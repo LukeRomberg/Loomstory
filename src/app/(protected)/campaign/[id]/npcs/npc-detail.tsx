@@ -39,6 +39,7 @@ interface NpcDetailProps {
   campaignName: string;
   npc: Npc;
   role: string;
+  userId?: string;
 }
 
 export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role }: NpcDetailProps) {
@@ -62,6 +63,7 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role }: N
   async function handleSave() {
     setSaving(true);
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase
       .from("npcs")
       .update({
@@ -72,6 +74,7 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role }: N
         tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
         gm_notes: gmNotes || null,
         player_notes: playerNotes || null,
+        updated_by: user?.id,
       })
       .eq("id", npc.id);
 
@@ -109,10 +112,11 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role }: N
 
   async function handleToggleVisibility() {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
     const newValue = !npc.gm_only;
     const { error } = await supabase
       .from("npcs")
-      .update({ gm_only: newValue })
+      .update({ gm_only: newValue, updated_by: user?.id })
       .eq("id", npc.id);
 
     if (error) {
