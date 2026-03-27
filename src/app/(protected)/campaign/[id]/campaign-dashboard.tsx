@@ -1,0 +1,358 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { EmptyState } from "@/components/loomstory/empty-state";
+import {
+  ChevronLeft,
+  Settings,
+  Plus,
+  ScrollText,
+  Users,
+  MapPin,
+  Shield,
+  Crown,
+} from "lucide-react";
+
+interface Session {
+  id: string;
+  title: string;
+  date_played: string | null;
+  session_number: number | null;
+  status: string;
+}
+
+interface CampaignDashboardProps {
+  campaign: {
+    id: string;
+    name: string;
+    description: string | null;
+    system_id: string | null;
+  };
+  role: string;
+  systemName: string | null;
+  sessions: Session[];
+  entityCounts: {
+    npcs: number;
+    locations: number;
+    factions: number;
+  };
+  userId: string;
+}
+
+export function CampaignDashboard({
+  campaign,
+  role,
+  systemName,
+  sessions: initialSessions,
+  entityCounts,
+  userId,
+}: CampaignDashboardProps) {
+  const router = useRouter();
+  const isGm = role === "gm";
+
+  const [sessions, setSessions] = useState(initialSessions);
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [datePlayed, setDatePlayed] = useState("");
+  const [sessionNumber, setSessionNumber] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const nextSessionNumber =
+    sessions.length > 0
+      ? Math.max(...sessions.map((s) => s.session_number ?? 0)) + 1
+      : 1;
+
+  async function handleCreateSession(e: React.FormEvent) {
+    e.preventDefault();
+    setCreating(true);
+
+    const supabase = createClient();
+
+    const { data: session, error: createError } = await supabase
+      .from("sessions")
+      .insert({
+        campaign_id: campaign.id,
+        title,
+        date_played: datePlayed || null,
+        session_number: sessionNumber
+          ? parseInt(sessionNumber)
+          : nextSessionNumber,
+        status: "draft",
+        created_by: userId,
+      })
+      .select()
+      .single();
+
+    if (createError || !session) {
+      toast.error("Failed to create session", { description: createError?.message });
+      setCreating(false);
+      return;
+    }
+
+    setOpen(false);
+    setTitle("");
+    setDatePlayed("");
+    setSessionNumber("");
+    setCreating(false);
+
+    router.push(`/campaign/${campaign.id}/session/${session.id}`);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
+          >
+            <ChevronLeft className="size-4" />
+            Back to campaigns
+          </button>
+          <h2 className="text-2xl font-heading font-semibold text-foreground">
+            {campaign.name}
+          </h2>
+          <div className="flex items-center gap-2 mt-1">
+            {systemName && (
+              <Badge variant="outline" className="text-xs">
+                {systemName}
+              </Badge>
+            )}
+            <Badge
+              variant={isGm ? "default" : "secondary"}
+              className="text-xs font-heading"
+            >
+              <Crown className="size-3 mr-1" />
+              {isGm ? "Game Master" : "Player"}
+            </Badge>
+          </div>
+          {campaign.description && (
+            <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
+              {campaign.description}
+            </p>
+          )}
+        </div>
+        {isGm && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() =>
+              router.push(`/campaign/${campaign.id}/settings`)
+            }
+          >
+            <Settings className="size-4" />
+          </Button>
+        )}
+      </div>
+
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card className="grain">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-heading flex items-center gap-2">
+              <Users className="size-4 text-gold" />
+              NPCs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{entityCounts.npcs}</p>
+          </CardContent>
+        </Card>
+        <Card className="grain">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-heading flex items-center gap-2">
+              <MapPin className="size-4 text-gold" />
+              Locations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{entityCounts.locations}</p>
+          </CardContent>
+        </Card>
+        <Card className="grain">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-heading flex items-center gap-2">
+              <Shield className="size-4 text-gold" />
+              Factions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{entityCounts.factions}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Sessions */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-heading font-medium">Recent Sessions</h3>
+          <div className="flex items-center gap-2">
+            {sessions.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  router.push(`/campaign/${campaign.id}/sessions`)
+                }
+              >
+                View all
+              </Button>
+            )}
+            {isGm && (
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger
+                  render={
+                    <Button size="sm" className="gold-glow font-heading">
+                      <Plus className="size-4 mr-1.5" />
+                      New Session
+                    </Button>
+                  }
+                />
+                <DialogContent>
+                  <form onSubmit={handleCreateSession}>
+                    <DialogHeader>
+                      <DialogTitle className="font-heading">
+                        New Session
+                      </DialogTitle>
+                      <DialogDescription>
+                        Create a session to start capturing notes.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="session-title">Title</Label>
+                        <Input
+                          id="session-title"
+                          placeholder="The Siege of Ironhold"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="session-number">Session #</Label>
+                          <Input
+                            id="session-number"
+                            type="number"
+                            placeholder={String(nextSessionNumber)}
+                            value={sessionNumber}
+                            onChange={(e) => setSessionNumber(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="date-played">Date Played</Label>
+                          <Input
+                            id="date-played"
+                            type="date"
+                            value={datePlayed}
+                            onChange={(e) => setDatePlayed(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={creating || !title.trim()}
+                        className="gold-glow"
+                      >
+                        {creating ? "Creating..." : "Create Session"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+        </div>
+
+        {sessions.length === 0 ? (
+          <EmptyState
+            icon={ScrollText}
+            message="No sessions yet. Create your first session to start building your story."
+            action={
+              isGm
+                ? { label: "New Session", onClick: () => setOpen(true) }
+                : undefined
+            }
+          />
+        ) : (
+          <div className="space-y-2">
+            {sessions.map((session) => (
+              <Card
+                key={session.id}
+                className="grain gold-glow cursor-pointer"
+                onClick={() =>
+                  router.push(
+                    `/campaign/${campaign.id}/session/${session.id}`
+                  )
+                }
+              >
+                <CardContent className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    {session.session_number != null && (
+                      <span className="text-xs text-muted-foreground font-mono w-8">
+                        #{session.session_number}
+                      </span>
+                    )}
+                    <span className="font-medium">{session.title}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {session.date_played && (
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(session.date_played).toLocaleDateString()}
+                      </span>
+                    )}
+                    <Badge
+                      variant={
+                        session.status === "published"
+                          ? "default"
+                          : "secondary"
+                      }
+                      className="text-xs"
+                    >
+                      {session.status}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
