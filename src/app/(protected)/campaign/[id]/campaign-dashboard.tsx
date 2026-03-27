@@ -29,6 +29,7 @@ import {
   Settings,
   Plus,
   ScrollText,
+  Scroll,
   Users,
   MapPin,
   Shield,
@@ -57,6 +58,7 @@ interface CampaignDashboardProps {
     npcs: number;
     locations: number;
     factions: number;
+    events: number;
   };
   userId: string;
 }
@@ -169,7 +171,7 @@ export function CampaignDashboard({
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card
           className="grain gold-glow cursor-pointer"
           onClick={() => router.push(`/campaign/${campaign.id}/npcs`)}
@@ -210,6 +212,20 @@ export function CampaignDashboard({
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">{entityCounts.factions}</p>
+          </CardContent>
+        </Card>
+        <Card
+          className="grain gold-glow cursor-pointer"
+          onClick={() => router.push(`/campaign/${campaign.id}/events`)}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-heading flex items-center gap-2">
+              <Scroll className="size-4 text-gold" />
+              Events
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{entityCounts.events}</p>
           </CardContent>
         </Card>
       </div>
