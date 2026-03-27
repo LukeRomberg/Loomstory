@@ -179,6 +179,51 @@ export const mockSessions = [
   },
 ];
 
+export const mockConversation = {
+  id: "conv-1",
+  campaign_id: "campaign-1",
+  session_id: "session-1",
+  event_id: null,
+  title: "Gareth warns the party",
+  participants: [
+    { entity_id: "npc-1", entity_type: "npc", name: "Gareth the Bold" },
+    { entity_id: null, entity_type: "character", name: "Durk" },
+  ],
+  content: [
+    { speaker: "Gareth", text: "The Crimson Hand has eyes everywhere. You'd best watch your backs.", tone: "nervous" },
+    { speaker: "Durk", text: "We've faced worse. What can you tell us about their leader?", tone: "confident" },
+    { speaker: "Gareth", text: "They call her the Veil. No one has seen her face and lived.", tone: "whispering" },
+  ],
+  content_plain: "Gareth: The Crimson Hand has eyes everywhere. You'd best watch your backs.\nDurk: We've faced worse. What can you tell us about their leader?\nGareth: They call her the Veil. No one has seen her face and lived.",
+  gm_notes: "Gareth is lying — he knows more than he's saying",
+  gm_only: true,
+  created_at: "2026-03-27T00:00:00Z",
+};
+
+export const mockConversations = [
+  mockConversation,
+  {
+    id: "conv-2",
+    campaign_id: "campaign-1",
+    session_id: "session-1",
+    event_id: null,
+    title: "Negotiating passage at the gate",
+    participants: [
+      { entity_id: null, entity_type: "character", name: "Durk" },
+      { entity_id: "npc-2", entity_type: "npc", name: "Gate Captain Hale" },
+    ],
+    content: [
+      { speaker: "Hale", text: "No one enters without the Warden's seal.", tone: "commanding" },
+      { speaker: "Durk", text: "We carry word from the southern villages. The Warden will want to hear this.", tone: "persuasive" },
+      { speaker: "Hale", text: "...fine. But I'll be watching you.", tone: "suspicious" },
+    ],
+    content_plain: "Hale: No one enters without the Warden's seal.\nDurk: We carry word from the southern villages. The Warden will want to hear this.\nHale: ...fine. But I'll be watching you.",
+    gm_notes: null,
+    gm_only: true,
+    created_at: "2026-03-27T00:01:00Z",
+  },
+];
+
 export const mockSystems = [
   { id: "system-dnd5e", name: "Dungeons & Dragons 5e", slug: "dnd5e" },
   { id: "system-pf2e", name: "Pathfinder 2e", slug: "pf2e" },
