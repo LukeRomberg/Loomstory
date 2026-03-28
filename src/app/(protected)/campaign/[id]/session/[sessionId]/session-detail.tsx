@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { TiptapEditor } from "@/components/loomstory/tiptap-editor";
 import { ExtractionReview } from "@/components/loomstory/extraction-review";
+import { SessionPanels } from "./session-panels";
 import {
   ChevronLeft,
   Save,
@@ -371,19 +372,14 @@ export function SessionDetail({
         </Card>
       )}
 
-      {session.ai_summary && (
-        <Card className="grain">
-          <CardHeader>
-            <CardTitle className="font-heading">AI Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              className="prose-fantasy text-sm"
-              dangerouslySetInnerHTML={{ __html: session.ai_summary }}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <SessionPanels
+        sessionId={session.id}
+        aiSummary={session.ai_summary}
+        gmNotes={session.gm_notes}
+        playerVisible={session.player_visible}
+        status={session.status}
+        role={role}
+      />
     </div>
   );
 }
