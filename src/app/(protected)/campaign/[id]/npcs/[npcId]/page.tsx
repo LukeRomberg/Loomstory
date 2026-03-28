@@ -34,6 +34,7 @@ export default async function NpcPage({
       campaignName={campaign.name}
       npc={npc}
       role={membership.role}
+      userId={user.id}
     />
   );
 }

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "@/components/loomstory/section-header";
+import { EntityDetailTabs } from "@/components/loomstory/entity-detail-tabs";
 import { ChevronLeft, Pencil, Trash2, Eye, EyeOff, X } from "lucide-react";
 
 interface Npc {
@@ -42,7 +43,7 @@ interface NpcDetailProps {
   userId?: string;
 }
 
-export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role }: NpcDetailProps) {
+export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, userId }: NpcDetailProps) {
   const router = useRouter();
   const isGm = role === "gm";
   const [npc, setNpc] = useState(initialNpc);
@@ -188,108 +189,116 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role }: N
         )}
       </div>
 
-      {/* Edit Mode */}
-      {editing && isGm ? (
-        <Card className="grain">
-          <CardHeader>
-            <CardTitle className="font-heading">Edit NPC</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="aliases">Aliases</Label>
-              <Input id="aliases" value={aliases} onChange={(e) => setAliases(e.target.value)} placeholder="nickname, title..." />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v ?? "alive")}>
-                <SelectTrigger id="status">
-                  <SelectValue>{status}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {["alive", "dead", "unknown", "missing"].map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tags">Tags</Label>
-              <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="ally, merchant..." />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="gm-notes">GM Notes</Label>
-              <Textarea id="gm-notes" value={gmNotes} onChange={(e) => setGmNotes(e.target.value)} rows={3} placeholder="Hidden info..." />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="player-notes">Player Notes</Label>
-              <Textarea id="player-notes" value={playerNotes} onChange={(e) => setPlayerNotes(e.target.value)} rows={3} placeholder="What the party knows..." />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSave} disabled={saving} className="gold-glow">{saving ? "Saving..." : "Save"}</Button>
-              <Button variant="ghost" onClick={cancelEdit}>Cancel</Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        /* Read Mode */
-        <>
-          {npc.description && (
+      <EntityDetailTabs
+        campaignId={campaignId}
+        entityType="npc"
+        entityId={npc.id}
+        entityName={npc.name}
+        role={role}
+        userId={userId ?? ""}
+        overviewContent={
+          editing && isGm ? (
             <Card className="grain">
-              <CardHeader><CardTitle className="font-heading text-sm">Description</CardTitle></CardHeader>
-              <CardContent><p className="text-sm font-lore">{npc.description}</p></CardContent>
+              <CardHeader>
+                <CardTitle className="font-heading">Edit NPC</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="aliases">Aliases</Label>
+                  <Input id="aliases" value={aliases} onChange={(e) => setAliases(e.target.value)} placeholder="nickname, title..." />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={status} onValueChange={(v) => setStatus(v ?? "alive")}>
+                    <SelectTrigger id="status">
+                      <SelectValue>{status}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["alive", "dead", "unknown", "missing"].map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags</Label>
+                  <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="ally, merchant..." />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gm-notes">GM Notes</Label>
+                  <Textarea id="gm-notes" value={gmNotes} onChange={(e) => setGmNotes(e.target.value)} rows={3} placeholder="Hidden info..." />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="player-notes">Player Notes</Label>
+                  <Textarea id="player-notes" value={playerNotes} onChange={(e) => setPlayerNotes(e.target.value)} rows={3} placeholder="What the party knows..." />
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleSave} disabled={saving} className="gold-glow">{saving ? "Saving..." : "Save"}</Button>
+                  <Button variant="ghost" onClick={cancelEdit}>Cancel</Button>
+                </div>
+              </CardContent>
             </Card>
-          )}
-
-          {npc.tags && npc.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {npc.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-              ))}
-            </div>
-          )}
-
-          {isGm && npc.gm_notes && (
-            <>
-              <Separator />
-              <div>
-                <SectionHeader>GM Notes</SectionHeader>
+          ) : (
+            <div className="space-y-6">
+              {npc.description && (
                 <Card className="grain">
-                  <CardContent className="py-3"><p className="text-sm">{npc.gm_notes}</p></CardContent>
+                  <CardHeader><CardTitle className="font-heading text-sm">Description</CardTitle></CardHeader>
+                  <CardContent><p className="text-sm font-lore">{npc.description}</p></CardContent>
                 </Card>
-              </div>
-            </>
-          )}
+              )}
 
-          {npc.player_notes && (
-            <>
-              <Separator />
-              <div>
-                <SectionHeader>Player Notes</SectionHeader>
-                <Card className="grain">
-                  <CardContent className="py-3"><p className="text-sm">{npc.player_notes}</p></CardContent>
-                </Card>
-              </div>
-            </>
-          )}
+              {npc.tags && npc.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {npc.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                  ))}
+                </div>
+              )}
 
-          {isGm && (
-            <div className="pt-2">
-              <Button variant="outline" onClick={() => setEditing(true)}>
-                <Pencil className="size-4 mr-1.5" />
-                Edit
-              </Button>
+              {isGm && npc.gm_notes && (
+                <>
+                  <Separator />
+                  <div>
+                    <SectionHeader>GM Notes</SectionHeader>
+                    <Card className="grain">
+                      <CardContent className="py-3"><p className="text-sm">{npc.gm_notes}</p></CardContent>
+                    </Card>
+                  </div>
+                </>
+              )}
+
+              {npc.player_notes && (
+                <>
+                  <Separator />
+                  <div>
+                    <SectionHeader>Player Notes</SectionHeader>
+                    <Card className="grain">
+                      <CardContent className="py-3"><p className="text-sm">{npc.player_notes}</p></CardContent>
+                    </Card>
+                  </div>
+                </>
+              )}
+
+              {isGm && (
+                <div className="pt-2">
+                  <Button variant="outline" onClick={() => setEditing(true)}>
+                    <Pencil className="size-4 mr-1.5" />
+                    Edit
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
-        </>
-      )}
+          )
+        }
+      />
     </div>
   );
 }

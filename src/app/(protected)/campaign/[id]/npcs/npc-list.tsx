@@ -13,6 +13,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/loomstory/empty-state";
+import { EntityQuickView } from "@/components/loomstory/entity-quick-view";
 import { ChevronLeft, Plus, Users, EyeOff } from "lucide-react";
 
 interface Npc {
@@ -41,6 +42,7 @@ export function NpcList({ campaignId, campaignName, npcs: initialNpcs, role, use
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [quickViewNpc, setQuickViewNpc] = useState<Npc | null>(null);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -117,7 +119,7 @@ export function NpcList({ campaignId, campaignName, npcs: initialNpcs, role, use
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {npcs.map((npc) => (
-            <Card key={npc.id} className="grain gold-glow cursor-pointer" onClick={() => router.push(`/campaign/${campaignId}/npcs/${npc.id}`)}>
+            <Card key={npc.id} className="grain gold-glow cursor-pointer" onClick={() => setQuickViewNpc(npc)}>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <CardTitle className="font-heading">{npc.name}</CardTitle>
@@ -144,6 +146,17 @@ export function NpcList({ campaignId, campaignName, npcs: initialNpcs, role, use
             </Card>
           ))}
         </div>
+      )}
+
+      {quickViewNpc && (
+        <EntityQuickView
+          entity={quickViewNpc}
+          entityType="npc"
+          campaignId={campaignId}
+          role={role}
+          open={!!quickViewNpc}
+          onClose={() => setQuickViewNpc(null)}
+        />
       )}
     </div>
   );

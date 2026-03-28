@@ -81,13 +81,12 @@ describe("NpcList", () => {
     expect(screen.getByText(/test campaign/i)).toBeInTheDocument();
   });
 
-  it("navigates to NPC detail on card click", async () => {
+  it("opens quick view on card click", async () => {
     const user = userEvent.setup();
     render(<NpcList {...defaultProps} />);
     await user.click(screen.getByText("Gareth the Bold"));
-    expect(mockPush).toHaveBeenCalledWith(
-      "/campaign/campaign-1/npcs/npc-1"
-    );
+    // Quick view dialog should show entity details
+    expect(screen.getAllByText("Gareth the Bold").length).toBeGreaterThanOrEqual(2); // card + dialog
   });
 
   // ─── Create ───────────────────────────────────────────────

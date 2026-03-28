@@ -224,6 +224,58 @@ export const mockConversations = [
   },
 ];
 
+export const mockRelations = [
+  {
+    id: "rel-1",
+    campaign_id: "campaign-1",
+    source_type: "npc",
+    source_id: "npc-1",
+    target_type: "faction",
+    target_id: "faction-1",
+    relation_type: "member_of",
+    description: "Secret member since the founding",
+    source_name: "Gareth the Bold",
+    target_name: "The Crimson Hand",
+  },
+  {
+    id: "rel-2",
+    campaign_id: "campaign-1",
+    source_type: "npc",
+    source_id: "npc-1",
+    target_type: "location",
+    target_id: "location-1",
+    relation_type: "located_in",
+    description: "Currently stationed at the city gates",
+    source_name: "Gareth the Bold",
+    target_name: "Ironhold",
+  },
+  {
+    id: "rel-3",
+    campaign_id: "campaign-1",
+    source_type: "faction",
+    source_id: "faction-1",
+    target_type: "location",
+    target_id: "location-1",
+    relation_type: "hostile_to",
+    description: "Planning to siege the city",
+    source_name: "The Crimson Hand",
+    target_name: "Ironhold",
+  },
+];
+
+export const mockRelationTypes = [
+  { id: "member_of", label: "Member Of" },
+  { id: "allied_with", label: "Allied With" },
+  { id: "hostile_to", label: "Hostile To" },
+  { id: "located_in", label: "Located In" },
+  { id: "owns", label: "Owns" },
+  { id: "knows", label: "Knows" },
+  { id: "reports_to", label: "Reports To" },
+  { id: "parent_of", label: "Parent Of" },
+  { id: "sibling_of", label: "Sibling Of" },
+  { id: "employs", label: "Employs" },
+];
+
 export const mockSystems = [
   { id: "system-dnd5e", name: "Dungeons & Dragons 5e", slug: "dnd5e" },
   { id: "system-pf2e", name: "Pathfinder 2e", slug: "pf2e" },
@@ -287,4 +339,54 @@ export const mockExtractionData = {
       },
     ],
   },
+};
+
+export const mockEntityHistory = {
+  events: [
+    {
+      id: "event-1",
+      content: "Gareth warned the party about the Crimson Hand's growing influence.",
+      summary: "Gareth warns the party",
+      weight: 3,
+      event_type: "scene",
+      narrative_day: 1,
+      narrative_time: 900,
+      resolved: false,
+      created_at: "2026-03-27T00:00:00Z",
+      role: "subject",
+    },
+    {
+      id: "event-2",
+      content: "Gareth promised safe passage through the mountains.",
+      summary: "Gareth's promise of safe passage",
+      weight: 4,
+      event_type: "promise",
+      narrative_day: 1,
+      narrative_time: 1200,
+      resolved: false,
+      created_at: "2026-03-27T00:01:00Z",
+      role: "subject",
+    },
+  ],
+  conversations: [
+    {
+      id: "conv-1",
+      title: "Gareth warns the party",
+      participants: [
+        { name: "Gareth the Bold", entity_type: "npc" },
+        { name: "Durk", entity_type: "character" },
+      ],
+      turn_count: 3,
+      created_at: "2026-03-27T00:00:00Z",
+    },
+  ],
+  session_mentions: [
+    {
+      session_id: "session-1",
+      session_title: "The Siege of Ironhold",
+      session_number: 1,
+      mention_type: "introduced",
+      created_at: "2026-03-27T00:00:00Z",
+    },
+  ],
 };
