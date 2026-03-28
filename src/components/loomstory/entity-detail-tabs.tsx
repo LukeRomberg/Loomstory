@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { LoadingScreen } from "@/components/loomstory/loading-screen";
 import { RelationsPanel } from "@/components/loomstory/relations-panel";
 import { EntityHistory } from "@/components/loomstory/entity-history";
-import { BookOpen, Link2, Clock } from "lucide-react";
+import { EntityVersions } from "@/components/loomstory/entity-versions";
+import { BookOpen, Link2, Clock, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EntityDetailTabsProps {
@@ -18,12 +19,13 @@ interface EntityDetailTabsProps {
   overviewContent: React.ReactNode;
 }
 
-type TabKey = "overview" | "relationships" | "history";
+type TabKey = "overview" | "relationships" | "history" | "versions";
 
 const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: "overview", label: "Overview", icon: BookOpen },
   { key: "relationships", label: "Relationships", icon: Link2 },
   { key: "history", label: "History", icon: Clock },
+  { key: "versions", label: "Versions", icon: History },
 ];
 
 export function EntityDetailTabs({
@@ -80,6 +82,24 @@ export function EntityDetailTabs({
     setLoadingTab(false);
   }, [campaignId, entityType, entityId]);
 
+  const [versionsData, setVersionsData] = useState<unknown[] | null>(null);
+
+  const fetchVersions = useCallback(async () => {
+    setLoadingTab(true);
+    try {
+      const res = await fetch(
+        `/api/campaigns/${campaignId}/entities/${entityType}/${entityId}/versions`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setVersionsData(data);
+      }
+    } catch {
+      // Fail silently
+    }
+    setLoadingTab(false);
+  }, [campaignId, entityType, entityId]);
+
   useEffect(() => {
     if (activeTab === "relationships" && !relationsData) {
       fetchRelations();
@@ -87,7 +107,10 @@ export function EntityDetailTabs({
     if (activeTab === "history" && !historyData) {
       fetchHistory();
     }
-  }, [activeTab, relationsData, historyData, fetchRelations, fetchHistory]);
+    if (activeTab === "versions" && !versionsData) {
+      fetchVersions();
+    }
+  }, [activeTab, relationsData, historyData, versionsData, fetchRelations, fetchHistory, fetchVersions]);
 
   return (
     <div className="space-y-4">
@@ -136,6 +159,14 @@ export function EntityDetailTabs({
             campaignId={campaignId}
             history={historyData as never}
           />
+        ) : null
+      )}
+
+      {activeTab === "versions" && (
+        loadingTab ? (
+          <LoadingScreen />
+        ) : versionsData ? (
+          <EntityVersions versions={versionsData as never[]} />
         ) : null
       )}
     </div>

@@ -476,3 +476,56 @@ export const mockLoreEntries = [
     gm_only: true,
   },
 ];
+
+export const mockEntityVersions = [
+  {
+    id: "ver-3",
+    entity_type: "npc",
+    entity_id: "npc-1",
+    version_number: 3,
+    snapshot: {
+      name: "Gareth the Bold",
+      status: "alive",
+      description: "A tall, scarred warrior with a commanding presence",
+      gm_notes: "Secretly working for the enemy",
+    },
+    change_summary: null,
+    changed_by: "user-1",
+    changed_by_name: "Luke",
+    changed_at: "2026-03-28T12:00:00Z",
+  },
+  {
+    id: "ver-2",
+    entity_type: "npc",
+    entity_id: "npc-1",
+    version_number: 2,
+    snapshot: {
+      name: "Gareth the Bold",
+      status: "alive",
+      description: "A tall warrior with a scar across his face",
+      aliases: [],
+      gm_notes: null,
+    },
+    change_summary: null,
+    changed_by: "user-1",
+    changed_by_name: "Luke",
+    changed_at: "2026-03-27T18:00:00Z",
+  },
+  {
+    id: "ver-1",
+    entity_type: "npc",
+    entity_id: "npc-1",
+    version_number: 1,
+    snapshot: {
+      name: "Gareth",
+      status: "alive",
+      description: "A warrior at the gates",
+      aliases: [],
+      gm_notes: null,
+    },
+    change_summary: null,
+    changed_by: "user-1",
+    changed_by_name: "System",
+    changed_at: "2026-03-27T00:00:00Z",
+  },
+];
