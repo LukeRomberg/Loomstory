@@ -1,13 +1,13 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { EventList } from "./event-list";
+import { EventDetail } from "../event-detail";
 
-export default async function EventsPage({
+export default async function EventPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; eventId: string }>;
 }) {
-  const { id } = await params;
+  const { id, eventId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -22,30 +22,18 @@ export default async function EventsPage({
     .eq("id", id).is("deleted_at", null).single();
   if (!campaign) notFound();
 
-  const { data: events } = await supabase
+  const { data: event } = await supabase
     .from("campaign_events")
     .select("id, session_id, content, summary, weight, event_type, narrative_day, narrative_time, sequence, resolved, trigger_condition, gm_only, created_at")
-    .eq("campaign_id", id)
-    .is("deleted_at", null)
-    .order("narrative_day", { ascending: true, nullsFirst: false })
-    .order("narrative_time", { ascending: true, nullsFirst: false })
-    .order("sequence", { ascending: true });
-
-  const { data: sessions } = await supabase
-    .from("sessions")
-    .select("id, title, session_number")
-    .eq("campaign_id", id)
-    .is("deleted_at", null)
-    .order("session_number", { ascending: true });
+    .eq("id", eventId).eq("campaign_id", id).is("deleted_at", null).single();
+  if (!event) notFound();
 
   return (
-    <EventList
+    <EventDetail
       campaignId={id}
       campaignName={campaign.name}
-      events={events ?? []}
-      sessions={sessions ?? []}
+      event={event}
       role={membership.role}
-      userId={user.id}
     />
   );
 }

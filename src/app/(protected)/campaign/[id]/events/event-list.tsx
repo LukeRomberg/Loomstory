@@ -9,7 +9,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/loomstory/empty-state";
-import { ChevronLeft, Scroll, Clock, Calendar, CheckCircle, AlertTriangle } from "lucide-react";
+import { EventCreate } from "./event-create";
+import { ChevronLeft, Scroll, Plus, CheckCircle, AlertTriangle } from "lucide-react";
 
 const TIME_LABELS: Record<number, string> = {
   0: "Midnight",
@@ -66,6 +67,7 @@ interface EventListProps {
   events: CampaignEvent[];
   sessions: Session[];
   role: string;
+  userId: string;
 }
 
 export function EventList({
@@ -74,10 +76,13 @@ export function EventList({
   events,
   sessions,
   role,
+  userId,
 }: EventListProps) {
   const router = useRouter();
+  const isGm = role === "gm";
   const [sessionFilter, setSessionFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const filteredEvents = useMemo(() => {
     let result = events;
@@ -112,7 +117,24 @@ export function EventList({
             {events.length} event{events.length !== 1 ? "s" : ""} in this campaign
           </p>
         </div>
+        {isGm && (
+          <Button className="gold-glow font-heading" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4 mr-1.5" />
+            New Event
+          </Button>
+        )}
       </div>
+
+      {isGm && (
+        <EventCreate
+          campaignId={campaignId}
+          userId={userId}
+          sessions={sessions}
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onCreated={() => router.refresh()}
+        />
+      )}
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -160,7 +182,7 @@ export function EventList({
       ) : (
         <div className="space-y-2">
           {filteredEvents.map((event) => (
-            <Card key={event.id} className="grain">
+            <Card key={event.id} className="grain gold-glow cursor-pointer" onClick={() => router.push(`/campaign/${campaignId}/events/${event.id}`)}>
               <CardContent className="py-3">
                 <div className="flex items-start gap-3">
                   {/* Timeline marker */}
