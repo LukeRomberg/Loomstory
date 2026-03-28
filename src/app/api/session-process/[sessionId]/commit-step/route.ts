@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { embedEntity } from "@/lib/ai/embeddings";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -237,6 +238,42 @@ export async function POST(
         }
         if (data) results.push({ id: data.id, name: item.title || "" });
       }
+    }
+
+    // Trigger embeddings in the background (don't block response)
+    const entityTypeMap: Record<string, string> = {
+      npcs: "npc",
+      locations: "location",
+      factions: "faction",
+      items: "item",
+      events: "event",
+      conversations: "conversation",
+    };
+    const embeddingEntityType = entityTypeMap[step];
+
+    if (embeddingEntityType && results.length > 0) {
+      // Fire and forget — embeddings happen async
+      Promise.all(
+        results.map((r) =>
+          supabase
+            .from(step === "events" ? "campaign_events" : step === "conversations" ? "conversation_logs" : step)
+            .select("*")
+            .eq("id", r.id)
+            .single()
+            .then(({ data: entity }) => {
+              if (entity) {
+                return embedEntity({
+                  campaignId: campaign_id,
+                  entityType: embeddingEntityType,
+                  entityId: r.id,
+                  data: entity,
+                  gmOnly: entity.gm_only ?? true,
+                  supabase: supabase as never,
+                });
+              }
+            })
+        )
+      ).catch((err) => console.error("Background embedding error:", err));
     }
 
     return NextResponse.json({
