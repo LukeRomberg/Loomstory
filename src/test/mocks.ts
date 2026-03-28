@@ -390,3 +390,89 @@ export const mockEntityHistory = {
     },
   ],
 };
+
+export const mockPlotThread = {
+  id: "thread-1",
+  campaign_id: "campaign-1",
+  title: "The Crimson Conspiracy",
+  description: "The Crimson Hand is secretly infiltrating the city guard to overthrow the Warden.",
+  status: "active",
+  priority: "main",
+  resolution_notes: null,
+  gm_notes: "The Veil is the Warden's own daughter",
+  gm_only: true,
+};
+
+export const mockPlotThreads = [
+  mockPlotThread,
+  {
+    id: "thread-2",
+    campaign_id: "campaign-1",
+    title: "The Missing Miners",
+    description: "Miners from Ironhold have been disappearing into the deep tunnels.",
+    status: "active",
+    priority: "side",
+    resolution_notes: null,
+    gm_notes: null,
+    gm_only: false,
+  },
+  {
+    id: "thread-3",
+    campaign_id: "campaign-1",
+    title: "The Dragon's Debt",
+    description: "The party owes a favor to the bronze dragon Vexilrath.",
+    status: "on_hold",
+    priority: "background",
+    resolution_notes: null,
+    gm_notes: "Vexilrath will call in the favor at the worst possible time",
+    gm_only: true,
+  },
+];
+
+export const mockItem = {
+  id: "item-1",
+  campaign_id: "campaign-1",
+  name: "Flame Tongue Longsword",
+  description: "A magical longsword that ignites with flame on command.",
+  type: "weapon",
+  mechanical_properties: { damage: "1d8+2d6 fire", properties: ["versatile", "magical"] },
+  gm_notes: "Cursed — the wielder hears whispers when alone",
+  player_notes: "Found in the dragon's hoard",
+  gm_only: false,
+};
+
+export const mockItems = [
+  mockItem,
+  {
+    id: "item-2",
+    campaign_id: "campaign-1",
+    name: "Sealed Letter",
+    description: "A letter sealed with the Warden's sigil, addressed to someone in the capital.",
+    type: "document",
+    mechanical_properties: null,
+    gm_notes: "Contains evidence of the Warden's treason",
+    player_notes: "Found on the assassin's body",
+    gm_only: true,
+  },
+];
+
+export const mockLoreEntry = {
+  id: "lore-1",
+  campaign_id: "campaign-1",
+  title: "The Founding of Ironhold",
+  content: "Ironhold was founded 300 years ago by dwarven miners who discovered rich veins of iron in the mountain pass. The city grew around the mines and became a critical trade hub between the northern and southern kingdoms.",
+  tags: ["history", "ironhold", "dwarves"],
+  gm_only: false,
+};
+
+export const mockLoreEntries = [
+  mockLoreEntry,
+  {
+    id: "lore-2",
+    campaign_id: "campaign-1",
+    title: "The Veil's True Identity",
+    content: "The Veil, leader of the Crimson Hand, is actually Sera Thornwall — the Warden's estranged daughter who was exiled after discovering her father's corruption.",
+    tags: ["crimson hand", "secrets"],
+    gm_only: true,
+  },
+];

@@ -35,6 +35,9 @@ import {
   MapPin,
   Shield,
   Crown,
+  GitBranch,
+  Sword,
+  BookOpen,
 } from "lucide-react";
 
 interface Session {
@@ -61,6 +64,9 @@ interface CampaignDashboardProps {
     factions: number;
     events: number;
     conversations: number;
+    plotThreads: number;
+    items: number;
+    lore: number;
   };
   userId: string;
 }
@@ -173,7 +179,7 @@ export function CampaignDashboard({
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card
           className="grain gold-glow cursor-pointer"
           onClick={() => router.push(`/campaign/${campaign.id}/npcs`)}
@@ -242,6 +248,48 @@ export function CampaignDashboard({
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">{entityCounts.conversations}</p>
+          </CardContent>
+        </Card>
+        <Card
+          className="grain gold-glow cursor-pointer"
+          onClick={() => router.push(`/campaign/${campaign.id}/plot-threads`)}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-heading flex items-center gap-2">
+              <GitBranch className="size-4 text-gold" />
+              Plot Threads
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{entityCounts.plotThreads}</p>
+          </CardContent>
+        </Card>
+        <Card
+          className="grain gold-glow cursor-pointer"
+          onClick={() => router.push(`/campaign/${campaign.id}/items`)}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-heading flex items-center gap-2">
+              <Sword className="size-4 text-gold" />
+              Items
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{entityCounts.items}</p>
+          </CardContent>
+        </Card>
+        <Card
+          className="grain gold-glow cursor-pointer"
+          onClick={() => router.push(`/campaign/${campaign.id}/lore`)}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-heading flex items-center gap-2">
+              <BookOpen className="size-4 text-gold" />
+              Lore
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{entityCounts.lore}</p>
           </CardContent>
         </Card>
       </div>
