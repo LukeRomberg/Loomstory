@@ -36,6 +36,17 @@ export default async function ConversationsPage({
     .is("deleted_at", null)
     .order("session_number", { ascending: true });
 
+  // Fetch known entities for participant picker
+  const [npcs, characters] = await Promise.all([
+    supabase.from("npcs").select("id, name").eq("campaign_id", id).is("deleted_at", null).order("name"),
+    supabase.from("characters").select("id, name").eq("campaign_id", id).is("deleted_at", null).order("name"),
+  ]);
+
+  const knownEntities = [
+    ...(npcs.data ?? []).map((n) => ({ id: n.id, name: n.name, entity_type: "npc" })),
+    ...(characters.data ?? []).map((c) => ({ id: c.id, name: c.name, entity_type: "character" })),
+  ];
+
   return (
     <ConversationList
       campaignId={id}
@@ -43,6 +54,8 @@ export default async function ConversationsPage({
       conversations={conversations ?? []}
       sessions={sessions ?? []}
       role={membership.role}
+      userId={user.id}
+      knownEntities={knownEntities}
     />
   );
 }

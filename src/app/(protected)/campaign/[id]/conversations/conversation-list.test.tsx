@@ -15,6 +15,11 @@ const defaultProps = {
   conversations: mockConversations,
   sessions: mockSessions,
   role: "gm",
+  userId: "user-1",
+  knownEntities: [
+    { id: "npc-1", name: "Gareth the Bold", entity_type: "npc" },
+    { id: "npc-2", name: "Gate Captain Hale", entity_type: "npc" },
+  ],
 };
 
 describe("ConversationList", () => {

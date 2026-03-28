@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/loomstory/empty-state";
 import { SectionHeader } from "@/components/loomstory/section-header";
-import { ChevronLeft, MessageSquare, ChevronDown, ChevronUp, EyeOff } from "lucide-react";
+import { ConversationCreate } from "./conversation-create";
+import { ChevronLeft, MessageSquare, Plus, ChevronDown, ChevronUp, EyeOff } from "lucide-react";
 
 interface Turn {
   speaker: string;
@@ -44,12 +45,20 @@ interface Session {
   session_number: number | null;
 }
 
+interface KnownEntity {
+  id: string;
+  name: string;
+  entity_type: string;
+}
+
 interface ConversationListProps {
   campaignId: string;
   campaignName: string;
   conversations: Conversation[];
   sessions: Session[];
   role: string;
+  userId: string;
+  knownEntities: KnownEntity[];
 }
 
 export function ConversationList({
@@ -58,11 +67,14 @@ export function ConversationList({
   conversations,
   sessions,
   role,
+  userId,
+  knownEntities,
 }: ConversationListProps) {
   const router = useRouter();
   const isGm = role === "gm";
   const [sessionFilter, setSessionFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const filtered = useMemo(() => {
     let result = conversations;
@@ -99,7 +111,24 @@ export function ConversationList({
             {conversations.length} conversation{conversations.length !== 1 ? "s" : ""} in this campaign
           </p>
         </div>
+        {isGm && (
+          <Button className="gold-glow font-heading" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4 mr-1.5" />
+            New Conversation
+          </Button>
+        )}
       </div>
+
+      {isGm && (
+        <ConversationCreate
+          campaignId={campaignId}
+          userId={userId}
+          knownEntities={knownEntities}
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onCreated={() => router.refresh()}
+        />
+      )}
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
