@@ -39,9 +39,17 @@ const TIME_OPTIONS = [
   { value: "0", label: "Midnight" },
 ];
 
+interface EntityTag {
+  entity_type: string;
+  entity_id: string;
+  entity_name: string;
+  role: string;
+}
+
 interface CampaignEvent {
   id: string;
   session_id: string | null;
+  parent_id?: string | null;
   content: string;
   summary: string | null;
   weight: number;
@@ -53,7 +61,16 @@ interface CampaignEvent {
   trigger_condition: string | null;
   gm_only: boolean;
   created_at: string;
+  entity_tags?: EntityTag[];
+  children_count?: number;
 }
+
+const ENTITY_ROUTES: Record<string, string> = {
+  npc: "npcs",
+  location: "locations",
+  faction: "factions",
+  item: "items",
+};
 
 interface EventDetailProps {
   campaignId: string;
@@ -293,6 +310,16 @@ export function EventDetail({
       ) : (
         /* Read Mode */
         <>
+          {/* Parent link */}
+          {event.parent_id && (
+            <Card className="grain gold-glow cursor-pointer" onClick={() => router.push(`/campaign/${campaignId}/events/${event.parent_id}`)}>
+              <CardContent className="py-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <ChevronLeft className="size-3" />
+                <span>Parent Event</span>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="grain">
             <CardContent className="py-4">
               <p className="text-sm font-lore">{event.content}</p>
@@ -306,12 +333,49 @@ export function EventDetail({
             </div>
           )}
 
+          {/* Entity Tags */}
+          <div>
+            <SectionHeader>Tagged Entities</SectionHeader>
+            {event.entity_tags && event.entity_tags.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {event.entity_tags.map((tag, i) => (
+                  <Card
+                    key={i}
+                    className="grain gold-glow cursor-pointer inline-flex"
+                    onClick={() => router.push(`/campaign/${campaignId}/${ENTITY_ROUTES[tag.entity_type] ?? tag.entity_type}/${tag.entity_id}`)}
+                  >
+                    <CardContent className="py-1.5 px-3 flex items-center gap-1.5">
+                      <Badge variant="outline" className="text-[10px]">{tag.entity_type}</Badge>
+                      <span className="text-sm font-medium">{tag.entity_name}</span>
+                      <Badge variant="secondary" className="text-[10px]">{tag.role}</Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">No entities tagged to this event.</p>
+            )}
+          </div>
+
+          {/* Children / Sub-events */}
+          {event.children_count != null && event.children_count > 0 && (
+            <div>
+              <SectionHeader>{event.children_count} sub-event{event.children_count !== 1 ? "s" : ""}</SectionHeader>
+            </div>
+          )}
+
+          {/* Actions */}
           {isGm && (
-            <div className="pt-2">
+            <div className="flex items-center gap-2 pt-2">
               <Button variant="outline" onClick={() => setEditing(true)}>
                 <Pencil className="size-4 mr-1.5" />
                 Edit
               </Button>
+              {(event.children_count != null && event.children_count > 0) || event.parent_id == null ? (
+                <Button variant="outline" size="sm">
+                  Add Sub-Event
+                </Button>
+              ) : null}
             </div>
           )}
         </>
