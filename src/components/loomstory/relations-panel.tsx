@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { SectionHeader } from "@/components/loomstory/section-header";
 import { EmptyState } from "@/components/loomstory/empty-state";
-import { Plus, X, Link2, ArrowRight } from "lucide-react";
+import { Plus, X, Pencil, Link2, ArrowRight } from "lucide-react";
 
 interface Relation {
   id: string;
@@ -161,6 +161,53 @@ export function RelationsPanel({
     toast.success("Relationship removed");
   }
 
+  // Edit relation
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingRelation, setEditingRelation] = useState<Relation | null>(null);
+  const [editRelationType, setEditRelationType] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  function openEdit(rel: Relation) {
+    setEditingRelation(rel);
+    setEditRelationType(rel.relation_type);
+    setEditDescription(rel.description ?? "");
+    setEditOpen(true);
+  }
+
+  async function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingRelation) return;
+    setSavingEdit(true);
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("entity_relations")
+      .update({
+        relation_type: editRelationType || "knows",
+        description: editDescription || null,
+      })
+      .eq("id", editingRelation.id);
+
+    if (error) {
+      toast.error("Failed to update", { description: error.message });
+      setSavingEdit(false);
+      return;
+    }
+
+    setRelations((prev) =>
+      prev.map((r) =>
+        r.id === editingRelation.id
+          ? { ...r, relation_type: editRelationType, description: editDescription || null }
+          : r
+      )
+    );
+    setEditOpen(false);
+    setEditingRelation(null);
+    setSavingEdit(false);
+    toast.success("Relationship updated");
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -287,14 +334,24 @@ export function RelationsPanel({
                       </span>
                     )}
                     {isGm && (
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={() => handleRemove(rel.id)}
-                        aria-label="Remove relation"
-                      >
-                        <X className="size-3" />
-                      </Button>
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={() => openEdit(rel)}
+                          aria-label="Edit relation"
+                        >
+                          <Pencil className="size-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={() => handleRemove(rel.id)}
+                          aria-label="Remove relation"
+                        >
+                          <X className="size-3" />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </CardContent>
@@ -303,6 +360,49 @@ export function RelationsPanel({
           })}
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <form onSubmit={handleSaveEdit}>
+            <DialogHeader>
+              <DialogTitle className="font-heading">Edit Relationship</DialogTitle>
+              <DialogDescription>
+                Update the relationship type or description.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Relationship Type</Label>
+                <Select value={editRelationType} onValueChange={(v) => setEditRelationType(v ?? "")}>
+                  <SelectTrigger>
+                    <SelectValue>{editRelationType ? getRelationLabel(editRelationType) : undefined}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {relationTypes.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Input
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Context about this relationship..."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={savingEdit} className="gold-glow">
+                {savingEdit ? "Saving..." : "Save"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

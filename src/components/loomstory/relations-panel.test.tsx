@@ -121,10 +121,37 @@ describe("RelationsPanel", () => {
 
   it("shows remove button on relations for GMs", () => {
     render(<RelationsPanel {...defaultProps} />);
-    // Each relation should have a remove/X button
     const removeButtons = screen.getAllByRole("button").filter(
-      (b) => b.getAttribute("aria-label") === "Remove relation" || b.querySelector('[class*="x-icon"], [class*="trash"]')
+      (b) => b.getAttribute("aria-label") === "Remove relation"
     );
-    expect(removeButtons.length).toBeGreaterThanOrEqual(0); // At minimum the buttons exist in the DOM
+    expect(removeButtons.length).toBeGreaterThanOrEqual(1);
+  });
+
+  // ─── Edit Relation (REL-04) ─────────────────────────────
+
+  it("shows edit button on relations for GMs", () => {
+    render(<RelationsPanel {...defaultProps} />);
+    const editButtons = screen.queryAllByRole("button").filter(
+      (b) => b.getAttribute("aria-label") === "Edit relation"
+    );
+    expect(editButtons.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("hides edit button for players", () => {
+    render(<RelationsPanel {...defaultProps} role="player" />);
+    const editButtons = screen.queryAllByRole("button").filter(
+      (b) => b.getAttribute("aria-label") === "Edit relation"
+    );
+    expect(editButtons.length).toBe(0);
+  });
+
+  it("opens edit dialog with current values when edit is clicked", async () => {
+    const user = userEvent.setup();
+    render(<RelationsPanel {...defaultProps} />);
+    const editButtons = screen.queryAllByRole("button").filter(
+      (b) => b.getAttribute("aria-label") === "Edit relation"
+    );
+    if (editButtons[0]) await user.click(editButtons[0]);
+    expect(screen.getByText(/edit relationship/i)).toBeInTheDocument();
   });
 });
