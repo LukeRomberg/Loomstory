@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/layout/app-header";
+import { ChatbotWrapper } from "@/components/loomstory/chatbot-wrapper";
 
 export default async function ProtectedLayout({
   children,
@@ -20,6 +21,7 @@ export default async function ProtectedLayout({
     <div className="min-h-screen bg-background">
       <AppHeader />
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+      <ChatbotWrapper />
     </div>
   );
 }
