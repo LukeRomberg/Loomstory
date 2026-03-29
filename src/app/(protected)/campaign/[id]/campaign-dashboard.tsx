@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { NpcModal } from "@/components/loomstory/npc-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +85,7 @@ export function CampaignDashboard({
 
   const [sessions, setSessions] = useState(initialSessions);
   const [open, setOpen] = useState(false);
+  const [npcModalOpen, setNpcModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [datePlayed, setDatePlayed] = useState("");
   const [sessionNumber, setSessionNumber] = useState("");
@@ -182,7 +184,7 @@ export function CampaignDashboard({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card
           className="grain gold-glow cursor-pointer"
-          onClick={() => router.push(`/campaign/${campaign.id}/npcs`)}
+          onClick={() => setNpcModalOpen(true)}
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-heading flex items-center gap-2">
@@ -442,6 +444,15 @@ export function CampaignDashboard({
           </div>
         )}
       </div>
+
+      {/* Entity Modals */}
+      <NpcModal
+        campaignId={campaign.id}
+        userId={userId}
+        role={role}
+        open={npcModalOpen}
+        onOpenChange={setNpcModalOpen}
+      />
     </div>
   );
 }
