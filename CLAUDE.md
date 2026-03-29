@@ -56,13 +56,25 @@ npm run test:coverage # Run tests with coverage report
 - **Auth pages are the exception** — login/register/reset forms keep inline errors since they're form validation, not async feedback.
 - **Loading states on buttons** — always disable the button and show "Saving...", "Creating...", etc. while an async operation is in progress.
 
-### Component Patterns
+### Component Patterns — USE SHARED COMPONENTS FIRST
+- **NEVER build UI patterns from scratch if a shared component exists.** Always check `src/components/shared/` first.
+- **Available shared components:**
+  - `MasterDetailModal` — entity list + detail sidebar modal. Use for all Knowledge Base entity browsing.
+  - `EntityFormTemplate` — create/edit forms with correct button labels, delete, cancel. Use for ALL entity create/edit forms.
+  - `EntityCard` — card with name, badges, description, gm_only. Use for ALL entity cards.
+  - `ConfirmDeleteDialog` — soft-delete confirmation. Use for ALL delete operations.
+  - `GmOnlyBadge` — "GM Only" badge. Use instead of inline Badge + EyeOff.
+  - `VisibilityToggle` — eye/eye-off toggle button. Use for ALL gm_only toggles.
+  - `PageHeader` — title + subtitle + actions + breadcrumb. Use for ALL page headers.
+  - `Breadcrumb` — back navigation. Use instead of inline button + ChevronLeft.
+  - `SkeletonCard` / `SkeletonList` — loading states. Use instead of blank loading.
+  - `useFetch` hook — async operations with auto-toast. Use for mutations.
 - **This project uses `@base-ui/react` (base-nova style), NOT Radix.**
   - Use `render={<Component />}` instead of `asChild` on trigger components (`DialogTrigger`, `DropdownMenuTrigger`, `SelectTrigger`, etc.)
   - `Select.onValueChange` passes `string | null`, not `string` — always handle: `onValueChange={(v) => setValue(v ?? "")}`
 - **Tiptap editor** — always set `immediatelyRender: false` in `useEditor()` to avoid SSR hydration errors.
-- **Create actions open modals** — when a user clicks "New Session", "New Campaign", etc., open a Dialog inline. Never navigate to a separate page for creation.
-- **Soft delete with confirmation** — all delete operations use a confirmation Dialog and perform soft delete (`deleted_at` timestamp).
+- **Create actions open modals** — when a user clicks "New Session", "New Campaign", etc., open a Dialog with `EntityFormTemplate` inside. Never navigate to a separate page for creation.
+- **Soft delete with confirmation** — all delete operations use `ConfirmDeleteDialog` and perform soft delete (`deleted_at` timestamp).
 
 ### Navigation
 - **Always provide a way back** — every sub-page has a `ChevronLeft` back button linking to the parent page.
