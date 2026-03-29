@@ -12,6 +12,9 @@ import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { MasterDetailModal } from "@/components/shared/master-detail-modal";
 import { EntityFormTemplate } from "@/components/shared/entity-form-template";
 import { GmOnlyBadge } from "@/components/shared/gm-only-badge";
@@ -104,6 +107,7 @@ export function NpcModal({
   }
 
   return (
+    <>
     <MasterDetailModal<Npc>
       title="NPCs"
       open={open}
@@ -147,6 +151,37 @@ export function NpcModal({
         />
       )}
     />
+
+    {/* Create NPC Dialog */}
+    <Dialog open={creating} onOpenChange={setCreating}>
+      <DialogContent>
+        <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }}>
+          <DialogHeader>
+            <DialogTitle className="font-heading">New NPC</DialogTitle>
+            <DialogDescription>Create an NPC and fill in details from the list.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="create-npc-name">Name</Label>
+              <Input
+                id="create-npc-name"
+                placeholder="Gareth the Bold"
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>
+            <Button type="submit" disabled={savingCreate || !createName.trim()} className="gold-glow">
+              {savingCreate ? "Creating..." : "Create NPC"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 

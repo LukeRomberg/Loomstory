@@ -41,14 +41,14 @@ export function MasterDetailModal<T extends { id: string }>({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[80vh] p-0 gap-0 flex flex-col">
+      <DialogContent className="max-w-7xl h-[90vh] p-0 gap-0 flex flex-col">
         {/* Header */}
         <DialogHeader className="px-6 py-4 border-b border-border flex-row items-center justify-between">
           <DialogTitle className="font-heading text-lg">{title}</DialogTitle>
           {onCreateClick && createLabel && (
             <Button
               size="sm"
-              className="gold-glow font-heading"
+              className="gold-glow font-heading mr-8"
               onClick={onCreateClick}
             >
               <Plus className="size-4 mr-1" />
@@ -87,7 +87,7 @@ export function MasterDetailModal<T extends { id: string }>({
                     className={`cursor-pointer rounded-lg p-3 transition-colors ${
                       item.id === selectedId
                         ? "bg-gold/10 ring-1 ring-gold/30"
-                        : "hover:bg-muted/50"
+                        : "bg-leather hover:bg-leather/80"
                     }`}
                   >
                     {renderListItem(item, item.id === selectedId)}
