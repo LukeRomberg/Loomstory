@@ -41,7 +41,7 @@ export function MasterDetailModal<T extends { id: string }>({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl h-[90vh] p-0 gap-0 flex flex-col">
+      <DialogContent size="full" className="h-[90vh] p-0 gap-0 flex flex-col">
         {/* Header */}
         <DialogHeader className="px-6 py-4 border-b border-border flex-row items-center justify-between">
           <DialogTitle className="font-heading text-lg">{title}</DialogTitle>
