@@ -373,12 +373,7 @@ function NpcDetail({
           </div>
         </div>
         {isGm && (
-          <div className="flex items-center gap-1">
-            <VisibilityToggle gmOnly={npc.gm_only} onToggle={handleToggleVisibility} loading={togglingVisibility} />
-            <Button variant="ghost" size="icon-sm" onClick={() => setEditing(true)}>
-              <Pencil className="size-4" />
-            </Button>
-          </div>
+          <VisibilityToggle gmOnly={npc.gm_only} onToggle={handleToggleVisibility} loading={togglingVisibility} />
         )}
       </div>
 
