@@ -77,10 +77,13 @@ Response format:
     {
       "name": "Full name",
       "aliases": ["nickname", "title"],
-      "description": "Physical appearance, personality, notable traits (2-4 sentences)",
+      "description": "General overview of who they are (1-2 sentences)",
+      "appearance": "Physical appearance, clothing, distinguishing features (2-3 sentences)",
+      "voice_notes": "Accent, pace, verbal tics, catchphrases, body language when speaking (1-3 sentences)",
+      "personality": "Temperament, motivations, quirks, how they interact with others (2-3 sentences)",
       "status": "alive",
       "tags": ["merchant", "ally"],
-      "gm_notes": "Hidden info the GM should track",
+      "gm_notes": "Hidden info the GM should track — secrets, agendas, lies",
       "player_notes": "What the party knows about them",
       "source_excerpt": "Relevant quote from the notes"
     }

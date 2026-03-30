@@ -28,6 +28,9 @@ interface Npc {
   name: string;
   aliases: string[] | null;
   description: string | null;
+  appearance: string | null;
+  voice_notes: string | null;
+  personality: string | null;
   status: string;
   tags: string[] | null;
   portrait_url: string | null;
@@ -64,7 +67,7 @@ export function NpcModal({
     const supabase = createClient();
     const { data } = await supabase
       .from("npcs")
-      .select("id, name, aliases, description, status, tags, portrait_url, gm_notes, player_notes, gm_only")
+      .select("id, name, aliases, description, appearance, voice_notes, personality, status, tags, portrait_url, gm_notes, player_notes, gm_only")
       .eq("campaign_id", campaignId)
       .is("deleted_at", null)
       .order("name");
@@ -203,6 +206,9 @@ function NpcDetail({
   const [name, setName] = useState(npc.name);
   const [aliases, setAliases] = useState((npc.aliases ?? []).join(", "));
   const [description, setDescription] = useState(npc.description ?? "");
+  const [appearance, setAppearance] = useState(npc.appearance ?? "");
+  const [voiceNotes, setVoiceNotes] = useState(npc.voice_notes ?? "");
+  const [personality, setPersonality] = useState(npc.personality ?? "");
   const [status, setStatus] = useState(npc.status);
   const [tags, setTags] = useState((npc.tags ?? []).join(", "));
   const [gmNotes, setGmNotes] = useState(npc.gm_notes ?? "");
@@ -214,6 +220,9 @@ function NpcDetail({
     setName(initialNpc.name);
     setAliases((initialNpc.aliases ?? []).join(", "));
     setDescription(initialNpc.description ?? "");
+    setAppearance(initialNpc.appearance ?? "");
+    setVoiceNotes(initialNpc.voice_notes ?? "");
+    setPersonality(initialNpc.personality ?? "");
     setStatus(initialNpc.status);
     setTags((initialNpc.tags ?? []).join(", "));
     setGmNotes(initialNpc.gm_notes ?? "");
@@ -231,6 +240,9 @@ function NpcDetail({
         name,
         aliases: aliases.split(",").map((a) => a.trim()).filter(Boolean),
         description: description || null,
+        appearance: appearance || null,
+        voice_notes: voiceNotes || null,
+        personality: personality || null,
         status,
         tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
         gm_notes: gmNotes || null,
@@ -293,6 +305,9 @@ function NpcDetail({
     setName(npc.name);
     setAliases((npc.aliases ?? []).join(", "));
     setDescription(npc.description ?? "");
+    setAppearance(npc.appearance ?? "");
+    setVoiceNotes(npc.voice_notes ?? "");
+    setPersonality(npc.personality ?? "");
     setStatus(npc.status);
     setTags((npc.tags ?? []).join(", "));
     setGmNotes(npc.gm_notes ?? "");
@@ -319,7 +334,19 @@ function NpcDetail({
         </div>
         <div className="space-y-2">
           <Label htmlFor="npc-desc">Description</Label>
-          <Textarea id="npc-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <Textarea id="npc-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="npc-appearance">Appearance</Label>
+          <Textarea id="npc-appearance" value={appearance} onChange={(e) => setAppearance(e.target.value)} rows={2} placeholder="Physical appearance, clothing, distinguishing features..." />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="npc-voice">Voice & Mannerisms</Label>
+          <Textarea id="npc-voice" value={voiceNotes} onChange={(e) => setVoiceNotes(e.target.value)} rows={2} placeholder="Accent, pace, verbal tics, body language..." />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="npc-personality">Personality</Label>
+          <Textarea id="npc-personality" value={personality} onChange={(e) => setPersonality(e.target.value)} rows={2} placeholder="Temperament, motivations, quirks..." />
         </div>
         <div className="space-y-2">
           <Label>Status</Label>
@@ -379,11 +406,50 @@ function NpcDetail({
 
       {/* Description */}
       {npc.description && (
-        <Card className="grain">
-          <CardContent className="py-3">
-            <p className="text-sm font-lore">{npc.description}</p>
-          </CardContent>
-        </Card>
+        <>
+          <SectionHeader>Description</SectionHeader>
+          <Card className="grain">
+            <CardContent className="py-3">
+              <p className="text-sm font-lore">{npc.description}</p>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* Appearance */}
+      {npc.appearance && (
+        <>
+          <SectionHeader>Appearance</SectionHeader>
+          <Card className="grain">
+            <CardContent className="py-3">
+              <p className="text-sm">{npc.appearance}</p>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* Voice & Mannerisms */}
+      {npc.voice_notes && (
+        <>
+          <SectionHeader>Voice & Mannerisms</SectionHeader>
+          <Card className="grain">
+            <CardContent className="py-3">
+              <p className="text-sm">{npc.voice_notes}</p>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* Personality */}
+      {npc.personality && (
+        <>
+          <SectionHeader>Personality</SectionHeader>
+          <Card className="grain">
+            <CardContent className="py-3">
+              <p className="text-sm">{npc.personality}</p>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* Tags */}

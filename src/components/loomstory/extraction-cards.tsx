@@ -212,7 +212,10 @@ function EditableCard<T extends BaseItem>({
 const NPC_FIELDS: FieldDef[] = [
   { key: "name", label: "Name", type: "text", placeholder: "NPC name" },
   { key: "aliases", label: "Aliases / Nicknames", type: "tags", placeholder: "nickname, title, short name..." },
-  { key: "description", label: "Description", type: "textarea", placeholder: "Appearance, personality, notable traits..." },
+  { key: "description", label: "Description", type: "textarea", placeholder: "General overview of who they are..." },
+  { key: "appearance", label: "Appearance", type: "textarea", placeholder: "Physical appearance, clothing, distinguishing features..." },
+  { key: "voice_notes", label: "Voice & Mannerisms", type: "textarea", placeholder: "Accent, pace, verbal tics, body language..." },
+  { key: "personality", label: "Personality", type: "textarea", placeholder: "Temperament, motivations, quirks..." },
   { key: "status", label: "Status", type: "select", options: ["alive", "dead", "unknown", "missing"] },
   { key: "tags", label: "Tags", type: "tags", placeholder: "merchant, ally, quest giver..." },
   { key: "gm_notes", label: "GM Notes", type: "textarea", placeholder: "Hidden info..." },

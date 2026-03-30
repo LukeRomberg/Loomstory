@@ -61,6 +61,9 @@ export function buildEmbeddingContent(
     case "npc":
       add("Name", data.name);
       add("Description", data.description);
+      add("Appearance", data.appearance);
+      add("Voice & Mannerisms", data.voice_notes);
+      add("Personality", data.personality);
       add("GM Notes", data.gm_notes);
       add("Player Notes", data.player_notes);
       break;
