@@ -15,6 +15,7 @@ const defaultProps = {
   events: mockEvents,
   sessions: mockSessions,
   role: "gm",
+  userId: "test-user-id",
 };
 
 describe("EventList", () => {

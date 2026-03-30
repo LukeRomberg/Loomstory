@@ -80,6 +80,8 @@ export const mockNpc = {
   gm_notes: "Secretly working for the enemy",
   player_notes: "Helped the party at the bridge",
   gm_only: false,
+  portrait_url: null,
+  last_location_id: null,
 };
 
 export const mockLocation = {

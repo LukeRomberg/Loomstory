@@ -65,7 +65,7 @@ describe("CampaignChatbot — Bubble & Toggle", () => {
     const input = screen.getByPlaceholderText(/ask a question/i);
     await user.type(input, "Tell me about the guild");
     const submitButtons = screen.getAllByRole("button");
-    const sendBtn = submitButtons.find((b) => b.querySelector('[class*="send"]') || b.type === "submit");
+    const sendBtn = submitButtons.find((b) => b.querySelector('[class*="send"]') || (b as HTMLButtonElement).type === "submit");
     if (sendBtn) await user.click(sendBtn);
 
     await waitFor(() => {

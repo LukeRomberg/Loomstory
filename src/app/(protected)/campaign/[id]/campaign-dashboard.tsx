@@ -10,6 +10,8 @@ import { FactionModal } from "@/components/loomstory/faction-modal";
 import { ItemModal } from "@/components/loomstory/item-modal";
 import { PlotThreadModal } from "@/components/loomstory/plot-thread-modal";
 import { LoreModal } from "@/components/loomstory/lore-modal";
+import { EventModal } from "@/components/loomstory/event-modal";
+import { ConversationModal } from "@/components/loomstory/conversation-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,6 +98,8 @@ export function CampaignDashboard({
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [plotThreadModalOpen, setPlotThreadModalOpen] = useState(false);
   const [loreModalOpen, setLoreModalOpen] = useState(false);
+  const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [conversationModalOpen, setConversationModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [datePlayed, setDatePlayed] = useState("");
   const [sessionNumber, setSessionNumber] = useState("");
@@ -236,7 +240,7 @@ export function CampaignDashboard({
         </Card>
         <Card
           className="grain gold-glow cursor-pointer"
-          onClick={() => router.push(`/campaign/${campaign.id}/events`)}
+          onClick={() => setEventModalOpen(true)}
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-heading flex items-center gap-2">
@@ -250,7 +254,7 @@ export function CampaignDashboard({
         </Card>
         <Card
           className="grain gold-glow cursor-pointer"
-          onClick={() => router.push(`/campaign/${campaign.id}/conversations`)}
+          onClick={() => setConversationModalOpen(true)}
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-heading flex items-center gap-2">
@@ -462,6 +466,8 @@ export function CampaignDashboard({
       <ItemModal campaignId={campaign.id} userId={userId} role={role} open={itemModalOpen} onOpenChange={setItemModalOpen} />
       <PlotThreadModal campaignId={campaign.id} userId={userId} role={role} open={plotThreadModalOpen} onOpenChange={setPlotThreadModalOpen} />
       <LoreModal campaignId={campaign.id} userId={userId} role={role} open={loreModalOpen} onOpenChange={setLoreModalOpen} />
+      <EventModal campaignId={campaign.id} userId={userId} role={role} open={eventModalOpen} onOpenChange={setEventModalOpen} />
+      <ConversationModal campaignId={campaign.id} userId={userId} role={role} open={conversationModalOpen} onOpenChange={setConversationModalOpen} />
     </div>
   );
 }

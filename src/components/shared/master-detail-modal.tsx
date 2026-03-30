@@ -22,6 +22,7 @@ interface MasterDetailModalProps<T extends { id: string }> {
   onCreateClick?: () => void;
   createLabel?: string;
   emptyMessage?: string;
+  renderFilters?: () => React.ReactNode;
 }
 
 export function MasterDetailModal<T extends { id: string }>({
@@ -35,6 +36,7 @@ export function MasterDetailModal<T extends { id: string }>({
   onCreateClick,
   createLabel,
   emptyMessage = "No items yet.",
+  renderFilters,
 }: MasterDetailModalProps<T>) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedItem = items.find((i) => i.id === selectedId) ?? null;
@@ -56,6 +58,13 @@ export function MasterDetailModal<T extends { id: string }>({
             </Button>
           )}
         </DialogHeader>
+
+        {/* Filters */}
+        {renderFilters && (
+          <div className="px-6 py-3 border-b border-border">
+            {renderFilters()}
+          </div>
+        )}
 
         {/* Body */}
         <div className="flex flex-1 overflow-hidden">

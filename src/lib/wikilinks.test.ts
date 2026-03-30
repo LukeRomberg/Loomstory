@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseWikilinks, renderWikilinksToText } from "./wikilinks";
+import { parseWikilinks, renderWikilinksToText, ResolvedEntity } from "./wikilinks";
 
 describe("parseWikilinks (WIKI-01)", () => {
   it("parses simple [[Entity Name]] syntax", () => {
@@ -69,7 +69,7 @@ describe("renderWikilinksToText", () => {
 
   it("marks unresolved wikilinks", () => {
     const text = "Heard about [[Unknown NPC]].";
-    const resolved: { name: string; resolved: boolean }[] = [];
+    const resolved: ResolvedEntity[] = [];
     const result = renderWikilinksToText(text, resolved);
     expect(result).toContain("Unknown NPC");
     expect(result).toContain("unresolved");
