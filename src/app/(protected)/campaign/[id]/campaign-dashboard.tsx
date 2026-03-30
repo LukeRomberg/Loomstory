@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { NpcModal } from "@/components/loomstory/npc-modal";
+import { LocationModal } from "@/components/loomstory/location-modal";
+import { FactionModal } from "@/components/loomstory/faction-modal";
+import { ItemModal } from "@/components/loomstory/item-modal";
+import { PlotThreadModal } from "@/components/loomstory/plot-thread-modal";
+import { LoreModal } from "@/components/loomstory/lore-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +91,11 @@ export function CampaignDashboard({
   const [sessions, setSessions] = useState(initialSessions);
   const [open, setOpen] = useState(false);
   const [npcModalOpen, setNpcModalOpen] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [factionModalOpen, setFactionModalOpen] = useState(false);
+  const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [plotThreadModalOpen, setPlotThreadModalOpen] = useState(false);
+  const [loreModalOpen, setLoreModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [datePlayed, setDatePlayed] = useState("");
   const [sessionNumber, setSessionNumber] = useState("");
@@ -198,7 +208,7 @@ export function CampaignDashboard({
         </Card>
         <Card
           className="grain gold-glow cursor-pointer"
-          onClick={() => router.push(`/campaign/${campaign.id}/locations`)}
+          onClick={() => setLocationModalOpen(true)}
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-heading flex items-center gap-2">
@@ -212,7 +222,7 @@ export function CampaignDashboard({
         </Card>
         <Card
           className="grain gold-glow cursor-pointer"
-          onClick={() => router.push(`/campaign/${campaign.id}/factions`)}
+          onClick={() => setFactionModalOpen(true)}
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-heading flex items-center gap-2">
@@ -254,7 +264,7 @@ export function CampaignDashboard({
         </Card>
         <Card
           className="grain gold-glow cursor-pointer"
-          onClick={() => router.push(`/campaign/${campaign.id}/plot-threads`)}
+          onClick={() => setPlotThreadModalOpen(true)}
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-heading flex items-center gap-2">
@@ -268,7 +278,7 @@ export function CampaignDashboard({
         </Card>
         <Card
           className="grain gold-glow cursor-pointer"
-          onClick={() => router.push(`/campaign/${campaign.id}/items`)}
+          onClick={() => setItemModalOpen(true)}
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-heading flex items-center gap-2">
@@ -282,7 +292,7 @@ export function CampaignDashboard({
         </Card>
         <Card
           className="grain gold-glow cursor-pointer"
-          onClick={() => router.push(`/campaign/${campaign.id}/lore`)}
+          onClick={() => setLoreModalOpen(true)}
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-heading flex items-center gap-2">
@@ -446,13 +456,12 @@ export function CampaignDashboard({
       </div>
 
       {/* Entity Modals */}
-      <NpcModal
-        campaignId={campaign.id}
-        userId={userId}
-        role={role}
-        open={npcModalOpen}
-        onOpenChange={setNpcModalOpen}
-      />
+      <NpcModal campaignId={campaign.id} userId={userId} role={role} open={npcModalOpen} onOpenChange={setNpcModalOpen} />
+      <LocationModal campaignId={campaign.id} userId={userId} role={role} open={locationModalOpen} onOpenChange={setLocationModalOpen} />
+      <FactionModal campaignId={campaign.id} userId={userId} role={role} open={factionModalOpen} onOpenChange={setFactionModalOpen} />
+      <ItemModal campaignId={campaign.id} userId={userId} role={role} open={itemModalOpen} onOpenChange={setItemModalOpen} />
+      <PlotThreadModal campaignId={campaign.id} userId={userId} role={role} open={plotThreadModalOpen} onOpenChange={setPlotThreadModalOpen} />
+      <LoreModal campaignId={campaign.id} userId={userId} role={role} open={loreModalOpen} onOpenChange={setLoreModalOpen} />
     </div>
   );
 }
