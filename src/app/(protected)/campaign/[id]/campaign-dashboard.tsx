@@ -46,6 +46,7 @@ import {
   GitBranch,
   Sword,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 
 interface Session {
@@ -315,6 +316,19 @@ export function CampaignDashboard({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-heading font-medium">Recent Sessions</h3>
           <div className="flex items-center gap-2">
+            {isGm && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-heading"
+                onClick={() =>
+                  router.push(`/campaign/${campaign.id}/prep`)
+                }
+              >
+                <Sparkles className="size-4 mr-1.5" />
+                Session Prep
+              </Button>
+            )}
             {sessions.length > 0 && (
               <Button
                 size="sm"
