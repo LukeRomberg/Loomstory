@@ -1,0 +1,450 @@
+[
+  {
+    "key": "identity",
+    "label": "Identity",
+    "icon": "user",
+    "order": 1,
+    "layout": "grid",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "race",
+        "label": "Race",
+        "type": "text",
+        "order": 1,
+        "storage": { "target": "data", "path": "race" },
+        "placeholder": "Human, Elf, Dwarf, Halfling..."
+      },
+      {
+        "key": "alignment",
+        "label": "Alignment",
+        "type": "select",
+        "order": 2,
+        "storage": { "target": "data", "path": "alignment" },
+        "options": [
+          { "value": "Good", "label": "Good" },
+          { "value": "Lawful", "label": "Lawful" },
+          { "value": "Neutral", "label": "Neutral" },
+          { "value": "Chaotic", "label": "Chaotic" },
+          { "value": "Evil", "label": "Evil" }
+        ]
+      },
+      {
+        "key": "alignment_move",
+        "label": "Alignment Move",
+        "type": "textarea",
+        "order": 3,
+        "storage": { "target": "data", "path": "alignment_move" },
+        "help_text": "XP trigger for your alignment",
+        "width": "full"
+      },
+      {
+        "key": "look",
+        "label": "Look",
+        "type": "textarea",
+        "order": 4,
+        "storage": { "target": "data", "path": "look" },
+        "placeholder": "Describe your character's appearance",
+        "width": "full"
+      }
+    ]
+  },
+  {
+    "key": "ability_scores",
+    "label": "Ability Scores",
+    "icon": "dumbbell",
+    "order": 2,
+    "layout": "grid",
+    "columns": 6,
+    "fields": [
+      {
+        "key": "str",
+        "label": "STR",
+        "type": "stat_block",
+        "order": 1,
+        "storage": { "target": "stat", "stat_key": "str", "data_fields": ["modifier"] },
+        "min": 3,
+        "max": 18,
+        "default_value": 16,
+        "children": [
+          {
+            "key": "str_modifier",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "str", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "dw_modifier(value)",
+              "depends_on": ["str"],
+              "display_prefix": ""
+            }
+          }
+        ]
+      },
+      {
+        "key": "dex",
+        "label": "DEX",
+        "type": "stat_block",
+        "order": 2,
+        "storage": { "target": "stat", "stat_key": "dex", "data_fields": ["modifier"] },
+        "min": 3,
+        "max": 18,
+        "default_value": 15,
+        "children": [
+          {
+            "key": "dex_modifier",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "dex", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "dw_modifier(value)",
+              "depends_on": ["dex"],
+              "display_prefix": ""
+            }
+          }
+        ]
+      },
+      {
+        "key": "con",
+        "label": "CON",
+        "type": "stat_block",
+        "order": 3,
+        "storage": { "target": "stat", "stat_key": "con", "data_fields": ["modifier"] },
+        "min": 3,
+        "max": 18,
+        "default_value": 13,
+        "children": [
+          {
+            "key": "con_modifier",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "con", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "dw_modifier(value)",
+              "depends_on": ["con"],
+              "display_prefix": ""
+            }
+          }
+        ]
+      },
+      {
+        "key": "int",
+        "label": "INT",
+        "type": "stat_block",
+        "order": 4,
+        "storage": { "target": "stat", "stat_key": "int", "data_fields": ["modifier"] },
+        "min": 3,
+        "max": 18,
+        "default_value": 12,
+        "children": [
+          {
+            "key": "int_modifier",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "int", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "dw_modifier(value)",
+              "depends_on": ["int"],
+              "display_prefix": ""
+            }
+          }
+        ]
+      },
+      {
+        "key": "wis",
+        "label": "WIS",
+        "type": "stat_block",
+        "order": 5,
+        "storage": { "target": "stat", "stat_key": "wis", "data_fields": ["modifier"] },
+        "min": 3,
+        "max": 18,
+        "default_value": 9,
+        "children": [
+          {
+            "key": "wis_modifier",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "wis", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "dw_modifier(value)",
+              "depends_on": ["wis"],
+              "display_prefix": ""
+            }
+          }
+        ]
+      },
+      {
+        "key": "cha",
+        "label": "CHA",
+        "type": "stat_block",
+        "order": 6,
+        "storage": { "target": "stat", "stat_key": "cha", "data_fields": ["modifier"] },
+        "min": 3,
+        "max": 18,
+        "default_value": 8,
+        "children": [
+          {
+            "key": "cha_modifier",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "cha", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "dw_modifier(value)",
+              "depends_on": ["cha"],
+              "display_prefix": ""
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "combat",
+    "label": "Combat",
+    "icon": "swords",
+    "order": 3,
+    "layout": "grid",
+    "columns": 4,
+    "fields": [
+      {
+        "key": "armor",
+        "label": "Armor",
+        "type": "number",
+        "order": 1,
+        "storage": { "target": "data", "path": "armor" },
+        "min": 0,
+        "default_value": 0
+      },
+      {
+        "key": "damage_die",
+        "label": "Damage Die",
+        "type": "text",
+        "order": 2,
+        "storage": { "target": "data", "path": "damage_die" },
+        "help_text": "Class damage die (d4-d10)",
+        "placeholder": "d8"
+      },
+      {
+        "key": "hp_current",
+        "label": "Current HP",
+        "type": "number",
+        "order": 3,
+        "storage": { "target": "core", "column": "hp_current" },
+        "min": 0
+      },
+      {
+        "key": "hp_max",
+        "label": "Max HP",
+        "type": "number",
+        "order": 4,
+        "storage": { "target": "core", "column": "hp_max" },
+        "min": 0
+      },
+      {
+        "key": "load_max",
+        "label": "Max Load",
+        "type": "number",
+        "order": 5,
+        "storage": { "target": "data", "path": "load_max" },
+        "help_text": "Max weight = class base + STR mod",
+        "min": 0
+      }
+    ]
+  },
+  {
+    "key": "moves",
+    "label": "Moves",
+    "icon": "zap",
+    "order": 4,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "starting_moves",
+        "label": "Starting & Advanced Moves",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "abilities", "ability_type": "move" }
+      },
+      {
+        "key": "racial_move",
+        "label": "Racial Move",
+        "type": "list",
+        "order": 2,
+        "storage": { "target": "abilities", "ability_type": "racial_move" }
+      }
+    ]
+  },
+  {
+    "key": "spellcasting",
+    "label": "Spellcasting",
+    "icon": "sparkles",
+    "order": 5,
+    "layout": "list",
+    "collapsed_default": true,
+    "fields": [
+      {
+        "key": "spells",
+        "label": "Spells",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "abilities", "ability_type": "spell" },
+        "help_text": "Available for Wizard and Cleric playbooks"
+      }
+    ]
+  },
+  {
+    "key": "bonds",
+    "label": "Bonds",
+    "icon": "handshake",
+    "order": 6,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "bond",
+        "label": "Bond",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "note", "note_key": "bond" },
+        "help_text": "Narrative connections to other PCs. Resolve bonds for XP."
+      }
+    ]
+  },
+  {
+    "key": "equipment",
+    "label": "Equipment",
+    "icon": "backpack",
+    "order": 7,
+    "layout": "columns",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "inventory",
+        "label": "Inventory",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "items", "weight_label": "Weight" }
+      },
+      {
+        "key": "coins",
+        "label": "Coins",
+        "type": "number",
+        "order": 2,
+        "storage": { "target": "data", "path": "coins" },
+        "default_value": 0,
+        "min": 0
+      }
+    ]
+  },
+  {
+    "key": "xp",
+    "label": "Experience",
+    "icon": "trophy",
+    "order": 8,
+    "layout": "grid",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "experience",
+        "label": "Current XP",
+        "type": "number",
+        "order": 1,
+        "storage": { "target": "core", "column": "experience" },
+        "default_value": 0,
+        "min": 0
+      },
+      {
+        "key": "xp_threshold",
+        "label": "XP Threshold",
+        "type": "number",
+        "order": 2,
+        "storage": { "target": "core", "column": "level" },
+        "computed": {
+          "formula": "core.level + 7",
+          "depends_on": ["core.level"],
+          "display_prefix": ""
+        },
+        "help_text": "Level up at this XP (current level + 7)"
+      }
+    ]
+  },
+  {
+    "key": "signature_items",
+    "label": "Signature Items",
+    "icon": "star",
+    "order": 9,
+    "layout": "list",
+    "collapsed_default": true,
+    "fields": [
+      {
+        "key": "signature_weapon",
+        "label": "Signature Weapon",
+        "type": "textarea",
+        "order": 1,
+        "storage": { "target": "data", "path": "signature_weapon" },
+        "help_text": "Fighter only: customize your weapon"
+      },
+      {
+        "key": "animal_companion",
+        "label": "Animal Companion",
+        "type": "textarea",
+        "order": 2,
+        "storage": { "target": "data", "path": "animal_companion" },
+        "help_text": "Ranger only: your bonded creature"
+      },
+      {
+        "key": "deity",
+        "label": "Deity",
+        "type": "textarea",
+        "order": 3,
+        "storage": { "target": "data", "path": "deity" },
+        "help_text": "Cleric/Paladin: your god and domain"
+      },
+      {
+        "key": "spellbook",
+        "label": "Spellbook",
+        "type": "textarea",
+        "order": 4,
+        "storage": { "target": "data", "path": "spellbook" },
+        "help_text": "Wizard: your book of spells"
+      }
+    ]
+  },
+  {
+    "key": "backstory",
+    "label": "Backstory",
+    "icon": "book-open",
+    "order": 10,
+    "layout": "freeform",
+    "fields": [
+      {
+        "key": "backstory",
+        "label": "Backstory",
+        "type": "richtext",
+        "order": 1,
+        "storage": { "target": "note", "note_key": "backstory" },
+        "width": "full"
+      }
+    ]
+  },
+  {
+    "key": "conditions",
+    "label": "Conditions",
+    "icon": "heart-crack",
+    "order": 11,
+    "layout": "table",
+    "fields": [
+      {
+        "key": "conditions",
+        "label": "Active Conditions",
+        "type": "table",
+        "order": 1,
+        "storage": { "target": "conditions", "show_severity": false }
+      }
+    ]
+  }
+]

@@ -14,6 +14,7 @@ import { PlotThreadModal } from "@/components/loomstory/plot-thread-modal";
 import { LoreModal } from "@/components/loomstory/lore-modal";
 import { EventModal } from "@/components/loomstory/event-modal";
 import { ConversationModal } from "@/components/loomstory/conversation-modal";
+import { CharacterModal } from "@/components/loomstory/character-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ import {
   Sword,
   BookOpen,
   Sparkles,
+  UserCircle,
 } from "lucide-react";
 
 interface Session {
@@ -78,6 +80,7 @@ interface CampaignDashboardProps {
     plotThreads: number;
     items: number;
     lore: number;
+    characters: number;
   };
   userId: string;
 }
@@ -105,6 +108,7 @@ export function CampaignDashboard({
   const [loreModalOpen, setLoreModalOpen] = useState(false);
   const [eventModalOpen, setEventModalOpen] = useState(false);
   const [conversationModalOpen, setConversationModalOpen] = useState(false);
+  const [characterModalOpen, setCharacterModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [datePlayed, setDatePlayed] = useState("");
@@ -310,6 +314,20 @@ export function CampaignDashboard({
             <p className="text-2xl font-semibold">{entityCounts.lore}</p>
           </CardContent>
         </Card>
+        <Card
+          className="grain gold-glow cursor-pointer"
+          onClick={() => setCharacterModalOpen(true)}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-heading flex items-center gap-2">
+              <UserCircle className="size-4 text-gold" />
+              Characters
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{entityCounts.characters}</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Sessions */}
@@ -483,6 +501,7 @@ export function CampaignDashboard({
       <LoreModal campaignId={campaign.id} userId={userId} role={role} open={loreModalOpen} onOpenChange={setLoreModalOpen} />
       <EventModal campaignId={campaign.id} userId={userId} role={role} open={eventModalOpen} onOpenChange={setEventModalOpen} />
       <ConversationModal campaignId={campaign.id} userId={userId} role={role} open={conversationModalOpen} onOpenChange={setConversationModalOpen} />
+      <CharacterModal campaignId={campaign.id} userId={userId} role={role} systemId={campaign.system_id} open={characterModalOpen} onOpenChange={setCharacterModalOpen} />
       {isGm && (
         <SettingsModal campaignId={campaign.id} userId={userId} open={settingsOpen} onOpenChange={setSettingsOpen} />
       )}

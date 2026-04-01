@@ -65,6 +65,7 @@ export default async function CampaignPage({
     supabase.from("plot_threads").select("id", { count: "exact", head: true }).eq("campaign_id", id).is("deleted_at", null),
     supabase.from("items").select("id", { count: "exact", head: true }).eq("campaign_id", id).is("deleted_at", null),
     supabase.from("lore_entries").select("id", { count: "exact", head: true }).eq("campaign_id", id).is("deleted_at", null),
+    supabase.from("characters").select("id", { count: "exact", head: true }).eq("campaign_id", id).is("deleted_at", null),
   ]);
 
   const entityCounts = {
@@ -76,6 +77,7 @@ export default async function CampaignPage({
     plotThreads: counts[5].count ?? 0,
     items: counts[6].count ?? 0,
     lore: counts[7].count ?? 0,
+    characters: counts[8].count ?? 0,
   };
 
   return (

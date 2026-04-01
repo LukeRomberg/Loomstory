@@ -1,0 +1,443 @@
+[
+  {
+    "key": "identity",
+    "label": "Identity",
+    "icon": "user",
+    "order": 1,
+    "layout": "grid",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "ancestry",
+        "label": "Ancestry",
+        "type": "text",
+        "order": 1,
+        "storage": { "target": "data", "path": "ancestry" },
+        "width": "half",
+        "placeholder": "e.g. Firbolg, Katari, Fungril"
+      },
+      {
+        "key": "community",
+        "label": "Community",
+        "type": "text",
+        "order": 2,
+        "storage": { "target": "data", "path": "community" },
+        "width": "half",
+        "placeholder": "e.g. Highborne, Wanderborne"
+      }
+    ]
+  },
+  {
+    "key": "traits",
+    "label": "Traits",
+    "icon": "hexagon",
+    "order": 2,
+    "layout": "grid",
+    "columns": 3,
+    "fields": [
+      {
+        "key": "agility",
+        "label": "Agility",
+        "type": "stat_block",
+        "order": 1,
+        "storage": { "target": "stat", "stat_key": "agility", "data_fields": ["marked"] },
+        "group": "Agility / Strength",
+        "min": -3,
+        "max": 5,
+        "default_value": 0,
+        "children": [
+          {
+            "key": "agility_marked",
+            "label": "Marked",
+            "type": "boolean",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "agility", "data_fields": ["marked"] },
+            "default_value": false
+          }
+        ]
+      },
+      {
+        "key": "strength",
+        "label": "Strength",
+        "type": "stat_block",
+        "order": 2,
+        "storage": { "target": "stat", "stat_key": "strength", "data_fields": ["marked"] },
+        "group": "Agility / Strength",
+        "min": -3,
+        "max": 5,
+        "default_value": 0,
+        "children": [
+          {
+            "key": "strength_marked",
+            "label": "Marked",
+            "type": "boolean",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "strength", "data_fields": ["marked"] },
+            "default_value": false
+          }
+        ]
+      },
+      {
+        "key": "finesse",
+        "label": "Finesse",
+        "type": "stat_block",
+        "order": 3,
+        "storage": { "target": "stat", "stat_key": "finesse", "data_fields": ["marked"] },
+        "group": "Finesse / Instinct",
+        "min": -3,
+        "max": 5,
+        "default_value": 0,
+        "children": [
+          {
+            "key": "finesse_marked",
+            "label": "Marked",
+            "type": "boolean",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "finesse", "data_fields": ["marked"] },
+            "default_value": false
+          }
+        ]
+      },
+      {
+        "key": "instinct",
+        "label": "Instinct",
+        "type": "stat_block",
+        "order": 4,
+        "storage": { "target": "stat", "stat_key": "instinct", "data_fields": ["marked"] },
+        "group": "Finesse / Instinct",
+        "min": -3,
+        "max": 5,
+        "default_value": 0,
+        "children": [
+          {
+            "key": "instinct_marked",
+            "label": "Marked",
+            "type": "boolean",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "instinct", "data_fields": ["marked"] },
+            "default_value": false
+          }
+        ]
+      },
+      {
+        "key": "presence",
+        "label": "Presence",
+        "type": "stat_block",
+        "order": 5,
+        "storage": { "target": "stat", "stat_key": "presence", "data_fields": ["marked"] },
+        "group": "Presence / Knowledge",
+        "min": -3,
+        "max": 5,
+        "default_value": 0,
+        "children": [
+          {
+            "key": "presence_marked",
+            "label": "Marked",
+            "type": "boolean",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "presence", "data_fields": ["marked"] },
+            "default_value": false
+          }
+        ]
+      },
+      {
+        "key": "knowledge",
+        "label": "Knowledge",
+        "type": "stat_block",
+        "order": 6,
+        "storage": { "target": "stat", "stat_key": "knowledge", "data_fields": ["marked"] },
+        "group": "Presence / Knowledge",
+        "min": -3,
+        "max": 5,
+        "default_value": 0,
+        "children": [
+          {
+            "key": "knowledge_marked",
+            "label": "Marked",
+            "type": "boolean",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "knowledge", "data_fields": ["marked"] },
+            "default_value": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "combat",
+    "label": "Combat",
+    "icon": "shield",
+    "order": 3,
+    "layout": "grid",
+    "columns": 3,
+    "fields": [
+      {
+        "key": "evasion",
+        "label": "Evasion",
+        "type": "number",
+        "order": 1,
+        "storage": { "target": "data", "path": "evasion" },
+        "width": "third"
+      },
+      {
+        "key": "proficiency",
+        "label": "Proficiency",
+        "type": "number",
+        "order": 2,
+        "storage": { "target": "data", "path": "proficiency" },
+        "width": "third",
+        "min": 1,
+        "max": 6,
+        "default_value": 1
+      },
+      {
+        "key": "armor_slots",
+        "label": "Armor Slots",
+        "type": "armor_slots",
+        "order": 3,
+        "storage": { "target": "data", "path": "armor_slots" },
+        "width": "third"
+      },
+      {
+        "key": "thresholds",
+        "label": "Damage Thresholds",
+        "type": "damage_threshold",
+        "order": 4,
+        "storage": { "target": "data", "path": "thresholds" },
+        "width": "full"
+      },
+      {
+        "key": "hp_current",
+        "label": "Current HP",
+        "type": "number",
+        "order": 5,
+        "storage": { "target": "core", "column": "hp_current" },
+        "width": "half",
+        "min": 0
+      },
+      {
+        "key": "hp_max",
+        "label": "Max HP",
+        "type": "number",
+        "order": 6,
+        "storage": { "target": "core", "column": "hp_max" },
+        "width": "half",
+        "min": 0
+      }
+    ]
+  },
+  {
+    "key": "resources",
+    "label": "Resources",
+    "icon": "sparkles",
+    "order": 4,
+    "layout": "grid",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "hope",
+        "label": "Hope",
+        "type": "resource_bar",
+        "order": 1,
+        "storage": { "target": "resource", "resource_key": "hope" },
+        "width": "half"
+      },
+      {
+        "key": "stress",
+        "label": "Stress",
+        "type": "resource_bar",
+        "order": 2,
+        "storage": { "target": "resource", "resource_key": "stress" },
+        "width": "half"
+      }
+    ]
+  },
+  {
+    "key": "experiences",
+    "label": "Experiences",
+    "icon": "book-open",
+    "order": 5,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "experiences",
+        "label": "Experiences",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "stat_group", "prefix": "exp_", "allow_custom": true },
+        "help_text": "Narrative skills that grant +2 when applicable",
+        "width": "full"
+      }
+    ]
+  },
+  {
+    "key": "weapons",
+    "label": "Weapons",
+    "icon": "swords",
+    "order": 6,
+    "layout": "table",
+    "fields": [
+      {
+        "key": "weapons",
+        "label": "Weapons",
+        "type": "table",
+        "order": 1,
+        "storage": {
+          "target": "items",
+          "item_type": "weapon",
+          "columns": [
+            { "source_field": "name", "label": "Name", "type": "text" },
+            { "source_field": "data.trait", "label": "Trait", "type": "select" },
+            { "source_field": "data.damage_die", "label": "Damage Die", "type": "text" },
+            { "source_field": "data.range", "label": "Range", "type": "text" },
+            { "source_field": "data.tags", "label": "Tags", "type": "tag_list" }
+          ]
+        },
+        "width": "full",
+        "options": [
+          { "value": "Agility", "label": "Agility" },
+          { "value": "Strength", "label": "Strength" },
+          { "value": "Finesse", "label": "Finesse" },
+          { "value": "Instinct", "label": "Instinct" },
+          { "value": "Presence", "label": "Presence" },
+          { "value": "Knowledge", "label": "Knowledge" }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "domain_cards",
+    "label": "Domain Cards",
+    "icon": "layers",
+    "order": 7,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "domain_cards",
+        "label": "Domain Cards",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "abilities", "ability_type": "domain_card" },
+        "width": "full"
+      }
+    ]
+  },
+  {
+    "key": "features",
+    "label": "Features",
+    "icon": "star",
+    "order": 8,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "class_features",
+        "label": "Class Features",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "abilities", "ability_type": "class_feature" },
+        "width": "full"
+      },
+      {
+        "key": "subclass_features",
+        "label": "Subclass Features",
+        "type": "list",
+        "order": 2,
+        "storage": { "target": "abilities", "ability_type": "subclass_feature" },
+        "width": "full"
+      },
+      {
+        "key": "ancestry_features",
+        "label": "Ancestry Features",
+        "type": "list",
+        "order": 3,
+        "storage": { "target": "abilities", "ability_type": "ancestry_feature" },
+        "width": "full"
+      },
+      {
+        "key": "community_features",
+        "label": "Community Features",
+        "type": "list",
+        "order": 4,
+        "storage": { "target": "abilities", "ability_type": "community_feature" },
+        "width": "full"
+      }
+    ]
+  },
+  {
+    "key": "equipment",
+    "label": "Equipment",
+    "icon": "backpack",
+    "order": 9,
+    "layout": "columns",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "inventory",
+        "label": "Inventory",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "items" },
+        "width": "half"
+      },
+      {
+        "key": "currency",
+        "label": "Currency",
+        "type": "currency",
+        "order": 2,
+        "storage": { "target": "data", "path": "currency" },
+        "width": "half"
+      }
+    ]
+  },
+  {
+    "key": "connections",
+    "label": "Connections",
+    "icon": "users",
+    "order": 10,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "connections",
+        "label": "Connections",
+        "type": "textarea",
+        "order": 1,
+        "storage": { "target": "note", "note_key": "connections" },
+        "width": "full"
+      }
+    ]
+  },
+  {
+    "key": "backstory",
+    "label": "Backstory",
+    "icon": "scroll-text",
+    "order": 11,
+    "layout": "freeform",
+    "fields": [
+      {
+        "key": "backstory",
+        "label": "Backstory",
+        "type": "richtext",
+        "order": 1,
+        "storage": { "target": "note", "note_key": "backstory" },
+        "width": "full"
+      }
+    ]
+  },
+  {
+    "key": "conditions",
+    "label": "Conditions",
+    "icon": "alert-triangle",
+    "order": 12,
+    "layout": "table",
+    "fields": [
+      {
+        "key": "conditions",
+        "label": "Conditions",
+        "type": "table",
+        "order": 1,
+        "storage": { "target": "conditions", "show_severity": false },
+        "width": "full"
+      }
+    ]
+  }
+]

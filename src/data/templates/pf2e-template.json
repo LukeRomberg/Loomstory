@@ -1,0 +1,771 @@
+[
+  {
+    "key": "identity",
+    "label": "Identity",
+    "icon": "user",
+    "order": 1,
+    "layout": "grid",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "ancestry",
+        "label": "Ancestry",
+        "type": "text",
+        "order": 1,
+        "storage": { "target": "data", "path": "ancestry" },
+        "placeholder": "e.g. Elf, Dwarf, Human"
+      },
+      {
+        "key": "heritage",
+        "label": "Heritage",
+        "type": "text",
+        "order": 2,
+        "storage": { "target": "data", "path": "heritage" },
+        "placeholder": "e.g. Ancient Elf, Cavern Dwarf"
+      },
+      {
+        "key": "background",
+        "label": "Background",
+        "type": "text",
+        "order": 3,
+        "storage": { "target": "data", "path": "background" },
+        "placeholder": "e.g. Scholar, Gladiator"
+      },
+      {
+        "key": "deity",
+        "label": "Deity",
+        "type": "text",
+        "order": 4,
+        "storage": { "target": "data", "path": "deity" },
+        "placeholder": "e.g. Sarenrae, Cayden Cailean"
+      },
+      {
+        "key": "alignment",
+        "label": "Alignment",
+        "type": "select",
+        "order": 5,
+        "storage": { "target": "data", "path": "alignment" },
+        "options": [
+          { "value": "LG", "label": "Lawful Good" },
+          { "value": "NG", "label": "Neutral Good" },
+          { "value": "CG", "label": "Chaotic Good" },
+          { "value": "LN", "label": "Lawful Neutral" },
+          { "value": "N", "label": "Neutral" },
+          { "value": "CN", "label": "Chaotic Neutral" },
+          { "value": "LE", "label": "Lawful Evil" },
+          { "value": "NE", "label": "Neutral Evil" },
+          { "value": "CE", "label": "Chaotic Evil" }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "ability_scores",
+    "label": "Ability Scores",
+    "icon": "dumbbell",
+    "order": 2,
+    "layout": "grid",
+    "columns": 6,
+    "fields": [
+      {
+        "key": "str",
+        "label": "Strength",
+        "type": "stat_block",
+        "order": 1,
+        "storage": { "target": "stat", "stat_key": "str", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "str_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "str", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((value - 10) / 2)",
+              "depends_on": ["str"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      },
+      {
+        "key": "dex",
+        "label": "Dexterity",
+        "type": "stat_block",
+        "order": 2,
+        "storage": { "target": "stat", "stat_key": "dex", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "dex_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "dex", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((value - 10) / 2)",
+              "depends_on": ["dex"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      },
+      {
+        "key": "con",
+        "label": "Constitution",
+        "type": "stat_block",
+        "order": 3,
+        "storage": { "target": "stat", "stat_key": "con", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "con_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "con", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((value - 10) / 2)",
+              "depends_on": ["con"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      },
+      {
+        "key": "int",
+        "label": "Intelligence",
+        "type": "stat_block",
+        "order": 4,
+        "storage": { "target": "stat", "stat_key": "int", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "int_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "int", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((value - 10) / 2)",
+              "depends_on": ["int"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      },
+      {
+        "key": "wis",
+        "label": "Wisdom",
+        "type": "stat_block",
+        "order": 5,
+        "storage": { "target": "stat", "stat_key": "wis", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "wis_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "wis", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((value - 10) / 2)",
+              "depends_on": ["wis"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      },
+      {
+        "key": "cha",
+        "label": "Charisma",
+        "type": "stat_block",
+        "order": 6,
+        "storage": { "target": "stat", "stat_key": "cha", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "cha_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "cha", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((value - 10) / 2)",
+              "depends_on": ["cha"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "combat",
+    "label": "Combat",
+    "icon": "swords",
+    "order": 3,
+    "layout": "grid",
+    "columns": 3,
+    "fields": [
+      {
+        "key": "ac",
+        "label": "Armor Class",
+        "type": "number",
+        "order": 1,
+        "storage": { "target": "data", "path": "ac" }
+      },
+      {
+        "key": "class_dc",
+        "label": "Class DC",
+        "type": "number",
+        "order": 2,
+        "storage": { "target": "data", "path": "class_dc" }
+      },
+      {
+        "key": "speed",
+        "label": "Speed",
+        "type": "number",
+        "order": 3,
+        "storage": { "target": "data", "path": "speed" },
+        "default_value": 25
+      },
+      {
+        "key": "hp_current",
+        "label": "Current HP",
+        "type": "number",
+        "order": 4,
+        "storage": { "target": "core", "column": "hp_current" }
+      },
+      {
+        "key": "hp_max",
+        "label": "Max HP",
+        "type": "number",
+        "order": 5,
+        "storage": { "target": "core", "column": "hp_max" }
+      },
+      {
+        "key": "hp_temp",
+        "label": "Temporary HP",
+        "type": "number",
+        "order": 6,
+        "storage": { "target": "data", "path": "hp_temp" },
+        "default_value": 0
+      },
+      {
+        "key": "dying",
+        "label": "Dying",
+        "type": "number",
+        "order": 7,
+        "storage": { "target": "data", "path": "dying" },
+        "min": 0,
+        "max": 4,
+        "default_value": 0
+      },
+      {
+        "key": "wounded",
+        "label": "Wounded",
+        "type": "number",
+        "order": 8,
+        "storage": { "target": "data", "path": "wounded" },
+        "min": 0,
+        "default_value": 0
+      },
+      {
+        "key": "doomed",
+        "label": "Doomed",
+        "type": "number",
+        "order": 9,
+        "storage": { "target": "data", "path": "doomed" },
+        "min": 0,
+        "default_value": 0
+      },
+      {
+        "key": "prof_armor_unarmored",
+        "label": "Unarmored",
+        "type": "rank",
+        "order": 10,
+        "storage": { "target": "stat", "stat_key": "prof_armor_unarmored", "data_fields": ["rank"] },
+        "group": "armor_proficiency"
+      },
+      {
+        "key": "prof_armor_light",
+        "label": "Light Armor",
+        "type": "rank",
+        "order": 11,
+        "storage": { "target": "stat", "stat_key": "prof_armor_light", "data_fields": ["rank"] },
+        "group": "armor_proficiency"
+      },
+      {
+        "key": "prof_armor_medium",
+        "label": "Medium Armor",
+        "type": "rank",
+        "order": 12,
+        "storage": { "target": "stat", "stat_key": "prof_armor_medium", "data_fields": ["rank"] },
+        "group": "armor_proficiency"
+      },
+      {
+        "key": "prof_armor_heavy",
+        "label": "Heavy Armor",
+        "type": "rank",
+        "order": 13,
+        "storage": { "target": "stat", "stat_key": "prof_armor_heavy", "data_fields": ["rank"] },
+        "group": "armor_proficiency"
+      },
+      {
+        "key": "prof_weapon_simple",
+        "label": "Simple Weapons",
+        "type": "rank",
+        "order": 14,
+        "storage": { "target": "stat", "stat_key": "prof_weapon_simple", "data_fields": ["rank"] },
+        "group": "weapon_proficiency"
+      },
+      {
+        "key": "prof_weapon_martial",
+        "label": "Martial Weapons",
+        "type": "rank",
+        "order": 15,
+        "storage": { "target": "stat", "stat_key": "prof_weapon_martial", "data_fields": ["rank"] },
+        "group": "weapon_proficiency"
+      },
+      {
+        "key": "prof_weapon_advanced",
+        "label": "Advanced Weapons",
+        "type": "rank",
+        "order": 16,
+        "storage": { "target": "stat", "stat_key": "prof_weapon_advanced", "data_fields": ["rank"] },
+        "group": "weapon_proficiency"
+      },
+      {
+        "key": "prof_weapon_unarmed",
+        "label": "Unarmed Attacks",
+        "type": "rank",
+        "order": 17,
+        "storage": { "target": "stat", "stat_key": "prof_weapon_unarmed", "data_fields": ["rank"] },
+        "group": "weapon_proficiency"
+      }
+    ]
+  },
+  {
+    "key": "perception",
+    "label": "Perception",
+    "icon": "eye",
+    "order": 4,
+    "layout": "grid",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "perception",
+        "label": "Perception",
+        "type": "number",
+        "order": 1,
+        "storage": { "target": "stat", "stat_key": "perception", "data_fields": ["modifier", "rank"] }
+      }
+    ]
+  },
+  {
+    "key": "saving_throws",
+    "label": "Saving Throws",
+    "icon": "shield",
+    "order": 5,
+    "layout": "table",
+    "fields": [
+      {
+        "key": "saves",
+        "label": "Saving Throws",
+        "type": "table",
+        "order": 1,
+        "storage": {
+          "target": "stat_group",
+          "prefix": "save_",
+          "fixed_keys": ["save_fort", "save_ref", "save_will"]
+        },
+        "children": [
+          {
+            "key": "save_fort",
+            "label": "Fortitude",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "save_fort", "data_fields": ["modifier", "rank"] }
+          },
+          {
+            "key": "save_ref",
+            "label": "Reflex",
+            "type": "number",
+            "order": 2,
+            "storage": { "target": "stat", "stat_key": "save_ref", "data_fields": ["modifier", "rank"] }
+          },
+          {
+            "key": "save_will",
+            "label": "Will",
+            "type": "number",
+            "order": 3,
+            "storage": { "target": "stat", "stat_key": "save_will", "data_fields": ["modifier", "rank"] }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "skills",
+    "label": "Skills",
+    "icon": "book-open",
+    "order": 6,
+    "layout": "table",
+    "fields": [
+      {
+        "key": "standard_skills",
+        "label": "Skills",
+        "type": "table",
+        "order": 1,
+        "storage": {
+          "target": "stat_group",
+          "prefix": "skill_",
+          "fixed_keys": [
+            "skill_acrobatics",
+            "skill_arcana",
+            "skill_athletics",
+            "skill_crafting",
+            "skill_deception",
+            "skill_diplomacy",
+            "skill_intimidation",
+            "skill_medicine",
+            "skill_nature",
+            "skill_occultism",
+            "skill_performance",
+            "skill_religion",
+            "skill_society",
+            "skill_stealth",
+            "skill_survival",
+            "skill_thievery"
+          ]
+        },
+        "children": [
+          {
+            "key": "skill_acrobatics",
+            "label": "Acrobatics",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "skill_acrobatics", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_arcana",
+            "label": "Arcana",
+            "type": "number",
+            "order": 2,
+            "storage": { "target": "stat", "stat_key": "skill_arcana", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_athletics",
+            "label": "Athletics",
+            "type": "number",
+            "order": 3,
+            "storage": { "target": "stat", "stat_key": "skill_athletics", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_crafting",
+            "label": "Crafting",
+            "type": "number",
+            "order": 4,
+            "storage": { "target": "stat", "stat_key": "skill_crafting", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_deception",
+            "label": "Deception",
+            "type": "number",
+            "order": 5,
+            "storage": { "target": "stat", "stat_key": "skill_deception", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_diplomacy",
+            "label": "Diplomacy",
+            "type": "number",
+            "order": 6,
+            "storage": { "target": "stat", "stat_key": "skill_diplomacy", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_intimidation",
+            "label": "Intimidation",
+            "type": "number",
+            "order": 7,
+            "storage": { "target": "stat", "stat_key": "skill_intimidation", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_medicine",
+            "label": "Medicine",
+            "type": "number",
+            "order": 8,
+            "storage": { "target": "stat", "stat_key": "skill_medicine", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_nature",
+            "label": "Nature",
+            "type": "number",
+            "order": 9,
+            "storage": { "target": "stat", "stat_key": "skill_nature", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_occultism",
+            "label": "Occultism",
+            "type": "number",
+            "order": 10,
+            "storage": { "target": "stat", "stat_key": "skill_occultism", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_performance",
+            "label": "Performance",
+            "type": "number",
+            "order": 11,
+            "storage": { "target": "stat", "stat_key": "skill_performance", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_religion",
+            "label": "Religion",
+            "type": "number",
+            "order": 12,
+            "storage": { "target": "stat", "stat_key": "skill_religion", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_society",
+            "label": "Society",
+            "type": "number",
+            "order": 13,
+            "storage": { "target": "stat", "stat_key": "skill_society", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_stealth",
+            "label": "Stealth",
+            "type": "number",
+            "order": 14,
+            "storage": { "target": "stat", "stat_key": "skill_stealth", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_survival",
+            "label": "Survival",
+            "type": "number",
+            "order": 15,
+            "storage": { "target": "stat", "stat_key": "skill_survival", "data_fields": ["modifier", "rank", "ability"] }
+          },
+          {
+            "key": "skill_thievery",
+            "label": "Thievery",
+            "type": "number",
+            "order": 16,
+            "storage": { "target": "stat", "stat_key": "skill_thievery", "data_fields": ["modifier", "rank", "ability"] }
+          }
+        ]
+      },
+      {
+        "key": "lore_skills",
+        "label": "Lore Skills",
+        "type": "table",
+        "order": 2,
+        "storage": {
+          "target": "stat_group",
+          "prefix": "lore_",
+          "allow_custom": true
+        }
+      }
+    ]
+  },
+  {
+    "key": "feats",
+    "label": "Feats",
+    "icon": "star",
+    "order": 7,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "ancestry_feats",
+        "label": "Ancestry Feats",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "abilities", "ability_type": "ancestry_feat" }
+      },
+      {
+        "key": "class_feats",
+        "label": "Class Feats",
+        "type": "list",
+        "order": 2,
+        "storage": { "target": "abilities", "ability_type": "class_feat" }
+      },
+      {
+        "key": "skill_feats",
+        "label": "Skill Feats",
+        "type": "list",
+        "order": 3,
+        "storage": { "target": "abilities", "ability_type": "skill_feat" }
+      },
+      {
+        "key": "general_feats",
+        "label": "General Feats",
+        "type": "list",
+        "order": 4,
+        "storage": { "target": "abilities", "ability_type": "general_feat" }
+      }
+    ]
+  },
+  {
+    "key": "spellcasting",
+    "label": "Spellcasting",
+    "icon": "wand-sparkles",
+    "order": 8,
+    "layout": "columns",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "tradition",
+        "label": "Tradition",
+        "type": "select",
+        "order": 1,
+        "storage": { "target": "data", "path": "spellcasting.tradition" },
+        "options": [
+          { "value": "Arcane", "label": "Arcane" },
+          { "value": "Divine", "label": "Divine" },
+          { "value": "Occult", "label": "Occult" },
+          { "value": "Primal", "label": "Primal" }
+        ]
+      },
+      {
+        "key": "spell_dc",
+        "label": "Spell DC",
+        "type": "number",
+        "order": 2,
+        "storage": { "target": "data", "path": "spellcasting.save_dc" }
+      },
+      {
+        "key": "spell_attack",
+        "label": "Spell Attack Bonus",
+        "type": "number",
+        "order": 3,
+        "storage": { "target": "data", "path": "spellcasting.attack_bonus" }
+      },
+      {
+        "key": "prof_spell_attack",
+        "label": "Spell Attack Proficiency",
+        "type": "rank",
+        "order": 4,
+        "storage": { "target": "stat", "stat_key": "prof_spell_attack", "data_fields": ["rank"] }
+      },
+      {
+        "key": "prof_spell_dc",
+        "label": "Spell DC Proficiency",
+        "type": "rank",
+        "order": 5,
+        "storage": { "target": "stat", "stat_key": "prof_spell_dc", "data_fields": ["rank"] }
+      },
+      {
+        "key": "focus_points",
+        "label": "Focus Points",
+        "type": "resource_bar",
+        "order": 6,
+        "storage": { "target": "resource", "resource_key": "focus_points" }
+      },
+      {
+        "key": "spell_slots",
+        "label": "Spell Slots",
+        "type": "slot_tracker",
+        "order": 7,
+        "storage": {
+          "target": "resource_group",
+          "prefix": "spell_slot_",
+          "fixed_keys": [
+            "spell_slot_1",
+            "spell_slot_2",
+            "spell_slot_3",
+            "spell_slot_4",
+            "spell_slot_5",
+            "spell_slot_6",
+            "spell_slot_7",
+            "spell_slot_8",
+            "spell_slot_9",
+            "spell_slot_10"
+          ]
+        }
+      },
+      {
+        "key": "cantrips",
+        "label": "Cantrips",
+        "type": "list",
+        "order": 8,
+        "storage": { "target": "abilities", "ability_type": "cantrip" }
+      },
+      {
+        "key": "spells",
+        "label": "Spells",
+        "type": "list",
+        "order": 9,
+        "storage": { "target": "abilities", "ability_type": "spell" }
+      }
+    ]
+  },
+  {
+    "key": "equipment",
+    "label": "Equipment",
+    "icon": "backpack",
+    "order": 9,
+    "layout": "columns",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "inventory",
+        "label": "Inventory",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "items", "weight_label": "Bulk" }
+      },
+      {
+        "key": "currency",
+        "label": "Currency",
+        "type": "currency",
+        "order": 2,
+        "storage": { "target": "data", "path": "currency" }
+      }
+    ]
+  },
+  {
+    "key": "notes",
+    "label": "Notes",
+    "icon": "scroll-text",
+    "order": 10,
+    "layout": "freeform",
+    "fields": [
+      {
+        "key": "backstory",
+        "label": "Backstory",
+        "type": "richtext",
+        "order": 1,
+        "storage": { "target": "note", "note_key": "backstory" }
+      }
+    ]
+  },
+  {
+    "key": "conditions",
+    "label": "Conditions",
+    "icon": "alert-triangle",
+    "order": 11,
+    "layout": "table",
+    "fields": [
+      {
+        "key": "conditions",
+        "label": "Active Conditions",
+        "type": "table",
+        "order": 1,
+        "storage": { "target": "conditions", "show_severity": true }
+      }
+    ]
+  }
+]

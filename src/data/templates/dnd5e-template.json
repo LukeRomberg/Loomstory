@@ -1,0 +1,997 @@
+[
+  {
+    "key": "identity",
+    "label": "Identity",
+    "icon": "user",
+    "order": 1,
+    "layout": "grid",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "race",
+        "label": "Race",
+        "type": "text",
+        "order": 1,
+        "storage": { "target": "data", "path": "race" },
+        "placeholder": "e.g. Half-Elf"
+      },
+      {
+        "key": "background",
+        "label": "Background",
+        "type": "text",
+        "order": 2,
+        "storage": { "target": "data", "path": "background" },
+        "placeholder": "e.g. Acolyte"
+      },
+      {
+        "key": "alignment",
+        "label": "Alignment",
+        "type": "select",
+        "order": 3,
+        "storage": { "target": "data", "path": "alignment" },
+        "options": [
+          { "value": "lawful_good", "label": "Lawful Good" },
+          { "value": "neutral_good", "label": "Neutral Good" },
+          { "value": "chaotic_good", "label": "Chaotic Good" },
+          { "value": "lawful_neutral", "label": "Lawful Neutral" },
+          { "value": "true_neutral", "label": "True Neutral" },
+          { "value": "chaotic_neutral", "label": "Chaotic Neutral" },
+          { "value": "lawful_evil", "label": "Lawful Evil" },
+          { "value": "neutral_evil", "label": "Neutral Evil" },
+          { "value": "chaotic_evil", "label": "Chaotic Evil" }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "ability_scores",
+    "label": "Ability Scores",
+    "icon": "dumbbell",
+    "order": 2,
+    "layout": "grid",
+    "columns": 6,
+    "fields": [
+      {
+        "key": "str",
+        "label": "Strength",
+        "type": "stat_block",
+        "order": 1,
+        "storage": { "target": "stat", "stat_key": "str", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "str_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "str", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((str - 10) / 2)",
+              "depends_on": ["str"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      },
+      {
+        "key": "dex",
+        "label": "Dexterity",
+        "type": "stat_block",
+        "order": 2,
+        "storage": { "target": "stat", "stat_key": "dex", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "dex_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "dex", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((dex - 10) / 2)",
+              "depends_on": ["dex"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      },
+      {
+        "key": "con",
+        "label": "Constitution",
+        "type": "stat_block",
+        "order": 3,
+        "storage": { "target": "stat", "stat_key": "con", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "con_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "con", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((con - 10) / 2)",
+              "depends_on": ["con"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      },
+      {
+        "key": "int",
+        "label": "Intelligence",
+        "type": "stat_block",
+        "order": 4,
+        "storage": { "target": "stat", "stat_key": "int", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "int_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "int", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((int - 10) / 2)",
+              "depends_on": ["int"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      },
+      {
+        "key": "wis",
+        "label": "Wisdom",
+        "type": "stat_block",
+        "order": 5,
+        "storage": { "target": "stat", "stat_key": "wis", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "wis_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "wis", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((wis - 10) / 2)",
+              "depends_on": ["wis"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      },
+      {
+        "key": "cha",
+        "label": "Charisma",
+        "type": "stat_block",
+        "order": 6,
+        "storage": { "target": "stat", "stat_key": "cha", "data_fields": ["modifier"] },
+        "min": 1,
+        "max": 30,
+        "default_value": 10,
+        "children": [
+          {
+            "key": "cha_mod",
+            "label": "Modifier",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "cha", "data_fields": ["modifier"] },
+            "computed": {
+              "formula": "floor((cha - 10) / 2)",
+              "depends_on": ["cha"],
+              "display_prefix": "+"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "combat",
+    "label": "Combat",
+    "icon": "swords",
+    "order": 3,
+    "layout": "grid",
+    "columns": 4,
+    "fields": [
+      {
+        "key": "ac",
+        "label": "Armor Class",
+        "type": "number",
+        "order": 1,
+        "storage": { "target": "data", "path": "ac" },
+        "min": 0
+      },
+      {
+        "key": "initiative",
+        "label": "Initiative",
+        "type": "number",
+        "order": 2,
+        "storage": { "target": "data", "path": "initiative" },
+        "computed": {
+          "formula": "floor((dex - 10) / 2)",
+          "depends_on": ["dex"],
+          "display_prefix": "+"
+        }
+      },
+      {
+        "key": "speed",
+        "label": "Speed",
+        "type": "number",
+        "order": 3,
+        "storage": { "target": "data", "path": "speed" },
+        "default_value": 30,
+        "help_text": "Walking speed in feet"
+      },
+      {
+        "key": "inspiration",
+        "label": "Inspiration",
+        "type": "boolean",
+        "order": 4,
+        "storage": { "target": "data", "path": "inspiration" },
+        "default_value": false
+      },
+      {
+        "key": "proficiency_bonus",
+        "label": "Proficiency Bonus",
+        "type": "number",
+        "order": 5,
+        "storage": { "target": "data", "path": "proficiency_bonus" },
+        "computed": {
+          "formula": "floor((level - 1) / 4) + 2",
+          "depends_on": ["level"],
+          "display_prefix": "+"
+        }
+      },
+      {
+        "key": "hp_current",
+        "label": "Current HP",
+        "type": "number",
+        "order": 6,
+        "storage": { "target": "core", "column": "hp_current" },
+        "min": 0
+      },
+      {
+        "key": "hp_max",
+        "label": "Max HP",
+        "type": "number",
+        "order": 7,
+        "storage": { "target": "core", "column": "hp_max" },
+        "min": 0
+      },
+      {
+        "key": "hp_temp",
+        "label": "Temp HP",
+        "type": "number",
+        "order": 8,
+        "storage": { "target": "data", "path": "hp_temp" },
+        "default_value": 0,
+        "min": 0
+      },
+      {
+        "key": "hit_dice",
+        "label": "Hit Dice",
+        "type": "resource_bar",
+        "order": 9,
+        "storage": { "target": "resource", "resource_key": "hit_dice" }
+      },
+      {
+        "key": "death_saves_success",
+        "label": "Death Save Successes",
+        "type": "slot_tracker",
+        "order": 10,
+        "storage": { "target": "resource", "resource_key": "death_saves_success" },
+        "max": 3
+      },
+      {
+        "key": "death_saves_fail",
+        "label": "Death Save Failures",
+        "type": "slot_tracker",
+        "order": 11,
+        "storage": { "target": "resource", "resource_key": "death_saves_fail" },
+        "max": 3
+      }
+    ]
+  },
+  {
+    "key": "saving_throws",
+    "label": "Saving Throws",
+    "icon": "shield",
+    "order": 4,
+    "layout": "table",
+    "fields": [
+      {
+        "key": "saving_throws_group",
+        "label": "Saving Throws",
+        "type": "stat_block",
+        "order": 1,
+        "storage": {
+          "target": "stat_group",
+          "prefix": "save_",
+          "fixed_keys": [
+            "save_str",
+            "save_dex",
+            "save_con",
+            "save_int",
+            "save_wis",
+            "save_cha"
+          ],
+          "allow_custom": false,
+          "template": {
+            "key": "save_template",
+            "label": "",
+            "type": "stat_block",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "", "data_fields": ["modifier", "proficient"] }
+          }
+        },
+        "children": [
+          {
+            "key": "save_str",
+            "label": "Strength",
+            "type": "stat_block",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "save_str", "data_fields": ["modifier", "proficient"] }
+          },
+          {
+            "key": "save_dex",
+            "label": "Dexterity",
+            "type": "stat_block",
+            "order": 2,
+            "storage": { "target": "stat", "stat_key": "save_dex", "data_fields": ["modifier", "proficient"] }
+          },
+          {
+            "key": "save_con",
+            "label": "Constitution",
+            "type": "stat_block",
+            "order": 3,
+            "storage": { "target": "stat", "stat_key": "save_con", "data_fields": ["modifier", "proficient"] }
+          },
+          {
+            "key": "save_int",
+            "label": "Intelligence",
+            "type": "stat_block",
+            "order": 4,
+            "storage": { "target": "stat", "stat_key": "save_int", "data_fields": ["modifier", "proficient"] }
+          },
+          {
+            "key": "save_wis",
+            "label": "Wisdom",
+            "type": "stat_block",
+            "order": 5,
+            "storage": { "target": "stat", "stat_key": "save_wis", "data_fields": ["modifier", "proficient"] }
+          },
+          {
+            "key": "save_cha",
+            "label": "Charisma",
+            "type": "stat_block",
+            "order": 6,
+            "storage": { "target": "stat", "stat_key": "save_cha", "data_fields": ["modifier", "proficient"] }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "skills",
+    "label": "Skills",
+    "icon": "brain",
+    "order": 5,
+    "layout": "table",
+    "fields": [
+      {
+        "key": "skills_group",
+        "label": "Skills",
+        "type": "stat_block",
+        "order": 1,
+        "storage": {
+          "target": "stat_group",
+          "prefix": "skill_",
+          "fixed_keys": [
+            "skill_acrobatics",
+            "skill_animal_handling",
+            "skill_arcana",
+            "skill_athletics",
+            "skill_deception",
+            "skill_history",
+            "skill_insight",
+            "skill_intimidation",
+            "skill_investigation",
+            "skill_medicine",
+            "skill_nature",
+            "skill_perception",
+            "skill_performance",
+            "skill_persuasion",
+            "skill_religion",
+            "skill_sleight_of_hand",
+            "skill_stealth",
+            "skill_survival"
+          ],
+          "allow_custom": false,
+          "template": {
+            "key": "skill_template",
+            "label": "",
+            "type": "stat_block",
+            "order": 1,
+            "storage": { "target": "stat", "stat_key": "", "data_fields": ["modifier", "proficient", "expertise", "ability"] }
+          }
+        },
+        "children": [
+          {
+            "key": "skill_acrobatics",
+            "label": "Acrobatics",
+            "type": "stat_block",
+            "order": 1,
+            "group": "dex",
+            "storage": { "target": "stat", "stat_key": "skill_acrobatics", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "dex" }
+          },
+          {
+            "key": "skill_animal_handling",
+            "label": "Animal Handling",
+            "type": "stat_block",
+            "order": 2,
+            "group": "wis",
+            "storage": { "target": "stat", "stat_key": "skill_animal_handling", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "wis" }
+          },
+          {
+            "key": "skill_arcana",
+            "label": "Arcana",
+            "type": "stat_block",
+            "order": 3,
+            "group": "int",
+            "storage": { "target": "stat", "stat_key": "skill_arcana", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "int" }
+          },
+          {
+            "key": "skill_athletics",
+            "label": "Athletics",
+            "type": "stat_block",
+            "order": 4,
+            "group": "str",
+            "storage": { "target": "stat", "stat_key": "skill_athletics", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "str" }
+          },
+          {
+            "key": "skill_deception",
+            "label": "Deception",
+            "type": "stat_block",
+            "order": 5,
+            "group": "cha",
+            "storage": { "target": "stat", "stat_key": "skill_deception", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "cha" }
+          },
+          {
+            "key": "skill_history",
+            "label": "History",
+            "type": "stat_block",
+            "order": 6,
+            "group": "int",
+            "storage": { "target": "stat", "stat_key": "skill_history", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "int" }
+          },
+          {
+            "key": "skill_insight",
+            "label": "Insight",
+            "type": "stat_block",
+            "order": 7,
+            "group": "wis",
+            "storage": { "target": "stat", "stat_key": "skill_insight", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "wis" }
+          },
+          {
+            "key": "skill_intimidation",
+            "label": "Intimidation",
+            "type": "stat_block",
+            "order": 8,
+            "group": "cha",
+            "storage": { "target": "stat", "stat_key": "skill_intimidation", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "cha" }
+          },
+          {
+            "key": "skill_investigation",
+            "label": "Investigation",
+            "type": "stat_block",
+            "order": 9,
+            "group": "int",
+            "storage": { "target": "stat", "stat_key": "skill_investigation", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "int" }
+          },
+          {
+            "key": "skill_medicine",
+            "label": "Medicine",
+            "type": "stat_block",
+            "order": 10,
+            "group": "wis",
+            "storage": { "target": "stat", "stat_key": "skill_medicine", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "wis" }
+          },
+          {
+            "key": "skill_nature",
+            "label": "Nature",
+            "type": "stat_block",
+            "order": 11,
+            "group": "int",
+            "storage": { "target": "stat", "stat_key": "skill_nature", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "int" }
+          },
+          {
+            "key": "skill_perception",
+            "label": "Perception",
+            "type": "stat_block",
+            "order": 12,
+            "group": "wis",
+            "storage": { "target": "stat", "stat_key": "skill_perception", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "wis" }
+          },
+          {
+            "key": "skill_performance",
+            "label": "Performance",
+            "type": "stat_block",
+            "order": 13,
+            "group": "cha",
+            "storage": { "target": "stat", "stat_key": "skill_performance", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "cha" }
+          },
+          {
+            "key": "skill_persuasion",
+            "label": "Persuasion",
+            "type": "stat_block",
+            "order": 14,
+            "group": "cha",
+            "storage": { "target": "stat", "stat_key": "skill_persuasion", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "cha" }
+          },
+          {
+            "key": "skill_religion",
+            "label": "Religion",
+            "type": "stat_block",
+            "order": 15,
+            "group": "int",
+            "storage": { "target": "stat", "stat_key": "skill_religion", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "int" }
+          },
+          {
+            "key": "skill_sleight_of_hand",
+            "label": "Sleight of Hand",
+            "type": "stat_block",
+            "order": 16,
+            "group": "dex",
+            "storage": { "target": "stat", "stat_key": "skill_sleight_of_hand", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "dex" }
+          },
+          {
+            "key": "skill_stealth",
+            "label": "Stealth",
+            "type": "stat_block",
+            "order": 17,
+            "group": "dex",
+            "storage": { "target": "stat", "stat_key": "skill_stealth", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "dex" }
+          },
+          {
+            "key": "skill_survival",
+            "label": "Survival",
+            "type": "stat_block",
+            "order": 18,
+            "group": "wis",
+            "storage": { "target": "stat", "stat_key": "skill_survival", "data_fields": ["modifier", "proficient", "expertise", "ability"] },
+            "default_value": { "ability": "wis" }
+          }
+        ]
+      },
+      {
+        "key": "passive_perception",
+        "label": "Passive Perception",
+        "type": "number",
+        "order": 2,
+        "storage": { "target": "data", "path": "passive_perception" },
+        "computed": {
+          "formula": "10 + skill_perception_modifier",
+          "depends_on": ["skill_perception"]
+        }
+      }
+    ]
+  },
+  {
+    "key": "attacks",
+    "label": "Attacks",
+    "icon": "axe",
+    "order": 6,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "attacks",
+        "label": "Attacks",
+        "type": "list",
+        "order": 1,
+        "storage": { "target": "data", "path": "attacks" },
+        "children": [
+          {
+            "key": "name",
+            "label": "Name",
+            "type": "text",
+            "order": 1,
+            "storage": { "target": "data", "path": "attacks[].name" },
+            "placeholder": "e.g. Longsword"
+          },
+          {
+            "key": "atk_bonus",
+            "label": "Atk Bonus",
+            "type": "number",
+            "order": 2,
+            "storage": { "target": "data", "path": "attacks[].atk_bonus" }
+          },
+          {
+            "key": "damage",
+            "label": "Damage",
+            "type": "text",
+            "order": 3,
+            "storage": { "target": "data", "path": "attacks[].damage" },
+            "placeholder": "e.g. 1d8+3"
+          },
+          {
+            "key": "damage_type",
+            "label": "Damage Type",
+            "type": "text",
+            "order": 4,
+            "storage": { "target": "data", "path": "attacks[].damage_type" },
+            "placeholder": "e.g. Slashing"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "spellcasting",
+    "label": "Spellcasting",
+    "icon": "sparkles",
+    "order": 7,
+    "layout": "columns",
+    "columns": 2,
+    "collapsed_default": true,
+    "fields": [
+      {
+        "key": "spellcasting_ability",
+        "label": "Spellcasting Ability",
+        "type": "select",
+        "order": 1,
+        "storage": { "target": "data", "path": "spellcasting.ability" },
+        "options": [
+          { "value": "int", "label": "Intelligence" },
+          { "value": "wis", "label": "Wisdom" },
+          { "value": "cha", "label": "Charisma" }
+        ]
+      },
+      {
+        "key": "spell_save_dc",
+        "label": "Spell Save DC",
+        "type": "number",
+        "order": 2,
+        "storage": { "target": "data", "path": "spellcasting.save_dc" }
+      },
+      {
+        "key": "spell_attack_bonus",
+        "label": "Spell Attack Bonus",
+        "type": "number",
+        "order": 3,
+        "storage": { "target": "data", "path": "spellcasting.attack_bonus" }
+      },
+      {
+        "key": "cantrips",
+        "label": "Cantrips",
+        "type": "table",
+        "order": 4,
+        "storage": { "target": "abilities", "ability_type": "cantrip" }
+      },
+      {
+        "key": "spell_slots",
+        "label": "Spell Slots",
+        "type": "resource_bar",
+        "order": 5,
+        "storage": {
+          "target": "resource_group",
+          "prefix": "spell_slot_",
+          "fixed_keys": [
+            "spell_slot_1",
+            "spell_slot_2",
+            "spell_slot_3",
+            "spell_slot_4",
+            "spell_slot_5",
+            "spell_slot_6",
+            "spell_slot_7",
+            "spell_slot_8",
+            "spell_slot_9"
+          ]
+        }
+      },
+      {
+        "key": "spells",
+        "label": "Spells",
+        "type": "table",
+        "order": 6,
+        "storage": { "target": "abilities", "ability_type": "spell" }
+      }
+    ]
+  },
+  {
+    "key": "features",
+    "label": "Features & Traits",
+    "icon": "star",
+    "order": 8,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "class_features",
+        "label": "Class Features",
+        "type": "table",
+        "order": 1,
+        "storage": { "target": "abilities", "ability_type": "class_feature" }
+      },
+      {
+        "key": "racial_traits",
+        "label": "Racial Traits",
+        "type": "table",
+        "order": 2,
+        "storage": { "target": "abilities", "ability_type": "racial_trait" }
+      },
+      {
+        "key": "feats",
+        "label": "Feats",
+        "type": "table",
+        "order": 3,
+        "storage": { "target": "abilities", "ability_type": "feat" }
+      }
+    ]
+  },
+  {
+    "key": "equipment",
+    "label": "Equipment",
+    "icon": "backpack",
+    "order": 9,
+    "layout": "columns",
+    "columns": 2,
+    "fields": [
+      {
+        "key": "inventory",
+        "label": "Inventory",
+        "type": "table",
+        "order": 1,
+        "storage": { "target": "items", "weight_label": "Weight (lbs)" }
+      },
+      {
+        "key": "currency",
+        "label": "Currency",
+        "type": "currency",
+        "order": 2,
+        "storage": { "target": "data", "path": "currency" },
+        "children": [
+          {
+            "key": "cp",
+            "label": "CP",
+            "type": "number",
+            "order": 1,
+            "storage": { "target": "data", "path": "currency.cp" },
+            "default_value": 0,
+            "min": 0
+          },
+          {
+            "key": "sp",
+            "label": "SP",
+            "type": "number",
+            "order": 2,
+            "storage": { "target": "data", "path": "currency.sp" },
+            "default_value": 0,
+            "min": 0
+          },
+          {
+            "key": "ep",
+            "label": "EP",
+            "type": "number",
+            "order": 3,
+            "storage": { "target": "data", "path": "currency.ep" },
+            "default_value": 0,
+            "min": 0
+          },
+          {
+            "key": "gp",
+            "label": "GP",
+            "type": "number",
+            "order": 4,
+            "storage": { "target": "data", "path": "currency.gp" },
+            "default_value": 0,
+            "min": 0
+          },
+          {
+            "key": "pp",
+            "label": "PP",
+            "type": "number",
+            "order": 5,
+            "storage": { "target": "data", "path": "currency.pp" },
+            "default_value": 0,
+            "min": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "proficiencies",
+    "label": "Proficiencies & Languages",
+    "icon": "scroll-text",
+    "order": 10,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "armor_proficiencies",
+        "label": "Armor Proficiencies",
+        "type": "tag_list",
+        "order": 1,
+        "storage": { "target": "data", "path": "proficiencies.armor" },
+        "placeholder": "e.g. Light, Medium, Shields"
+      },
+      {
+        "key": "weapon_proficiencies",
+        "label": "Weapon Proficiencies",
+        "type": "tag_list",
+        "order": 2,
+        "storage": { "target": "data", "path": "proficiencies.weapons" },
+        "placeholder": "e.g. Simple, Martial"
+      },
+      {
+        "key": "tool_proficiencies",
+        "label": "Tool Proficiencies",
+        "type": "tag_list",
+        "order": 3,
+        "storage": { "target": "data", "path": "proficiencies.tools" },
+        "placeholder": "e.g. Thieves' Tools"
+      },
+      {
+        "key": "languages",
+        "label": "Languages",
+        "type": "tag_list",
+        "order": 4,
+        "storage": { "target": "data", "path": "languages" },
+        "placeholder": "e.g. Common, Elvish"
+      }
+    ]
+  },
+  {
+    "key": "personality",
+    "label": "Personality",
+    "icon": "heart",
+    "order": 11,
+    "layout": "list",
+    "fields": [
+      {
+        "key": "personality_traits",
+        "label": "Personality Traits",
+        "type": "textarea",
+        "order": 1,
+        "storage": { "target": "note", "note_key": "personality_traits" },
+        "placeholder": "Describe your character's personality traits..."
+      },
+      {
+        "key": "ideals",
+        "label": "Ideals",
+        "type": "textarea",
+        "order": 2,
+        "storage": { "target": "note", "note_key": "ideals" },
+        "placeholder": "What ideals drive your character?"
+      },
+      {
+        "key": "bonds",
+        "label": "Bonds",
+        "type": "textarea",
+        "order": 3,
+        "storage": { "target": "note", "note_key": "bonds" },
+        "placeholder": "What connections does your character have?"
+      },
+      {
+        "key": "flaws",
+        "label": "Flaws",
+        "type": "textarea",
+        "order": 4,
+        "storage": { "target": "note", "note_key": "flaws" },
+        "placeholder": "What are your character's flaws?"
+      }
+    ]
+  },
+  {
+    "key": "appearance",
+    "label": "Appearance",
+    "icon": "eye",
+    "order": 12,
+    "layout": "grid",
+    "columns": 3,
+    "fields": [
+      {
+        "key": "age",
+        "label": "Age",
+        "type": "text",
+        "order": 1,
+        "storage": { "target": "data", "path": "appearance.age" }
+      },
+      {
+        "key": "height",
+        "label": "Height",
+        "type": "text",
+        "order": 2,
+        "storage": { "target": "data", "path": "appearance.height" }
+      },
+      {
+        "key": "weight",
+        "label": "Weight",
+        "type": "text",
+        "order": 3,
+        "storage": { "target": "data", "path": "appearance.weight" }
+      },
+      {
+        "key": "eyes",
+        "label": "Eyes",
+        "type": "text",
+        "order": 4,
+        "storage": { "target": "data", "path": "appearance.eyes" }
+      },
+      {
+        "key": "skin",
+        "label": "Skin",
+        "type": "text",
+        "order": 5,
+        "storage": { "target": "data", "path": "appearance.skin" }
+      },
+      {
+        "key": "hair",
+        "label": "Hair",
+        "type": "text",
+        "order": 6,
+        "storage": { "target": "data", "path": "appearance.hair" }
+      }
+    ]
+  },
+  {
+    "key": "backstory",
+    "label": "Backstory",
+    "icon": "book-open",
+    "order": 13,
+    "layout": "freeform",
+    "fields": [
+      {
+        "key": "backstory",
+        "label": "Backstory",
+        "type": "richtext",
+        "order": 1,
+        "storage": { "target": "note", "note_key": "backstory" },
+        "width": "full"
+      }
+    ]
+  },
+  {
+    "key": "conditions",
+    "label": "Conditions",
+    "icon": "alert-triangle",
+    "order": 14,
+    "layout": "table",
+    "fields": [
+      {
+        "key": "conditions",
+        "label": "Active Conditions",
+        "type": "table",
+        "order": 1,
+        "storage": { "target": "conditions", "show_severity": false }
+      }
+    ]
+  }
+]
