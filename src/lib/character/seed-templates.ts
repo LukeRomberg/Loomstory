@@ -40,12 +40,27 @@ async function seedTemplates() {
       continue;
     }
 
-    const { error } = await supabase
+    // Check if a template row already exists for this system
+    const { data: existing } = await supabase
       .from("system_templates")
-      .upsert(
-        { system_id: system.id, sections, version: 1 },
-        { onConflict: "system_id" }
-      );
+      .select("id")
+      .eq("system_id", system.id)
+      .limit(1)
+      .single();
+
+    let error;
+    if (existing) {
+      // Update existing row
+      ({ error } = await supabase
+        .from("system_templates")
+        .update({ sections, version: 1 })
+        .eq("id", existing.id));
+    } else {
+      // Insert new row
+      ({ error } = await supabase
+        .from("system_templates")
+        .insert({ system_id: system.id, sections, version: 1 }));
+    }
 
     if (error) {
       console.error(`Failed to seed ${slug}:`, error);
