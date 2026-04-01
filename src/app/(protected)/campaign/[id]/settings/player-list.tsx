@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { IconButton } from "@/components/shared/icon-button";
 import { UserMinus, Users } from "lucide-react";
 
 interface Member {
@@ -106,15 +107,12 @@ export function PlayerList({
                 <Badge variant="secondary">{member.role}</Badge>
               </div>
               {member.role !== "gm" && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <IconButton
+                  icon={UserMinus}
+                  label="Remove"
+                  variant="destructive"
                   onClick={() => setRemoveTarget(member)}
-                  aria-label="Remove"
-                  className="text-destructive hover:text-destructive"
-                >
-                  <UserMinus className="size-4" />
-                </Button>
+                />
               )}
             </div>
           ))}

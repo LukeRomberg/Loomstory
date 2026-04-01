@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { SettingsModal } from "@/components/loomstory/settings-modal";
+import { IconButton } from "@/components/shared/icon-button";
 import { NpcModal } from "@/components/loomstory/npc-modal";
 import { LocationModal } from "@/components/loomstory/location-modal";
 import { FactionModal } from "@/components/loomstory/faction-modal";
@@ -185,13 +186,11 @@ export function CampaignDashboard({
           )}
         </div>
         {isGm && (
-          <Button
-            variant="ghost"
-            size="icon"
+          <IconButton
+            icon={Settings}
+            label="Campaign settings"
             onClick={() => setSettingsOpen(true)}
-          >
-            <Settings className="size-4" />
-          </Button>
+          />
         )}
       </div>
 

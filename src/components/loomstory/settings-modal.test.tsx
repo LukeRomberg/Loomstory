@@ -181,7 +181,7 @@ describe("SettingsModal", () => {
   it("renders pending invites", async () => {
     render(<SettingsModal {...defaultProps} />);
     await waitFor(() => {
-      expect(screen.getByText("player@example.com")).toBeInTheDocument();
+      expect(screen.getByText(/2 pending/i)).toBeInTheDocument();
     });
   });
 

@@ -6,22 +6,15 @@ import { mockInvite, mockInvites } from "@/test/mocks";
 
 // ─── Mocks ──────────────────────────────────────────────────
 
-const mockRefresh = vi.fn();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: mockRefresh }),
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
-// Clipboard mock — jsdom doesn't expose navigator.clipboard by default
-beforeEach(() => {
-  if (!navigator.clipboard) {
-    Object.defineProperty(navigator, "clipboard", {
-      value: { writeText: vi.fn().mockResolvedValue(undefined) },
-      configurable: true,
-    });
-  } else {
-    vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue(undefined);
-  }
-});
+// Clipboard mock
+const mockCopyToClipboard = vi.fn();
+vi.mock("@/lib/clipboard", () => ({
+  copyToClipboard: (...args: unknown[]) => mockCopyToClipboard(...args),
+}));
 
 // Crypto mock for token generation
 vi.stubGlobal("crypto", {
@@ -41,17 +34,6 @@ const mockUpdate = vi.fn().mockReturnValue({
   eq: vi.fn().mockResolvedValue({ error: null }),
 });
 
-const mockSelect = vi.fn().mockReturnValue({
-  eq: vi.fn().mockReturnValue({
-    is: vi.fn().mockReturnValue({
-      order: vi.fn().mockResolvedValue({
-        data: mockInvites.filter((i) => !i.accepted_at),
-        error: null,
-      }),
-    }),
-  }),
-});
-
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     from: (table: string) => {
@@ -59,10 +41,6 @@ vi.mock("@/lib/supabase/client", () => ({
         return {
           insert: mockInsert,
           update: mockUpdate,
-          select: mockSelect,
-          delete: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ error: null }),
-          }),
         };
       }
       return {};
@@ -95,14 +73,10 @@ describe("InviteManager", () => {
     expect(screen.getByText(/2 pending/i)).toBeInTheDocument();
   });
 
-  it("renders invite email when present", () => {
+  it("renders 'Invite link' label for each invite", () => {
     render(<InviteManager {...defaultProps} />);
-    expect(screen.getByText("player@example.com")).toBeInTheDocument();
-  });
-
-  it("renders 'Open invite' label when no email", () => {
-    render(<InviteManager {...defaultProps} />);
-    expect(screen.getByText(/open invite/i)).toBeInTheDocument();
+    const labels = screen.getAllByText("Invite link");
+    expect(labels).toHaveLength(2);
   });
 
   it("renders invite role badge", () => {
@@ -116,11 +90,6 @@ describe("InviteManager", () => {
     expect(screen.getByText(/create one to invite players/i)).toBeInTheDocument();
   });
 
-  it("does not show accepted invites", () => {
-    render(<InviteManager {...defaultProps} />);
-    expect(screen.queryByText("accepted@example.com")).not.toBeInTheDocument();
-  });
-
   // ─── Create Invite ─────────────────────────────────────
 
   it("has a create invite button", () => {
@@ -128,41 +97,12 @@ describe("InviteManager", () => {
     expect(screen.getByRole("button", { name: /create invite/i })).toBeInTheDocument();
   });
 
-  it("opens create invite form on button click", async () => {
+  it("creates invite and copies link on button click", async () => {
+
     const user = userEvent.setup();
     render(<InviteManager {...defaultProps} />);
 
     await user.click(screen.getByRole("button", { name: /create invite/i }));
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-  });
-
-  it("creates invite with email", async () => {
-    const user = userEvent.setup();
-    render(<InviteManager {...defaultProps} />);
-
-    await user.click(screen.getByRole("button", { name: /create invite/i }));
-    await user.type(screen.getByLabelText(/email/i), "newplayer@example.com");
-    await user.click(screen.getByRole("button", { name: /^send invite$/i }));
-
-    await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          campaign_id: "campaign-1",
-          email: "newplayer@example.com",
-          role: "player",
-          created_by: "test-user-id",
-        })
-      );
-    });
-  });
-
-  it("creates invite without email (open invite link)", async () => {
-    const user = userEvent.setup();
-    render(<InviteManager {...defaultProps} />);
-
-    await user.click(screen.getByRole("button", { name: /create invite/i }));
-    // Don't fill in email — submit directly
-    await user.click(screen.getByRole("button", { name: /^send invite$/i }));
 
     await waitFor(() => {
       expect(mockInsert).toHaveBeenCalledWith(
@@ -174,6 +114,12 @@ describe("InviteManager", () => {
         })
       );
     });
+
+    await waitFor(() => {
+      expect(mockCopyToClipboard).toHaveBeenCalledWith(
+        expect.stringContaining("generated-uuid-token")
+      );
+    });
   });
 
   it("shows loading state while creating invite", async () => {
@@ -181,12 +127,9 @@ describe("InviteManager", () => {
     render(<InviteManager {...defaultProps} />);
 
     await user.click(screen.getByRole("button", { name: /create invite/i }));
-    await user.click(screen.getByRole("button", { name: /^send invite$/i }));
 
-    // Button should be disabled during creation
     await waitFor(() => {
-      const btn = screen.queryByRole("button", { name: /sending/i });
-      // Either the button shows "Sending..." or the form has already closed
+      const btn = screen.queryByRole("button", { name: /creating/i });
       expect(btn === null || btn?.hasAttribute("disabled")).toBe(true);
     });
   });
@@ -200,6 +143,7 @@ describe("InviteManager", () => {
   });
 
   it("copies invite link to clipboard on click", async () => {
+
     const user = userEvent.setup();
     render(<InviteManager {...defaultProps} />);
 
@@ -207,7 +151,7 @@ describe("InviteManager", () => {
     await user.click(copyButtons[0]);
 
     await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect(mockCopyToClipboard).toHaveBeenCalledWith(
         expect.stringContaining("abc123token")
       );
     });
@@ -228,7 +172,6 @@ describe("InviteManager", () => {
     const revokeButtons = screen.getAllByRole("button", { name: /revoke/i });
     await user.click(revokeButtons[0]);
 
-    // Confirm dialog should appear
     const confirmBtn = await screen.findByRole("button", { name: /^confirm$/i });
     await user.click(confirmBtn);
 
@@ -254,13 +197,11 @@ describe("InviteManager", () => {
 
   it("shows expiration date when set", () => {
     render(<InviteManager {...defaultProps} />);
-    // First invite has expires_at set
     expect(screen.getByText(/expires/i)).toBeInTheDocument();
   });
 
   it("shows 'No expiration' when expires_at is null", () => {
     render(<InviteManager {...defaultProps} />);
-    // Second invite has no expiration
     expect(screen.getByText(/no expiration/i)).toBeInTheDocument();
   });
 });

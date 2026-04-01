@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { copyToClipboard } from "@/lib/clipboard";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -22,8 +20,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import { IconButton } from "@/components/shared/icon-button";
 import { Copy, Link, Trash2, UserPlus } from "lucide-react";
 
 interface Invite {
@@ -49,10 +47,7 @@ export function InviteManager({
   invites: initialInvites,
   userId,
 }: InviteManagerProps) {
-  const router = useRouter();
   const [invites, setInvites] = useState<Invite[]>(initialInvites);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [email, setEmail] = useState("");
   const [creating, setCreating] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<Invite | null>(null);
   const [revoking, setRevoking] = useState(false);
@@ -66,7 +61,7 @@ export function InviteManager({
       .from("campaign_invites")
       .insert({
         campaign_id: campaignId,
-        email: email.trim() || null,
+        email: null,
         token,
         role: "player",
         created_by: userId,
@@ -80,11 +75,13 @@ export function InviteManager({
       return;
     }
 
+    // Copy the link immediately
+    const url = `${window.location.origin}/invite/${token}`;
+    copyToClipboard(url);
+
     setInvites((prev) => [...prev, data]);
-    setEmail("");
-    setCreateOpen(false);
     setCreating(false);
-    toast.success("Invite created");
+    toast.success("Invite link created and copied to clipboard");
   }
 
   async function handleRevoke(invite: Invite) {
@@ -110,7 +107,7 @@ export function InviteManager({
 
   function copyLink(token: string) {
     const url = `${window.location.origin}/invite/${token}`;
-    navigator.clipboard.writeText(url);
+    copyToClipboard(url);
     toast.success("Invite link copied");
   }
 
@@ -132,56 +129,16 @@ export function InviteManager({
                 : "No pending invites"}
             </CardDescription>
           </div>
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger
-              render={
-                <Button variant="outline" size="sm" className="gold-glow">
-                  <UserPlus className="size-4 mr-1.5" />
-                  Create Invite
-                </Button>
-              }
-            />
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Invite</DialogTitle>
-                <DialogDescription>
-                  Send a direct invite or create a shareable link.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label htmlFor="invite-email">
-                    Email <span className="text-muted-foreground">(optional)</span>
-                  </Label>
-                  <Input
-                    id="invite-email"
-                    type="email"
-                    placeholder="player@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Leave blank to create a shareable invite link.
-                  </p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="ghost"
-                  onClick={() => setCreateOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreate}
-                  disabled={creating}
-                  className="gold-glow"
-                >
-                  {creating ? "Sending..." : "Send Invite"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gold-glow"
+            onClick={handleCreate}
+            disabled={creating}
+          >
+            <UserPlus className="size-4 mr-1.5" />
+            {creating ? "Creating..." : "Create Invite"}
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -200,7 +157,7 @@ export function InviteManager({
                   <Link className="size-4 text-muted-foreground shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">
-                      {invite.email ?? "Open invite"}
+                      Invite link
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {formatExpiry(invite.expires_at)}
@@ -211,23 +168,17 @@ export function InviteManager({
                   </Badge>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <IconButton
+                    icon={Copy}
+                    label="Copy link"
                     onClick={() => copyLink(invite.token)}
-                    aria-label="Copy link"
-                  >
-                    <Copy className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  />
+                  <IconButton
+                    icon={Trash2}
+                    label="Revoke"
+                    variant="destructive"
                     onClick={() => setRevokeTarget(invite)}
-                    aria-label="Revoke"
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                  />
                 </div>
               </div>
             ))}
