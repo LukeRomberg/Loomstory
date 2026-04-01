@@ -53,12 +53,18 @@ export default async function CampaignSettingsPage({
     .order("created_at", { ascending: false });
 
   // Fetch campaign members with profiles
-  const { data: members } = await supabase
+  const { data: rawMembers } = await supabase
     .from("campaign_members")
     .select("id, campaign_id, user_id, role, joined_at, profiles(id, display_name, avatar_url)")
     .eq("campaign_id", id)
     .is("deleted_at", null)
     .order("joined_at");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns joined profiles as array without generated types
+  const members = (rawMembers ?? []).map((m: any) => ({
+    ...m,
+    profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles,
+  }));
 
   return (
     <>
@@ -66,7 +72,7 @@ export default async function CampaignSettingsPage({
       <div className="max-w-2xl mt-6 space-y-6">
         <PlayerList
           campaignId={id}
-          members={members ?? []}
+          members={members}
           currentUserId={user.id}
         />
         <InviteManager
