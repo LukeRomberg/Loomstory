@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { SettingsModal } from "@/components/loomstory/settings-modal";
 import { NpcModal } from "@/components/loomstory/npc-modal";
 import { LocationModal } from "@/components/loomstory/location-modal";
 import { FactionModal } from "@/components/loomstory/faction-modal";
@@ -101,6 +102,7 @@ export function CampaignDashboard({
   const [loreModalOpen, setLoreModalOpen] = useState(false);
   const [eventModalOpen, setEventModalOpen] = useState(false);
   const [conversationModalOpen, setConversationModalOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [datePlayed, setDatePlayed] = useState("");
   const [sessionNumber, setSessionNumber] = useState("");
@@ -186,9 +188,7 @@ export function CampaignDashboard({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() =>
-              router.push(`/campaign/${campaign.id}/settings`)
-            }
+            onClick={() => setSettingsOpen(true)}
           >
             <Settings className="size-4" />
           </Button>
@@ -482,6 +482,9 @@ export function CampaignDashboard({
       <LoreModal campaignId={campaign.id} userId={userId} role={role} open={loreModalOpen} onOpenChange={setLoreModalOpen} />
       <EventModal campaignId={campaign.id} userId={userId} role={role} open={eventModalOpen} onOpenChange={setEventModalOpen} />
       <ConversationModal campaignId={campaign.id} userId={userId} role={role} open={conversationModalOpen} onOpenChange={setConversationModalOpen} />
+      {isGm && (
+        <SettingsModal campaignId={campaign.id} userId={userId} open={settingsOpen} onOpenChange={setSettingsOpen} />
+      )}
     </div>
   );
 }
