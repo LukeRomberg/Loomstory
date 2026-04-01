@@ -479,6 +479,63 @@ export const mockLoreEntries = [
   },
 ];
 
+export const mockInvite = {
+  id: "invite-1",
+  campaign_id: "campaign-1",
+  email: "player@example.com",
+  token: "abc123token",
+  role: "player",
+  created_by: "test-user-id",
+  expires_at: "2026-04-07T00:00:00Z",
+  accepted_at: null,
+  created_at: "2026-03-31T00:00:00Z",
+};
+
+export const mockInvites = [
+  mockInvite,
+  {
+    id: "invite-2",
+    campaign_id: "campaign-1",
+    email: null,
+    token: "def456token",
+    role: "player",
+    created_by: "test-user-id",
+    expires_at: null,
+    accepted_at: null,
+    created_at: "2026-03-31T00:01:00Z",
+  },
+  {
+    id: "invite-3",
+    campaign_id: "campaign-1",
+    email: "accepted@example.com",
+    token: "ghi789token",
+    role: "player",
+    created_by: "test-user-id",
+    expires_at: null,
+    accepted_at: "2026-03-30T00:00:00Z",
+    created_at: "2026-03-29T00:00:00Z",
+  },
+];
+
+export const mockMembers = [
+  {
+    id: "member-1",
+    campaign_id: "campaign-1",
+    user_id: "test-user-id",
+    role: "gm",
+    joined_at: "2026-03-20T00:00:00Z",
+    profiles: { id: "test-user-id", display_name: "Test GM", avatar_url: null },
+  },
+  {
+    id: "member-2",
+    campaign_id: "campaign-1",
+    user_id: "player-user-id",
+    role: "player",
+    joined_at: "2026-03-25T00:00:00Z",
+    profiles: { id: "player-user-id", display_name: "Player One", avatar_url: null },
+  },
+];
+
 export const mockEntityVersions = [
   {
     id: "ver-3",
