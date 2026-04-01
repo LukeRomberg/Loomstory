@@ -34,9 +34,11 @@ export function FactionModal({ campaignId, userId, role, open, onOpenChange }: F
   const fetchFactions = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase.from("factions").select("id, name, description, goals, gm_notes, player_notes, gm_only").eq("campaign_id", campaignId).is("deleted_at", null).order("name");
+    let query = supabase.from("factions").select("id, name, description, goals, gm_notes, player_notes, gm_only").eq("campaign_id", campaignId).is("deleted_at", null);
+    if (!isGm) query = query.eq("gm_only", false);
+    const { data } = await query.order("name");
     setFactions(data ?? []); setLoading(false);
-  }, [campaignId]);
+  }, [campaignId, isGm]);
 
   useEffect(() => { if (open) fetchFactions(); }, [open, fetchFactions]);
 

@@ -102,12 +102,14 @@ export function EventModal({
   const fetchData = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
+    let eventsQuery = supabase
+      .from("campaign_events")
+      .select("id, session_id, content, summary, weight, event_type, narrative_day, narrative_time, sequence, resolved, trigger_condition, gm_only, created_at")
+      .eq("campaign_id", campaignId)
+      .is("deleted_at", null);
+    if (!isGm) eventsQuery = eventsQuery.eq("gm_only", false);
     const [eventsRes, sessionsRes] = await Promise.all([
-      supabase
-        .from("campaign_events")
-        .select("id, session_id, content, summary, weight, event_type, narrative_day, narrative_time, sequence, resolved, trigger_condition, gm_only, created_at")
-        .eq("campaign_id", campaignId)
-        .is("deleted_at", null)
+      eventsQuery
         .order("narrative_day", { ascending: true, nullsFirst: false })
         .order("narrative_time", { ascending: true, nullsFirst: false })
         .order("sequence", { ascending: true }),
@@ -121,7 +123,7 @@ export function EventModal({
     setEvents(eventsRes.data ?? []);
     setSessions(sessionsRes.data ?? []);
     setLoading(false);
-  }, [campaignId]);
+  }, [campaignId, isGm]);
 
   useEffect(() => {
     if (open) fetchData();

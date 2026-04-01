@@ -52,13 +52,15 @@ export function LocationModal({ campaignId, userId, role, open, onOpenChange }: 
   const fetchLocations = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase
+    let query = supabase
       .from("locations")
       .select("id, name, aliases, description, type, parent_location_id, map_image_url, gm_notes, player_notes, gm_only")
-      .eq("campaign_id", campaignId).is("deleted_at", null).order("name");
+      .eq("campaign_id", campaignId).is("deleted_at", null);
+    if (!isGm) query = query.eq("gm_only", false);
+    const { data } = await query.order("name");
     setLocations(data ?? []);
     setLoading(false);
-  }, [campaignId]);
+  }, [campaignId, isGm]);
 
   useEffect(() => { if (open) fetchLocations(); }, [open, fetchLocations]);
 

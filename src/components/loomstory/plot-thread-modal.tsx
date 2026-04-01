@@ -35,9 +35,11 @@ export function PlotThreadModal({ campaignId, userId, role, open, onOpenChange }
   const fetchThreads = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase.from("plot_threads").select("id, title, description, status, priority, resolution_notes, gm_notes, gm_only").eq("campaign_id", campaignId).is("deleted_at", null).order("priority").order("title");
+    let query = supabase.from("plot_threads").select("id, title, description, status, priority, resolution_notes, gm_notes, gm_only").eq("campaign_id", campaignId).is("deleted_at", null);
+    if (!isGm) query = query.eq("gm_only", false);
+    const { data } = await query.order("priority").order("title");
     setThreads(data ?? []); setLoading(false);
-  }, [campaignId]);
+  }, [campaignId, isGm]);
 
   useEffect(() => { if (open) fetchThreads(); }, [open, fetchThreads]);
 

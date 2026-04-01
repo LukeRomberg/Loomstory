@@ -65,15 +65,16 @@ export function NpcModal({
   const fetchNpcs = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase
+    let query = supabase
       .from("npcs")
       .select("id, name, aliases, description, appearance, voice_notes, personality, status, tags, portrait_url, gm_notes, player_notes, gm_only")
       .eq("campaign_id", campaignId)
-      .is("deleted_at", null)
-      .order("name");
+      .is("deleted_at", null);
+    if (!isGm) query = query.eq("gm_only", false);
+    const { data } = await query.order("name");
     setNpcs(data ?? []);
     setLoading(false);
-  }, [campaignId]);
+  }, [campaignId, isGm]);
 
   useEffect(() => {
     if (open) fetchNpcs();

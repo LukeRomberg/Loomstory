@@ -93,7 +93,9 @@ export function CampaignDashboard({
   const router = useRouter();
   const isGm = role === "gm";
 
-  const [sessions, setSessions] = useState(initialSessions);
+  const [sessions, setSessions] = useState(
+    isGm ? initialSessions : initialSessions.filter((s) => s.status === "published")
+  );
   const [open, setOpen] = useState(false);
   const [npcModalOpen, setNpcModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);

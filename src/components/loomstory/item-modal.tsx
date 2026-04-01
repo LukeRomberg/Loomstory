@@ -37,9 +37,11 @@ export function ItemModal({ campaignId, userId, role, open, onOpenChange }: Item
   const fetchItems = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase.from("items").select("id, name, description, type, mechanical_properties, gm_notes, player_notes, gm_only").eq("campaign_id", campaignId).is("deleted_at", null).order("name");
+    let query = supabase.from("items").select("id, name, description, type, mechanical_properties, gm_notes, player_notes, gm_only").eq("campaign_id", campaignId).is("deleted_at", null);
+    if (!isGm) query = query.eq("gm_only", false);
+    const { data } = await query.order("name");
     setItems(data ?? []); setLoading(false);
-  }, [campaignId]);
+  }, [campaignId, isGm]);
 
   useEffect(() => { if (open) fetchItems(); }, [open, fetchItems]);
 

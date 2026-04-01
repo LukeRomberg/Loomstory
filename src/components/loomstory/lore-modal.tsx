@@ -34,9 +34,11 @@ export function LoreModal({ campaignId, userId, role, open, onOpenChange }: Lore
   const fetchEntries = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase.from("lore_entries").select("id, title, content, tags, gm_only").eq("campaign_id", campaignId).is("deleted_at", null).order("title");
+    let query = supabase.from("lore_entries").select("id, title, content, tags, gm_only").eq("campaign_id", campaignId).is("deleted_at", null);
+    if (!isGm) query = query.eq("gm_only", false);
+    const { data } = await query.order("title");
     setEntries(data ?? []); setLoading(false);
-  }, [campaignId]);
+  }, [campaignId, isGm]);
 
   useEffect(() => { if (open) fetchEntries(); }, [open, fetchEntries]);
 

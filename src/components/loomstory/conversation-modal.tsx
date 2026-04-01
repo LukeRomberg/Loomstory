@@ -84,13 +84,14 @@ export function ConversationModal({
   const fetchData = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
+    let convsQuery = supabase
+      .from("conversation_logs")
+      .select("id, session_id, event_id, title, participants, content, content_plain, gm_notes, gm_only, created_at")
+      .eq("campaign_id", campaignId)
+      .is("deleted_at", null);
+    if (!isGm) convsQuery = convsQuery.eq("gm_only", false);
     const [convsRes, sessionsRes, npcsRes, charsRes] = await Promise.all([
-      supabase
-        .from("conversation_logs")
-        .select("id, session_id, event_id, title, participants, content, content_plain, gm_notes, gm_only, created_at")
-        .eq("campaign_id", campaignId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false }),
+      convsQuery.order("created_at", { ascending: false }),
       supabase
         .from("sessions")
         .select("id, title, session_number")
@@ -117,7 +118,7 @@ export function ConversationModal({
       ...(charsRes.data ?? []).map((c) => ({ id: c.id, name: c.name, entity_type: "character" })),
     ]);
     setLoading(false);
-  }, [campaignId]);
+  }, [campaignId, isGm]);
 
   useEffect(() => {
     if (open) fetchData();
