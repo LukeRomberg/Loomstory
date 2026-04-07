@@ -21,7 +21,10 @@ import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 import { SectionHeader } from "@/components/loomstory/section-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Pencil } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { RelationsPanel } from "@/components/loomstory/relations-panel";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Pencil, Clock, MessageSquare, Bookmark } from "lucide-react";
 
 interface Npc {
   id: string;
@@ -148,6 +151,7 @@ export function NpcModal({
         <NpcDetail
           npc={npc}
           campaignId={campaignId}
+          userId={userId}
           role={role}
           onUpdated={fetchNpcs}
         />
@@ -184,14 +188,68 @@ export function NpcModal({
 
 // ─── NPC Detail (sidebar content) ──────────────────────────
 
+// ─── Types for lazy-loaded data ──────────────────────────
+
+interface HistoryEvent {
+  id: string;
+  content: string;
+  summary: string | null;
+  weight: number;
+  event_type: string;
+  narrative_day: number | null;
+  narrative_time: number | null;
+  resolved: boolean;
+  created_at: string;
+  role: string;
+}
+
+interface HistoryConversation {
+  id: string;
+  title: string;
+  turn_count: number;
+  created_at: string;
+}
+
+interface HistoryMention {
+  session_id: string;
+  session_title: string;
+  session_number: number | null;
+  mention_type: string;
+  created_at: string;
+}
+
+interface HistoryData {
+  events: HistoryEvent[];
+  conversations: HistoryConversation[];
+  session_mentions: HistoryMention[];
+}
+
+interface RelationsData {
+  relations: Array<{
+    id: string;
+    source_type: string;
+    source_id: string;
+    target_type: string;
+    target_id: string;
+    relation_type: string;
+    description: string | null;
+    source_name?: string;
+    target_name?: string;
+  }>;
+  relationTypes: Array<{ id: string; label: string }>;
+  knownEntities: Array<{ id: string; name: string; entity_type: string }>;
+}
+
 function NpcDetail({
   npc: initialNpc,
   campaignId,
+  userId,
   role,
   onUpdated,
 }: {
   npc: Npc;
   campaignId: string;
+  userId: string;
   role: string;
   onUpdated: () => void;
 }) {
@@ -202,6 +260,13 @@ function NpcDetail({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [togglingVisibility, setTogglingVisibility] = useState(false);
+  const [activeTab, setActiveTab] = useState<string | null>("general");
+
+  // Lazy-loaded tab data
+  const [relationsData, setRelationsData] = useState<RelationsData | null>(null);
+  const [relationsLoading, setRelationsLoading] = useState(false);
+  const [historyData, setHistoryData] = useState<HistoryData | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Edit form state
   const [name, setName] = useState(npc.name);
@@ -229,7 +294,42 @@ function NpcDetail({
     setGmNotes(initialNpc.gm_notes ?? "");
     setPlayerNotes(initialNpc.player_notes ?? "");
     setEditing(false);
+    setActiveTab("general");
+    setRelationsData(null);
+    setHistoryData(null);
   }, [initialNpc]);
+
+  // Lazy fetch relations
+  async function fetchRelations() {
+    if (relationsData) return;
+    setRelationsLoading(true);
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/entities/npc/${npc.id}/relations`);
+      if (res.ok) setRelationsData(await res.json());
+    } catch {
+      toast.error("Failed to load relationships");
+    }
+    setRelationsLoading(false);
+  }
+
+  // Lazy fetch history
+  async function fetchHistory() {
+    if (historyData) return;
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/entities/npc/${npc.id}/history`);
+      if (res.ok) setHistoryData(await res.json());
+    } catch {
+      toast.error("Failed to load history");
+    }
+    setHistoryLoading(false);
+  }
+
+  function handleTabChange(value: string | null) {
+    setActiveTab(value);
+    if (value === "relationships") fetchRelations();
+    if (value === "history") fetchHistory();
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -390,8 +490,13 @@ function NpcDetail({
       <div className="flex items-start justify-between">
         <div>
           <h3 className="text-xl font-heading font-semibold">{npc.name}</h3>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <Badge variant="outline" className="text-xs">{npc.status}</Badge>
+            {npc.tags && npc.tags.length > 0 &&
+              npc.tags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+              ))
+            }
             {npc.gm_only && <GmOnlyBadge />}
             {npc.aliases && npc.aliases.length > 0 && (
               <span className="text-xs text-muted-foreground italic">
@@ -405,96 +510,236 @@ function NpcDetail({
         )}
       </div>
 
-      {/* Description */}
-      {npc.description && (
-        <>
-          <SectionHeader>Description</SectionHeader>
-          <Card className="grain">
-            <CardContent className="py-3">
-              <p className="text-sm font-lore">{npc.description}</p>
-            </CardContent>
-          </Card>
-        </>
-      )}
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList variant="line">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="relationships">Relationships</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+        </TabsList>
 
-      {/* Appearance */}
-      {npc.appearance && (
-        <>
-          <SectionHeader>Appearance</SectionHeader>
-          <Card className="grain">
-            <CardContent className="py-3">
-              <p className="text-sm">{npc.appearance}</p>
-            </CardContent>
-          </Card>
-        </>
-      )}
+        {/* ─── General Tab ─── */}
+        <TabsContent value="general">
+          <div className="space-y-4 pt-2">
+            {npc.description && (
+              <>
+                <SectionHeader>Description</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm font-lore">{npc.description}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
-      {/* Voice & Mannerisms */}
-      {npc.voice_notes && (
-        <>
-          <SectionHeader>Voice & Mannerisms</SectionHeader>
-          <Card className="grain">
-            <CardContent className="py-3">
-              <p className="text-sm">{npc.voice_notes}</p>
-            </CardContent>
-          </Card>
-        </>
-      )}
+            {npc.appearance && (
+              <>
+                <SectionHeader>Appearance</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm">{npc.appearance}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
-      {/* Personality */}
-      {npc.personality && (
-        <>
-          <SectionHeader>Personality</SectionHeader>
-          <Card className="grain">
-            <CardContent className="py-3">
-              <p className="text-sm">{npc.personality}</p>
-            </CardContent>
-          </Card>
-        </>
-      )}
+            {npc.voice_notes && (
+              <>
+                <SectionHeader>Voice & Mannerisms</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm">{npc.voice_notes}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
-      {/* Tags */}
-      {npc.tags && npc.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {npc.tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-          ))}
+            {npc.personality && (
+              <>
+                <SectionHeader>Personality</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm">{npc.personality}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {isGm && npc.gm_notes && (
+              <>
+                <Separator />
+                <SectionHeader>GM Notes</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm italic">{npc.gm_notes}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {npc.player_notes && (
+              <>
+                <Separator />
+                <SectionHeader>Player Notes</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm">{npc.player_notes}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {isGm && (
+              <div className="pt-2">
+                <Button variant="outline" onClick={() => setEditing(true)}>
+                  <Pencil className="size-4 mr-1.5" />
+                  Edit
+                </Button>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ─── Relationships Tab ─── */}
+        <TabsContent value="relationships">
+          <div className="pt-2">
+            {relationsLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : relationsData ? (
+              <RelationsPanel
+                campaignId={campaignId}
+                entityType="npc"
+                entityId={npc.id}
+                entityName={npc.name}
+                relations={relationsData.relations}
+                relationTypes={relationsData.relationTypes}
+                knownEntities={relationsData.knownEntities}
+                role={role}
+                userId={userId}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground font-lore">No relationships yet.</p>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ─── History Tab ─── */}
+        <TabsContent value="history">
+          <div className="pt-2">
+            {historyLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : historyData ? (
+              <NpcHistory data={historyData} />
+            ) : (
+              <p className="text-sm text-muted-foreground font-lore">No history yet.</p>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+// ─── History sub-component ───────────────────────────────
+
+function NpcHistory({ data }: { data: HistoryData }) {
+  const { events, conversations, session_mentions } = data;
+  const hasContent = events.length > 0 || conversations.length > 0 || session_mentions.length > 0;
+
+  if (!hasContent) {
+    return <p className="text-sm text-muted-foreground font-lore">No history yet.</p>;
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Events */}
+      {events.length > 0 && (
+        <div>
+          <SectionHeader className="flex items-center gap-2 mb-2">
+            <Bookmark className="size-3.5 text-gold" />
+            Events ({events.length})
+          </SectionHeader>
+          <div className="space-y-2">
+            {events.map((evt) => (
+              <Card key={evt.id} className="grain">
+                <CardContent className="py-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium line-clamp-2">
+                        {evt.summary ?? evt.content}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-[10px]">{evt.event_type}</Badge>
+                        <Badge variant="secondary" className="text-[10px]">{evt.role}</Badge>
+                        {evt.narrative_day != null && (
+                          <span className="text-[10px] text-muted-foreground">
+                            Day {evt.narrative_day}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* GM Notes */}
-      {isGm && npc.gm_notes && (
-        <>
-          <Separator />
-          <SectionHeader>GM Notes</SectionHeader>
-          <Card className="grain">
-            <CardContent className="py-3">
-              <p className="text-sm italic">{npc.gm_notes}</p>
-            </CardContent>
-          </Card>
-        </>
+      {/* Conversations */}
+      {conversations.length > 0 && (
+        <div>
+          <SectionHeader className="flex items-center gap-2 mb-2">
+            <MessageSquare className="size-3.5 text-gold" />
+            Conversations ({conversations.length})
+          </SectionHeader>
+          <div className="space-y-2">
+            {conversations.map((conv) => (
+              <Card key={conv.id} className="grain">
+                <CardContent className="py-2 flex items-center justify-between">
+                  <span className="text-sm font-medium">{conv.title}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {conv.turn_count} turn{conv.turn_count !== 1 ? "s" : ""}
+                  </span>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
 
-      {/* Player Notes */}
-      {npc.player_notes && (
-        <>
-          <Separator />
-          <SectionHeader>Player Notes</SectionHeader>
-          <Card className="grain">
-            <CardContent className="py-3">
-              <p className="text-sm">{npc.player_notes}</p>
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      {/* Edit button at bottom */}
-      {isGm && (
-        <div className="pt-2">
-          <Button variant="outline" onClick={() => setEditing(true)}>
-            <Pencil className="size-4 mr-1.5" />
-            Edit
-          </Button>
+      {/* Session Mentions */}
+      {session_mentions.length > 0 && (
+        <div>
+          <SectionHeader className="flex items-center gap-2 mb-2">
+            <Clock className="size-3.5 text-gold" />
+            Session Appearances ({session_mentions.length})
+          </SectionHeader>
+          <div className="space-y-2">
+            {session_mentions.map((m) => (
+              <Card key={`${m.session_id}-${m.mention_type}`} className="grain">
+                <CardContent className="py-2 flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    {m.session_number != null && (
+                      <span className="font-mono text-xs text-muted-foreground mr-1.5">
+                        #{m.session_number}
+                      </span>
+                    )}
+                    {m.session_title}
+                  </span>
+                  <Badge variant="outline" className="text-[10px]">{m.mention_type}</Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
     </div>

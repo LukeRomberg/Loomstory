@@ -22,7 +22,7 @@ export function VisibilityToggle({
       disabled={loading}
       title={gmOnly ? "Make visible to players" : "Hide from players"}
     >
-      {gmOnly ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+      {gmOnly ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
     </Button>
   );
 }
