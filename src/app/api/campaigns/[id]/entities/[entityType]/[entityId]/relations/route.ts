@@ -11,6 +11,7 @@ const ENTITY_TABLES: Record<string, string> = {
   location: "locations",
   faction: "factions",
   item: "items",
+  character: "characters",
 };
 
 export async function GET(

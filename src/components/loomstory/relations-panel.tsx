@@ -47,6 +47,7 @@ const ENTITY_ROUTES: Record<string, string> = {
   location: "locations",
   faction: "factions",
   item: "items",
+  character: "characters",
 };
 
 interface RelationsPanelProps {
