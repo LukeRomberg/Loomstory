@@ -40,7 +40,7 @@ const validInvite = {
   token: "abc123token",
   role: "player",
   created_by: "gm-user-id",
-  expires_at: "2026-04-07T00:00:00Z",
+  expires_at: "2030-12-31T00:00:00Z",
   accepted_at: null,
   created_at: "2026-03-31T00:00:00Z",
   campaigns: { id: "campaign-1", name: "The Crimson Accord" },
