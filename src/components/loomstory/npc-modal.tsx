@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RelationsPanel } from "@/components/loomstory/relations-panel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Pencil, Clock, MessageSquare, Bookmark } from "lucide-react";
+import { Pencil, Clock, MessageSquare, Bookmark, ChevronRight, ArrowLeft } from "lucide-react";
 
 interface Npc {
   id: string;
@@ -148,7 +148,7 @@ export function NpcModal({
         </div>
       )}
       renderDetail={(npc) => (
-        <NpcDetail
+        <NpcDetailWithNav
           npc={npc}
           campaignId={campaignId}
           userId={userId}
@@ -246,12 +246,14 @@ function NpcDetail({
   userId,
   role,
   onUpdated,
+  onEntityClick,
 }: {
   npc: Npc;
   campaignId: string;
   userId: string;
   role: string;
   onUpdated: () => void;
+  onEntityClick?: (entityType: string, entityId: string, entityName: string) => void;
 }) {
   const isGm = role === "gm";
   const [npc, setNpc] = useState(initialNpc);
@@ -620,6 +622,7 @@ function NpcDetail({
                 knownEntities={relationsData.knownEntities}
                 role={role}
                 userId={userId}
+                onEntityClick={onEntityClick}
               />
             ) : (
               <p className="text-sm text-muted-foreground font-lore">No relationships yet.</p>
@@ -742,6 +745,389 @@ function NpcHistory({ data }: { data: HistoryData }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Navigation wrapper (breadcrumb + page-flip) ─────────
+
+const ENTITY_TABLES: Record<string, string> = {
+  npc: "npcs",
+  location: "locations",
+  faction: "factions",
+  item: "items",
+  character: "characters",
+};
+
+interface NavEntry {
+  entityType: string;
+  entityId: string;
+  entityName: string;
+}
+
+function NpcDetailWithNav({
+  npc,
+  campaignId,
+  userId,
+  role,
+  onUpdated,
+}: {
+  npc: Npc;
+  campaignId: string;
+  userId: string;
+  role: string;
+  onUpdated: () => void;
+}) {
+  const [navStack, setNavStack] = useState<NavEntry[]>([]);
+  const [deepDiveEntity, setDeepDiveEntity] = useState<{ type: string; id: string; name: string; data: Record<string, unknown> } | null>(null);
+  const [loadingEntity, setLoadingEntity] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right">("left");
+
+  // Reset nav when the parent NPC selection changes
+  useEffect(() => {
+    setNavStack([]);
+    setDeepDiveEntity(null);
+  }, [npc.id]);
+
+  async function handleEntityClick(entityType: string, entityId: string, entityName: string) {
+    setSlideDirection("left");
+    setLoadingEntity(true);
+
+    // Push current entity onto stack
+    if (deepDiveEntity) {
+      setNavStack((prev) => [...prev, { entityType: deepDiveEntity.type, entityId: deepDiveEntity.id, entityName: deepDiveEntity.name }]);
+    } else {
+      setNavStack((prev) => [...prev, { entityType: "npc", entityId: npc.id, entityName: npc.name }]);
+    }
+
+    // Fetch the target entity
+    const table = ENTITY_TABLES[entityType];
+    if (table) {
+      const supabase = createClient();
+      const { data } = await supabase.from(table).select("*").eq("id", entityId).single();
+      if (data) {
+        setDeepDiveEntity({ type: entityType, id: entityId, name: entityName, data });
+      }
+    }
+    setLoadingEntity(false);
+  }
+
+  function handleBreadcrumbClick(index: number) {
+    setSlideDirection("right");
+    const entry = navStack[index];
+    // Pop stack to this point
+    setNavStack((prev) => prev.slice(0, index));
+
+    if (entry.entityType === "npc" && entry.entityId === npc.id) {
+      // Going back to the original NPC
+      setDeepDiveEntity(null);
+    } else {
+      // Re-fetch the entity
+      const table = ENTITY_TABLES[entry.entityType];
+      if (table) {
+        setLoadingEntity(true);
+        const supabase = createClient();
+        supabase.from(table).select("*").eq("id", entry.entityId).single().then(({ data }) => {
+          if (data) {
+            setDeepDiveEntity({ type: entry.entityType, id: entry.entityId, name: entry.entityName, data });
+          }
+          setLoadingEntity(false);
+        });
+      }
+    }
+  }
+
+  function handleBack() {
+    if (navStack.length === 0) return;
+    handleBreadcrumbClick(navStack.length - 1);
+  }
+
+  const currentName = deepDiveEntity?.name ?? npc.name;
+  const currentId = deepDiveEntity?.id ?? npc.id;
+
+  return (
+    <div>
+      {/* Breadcrumb trail */}
+      {navStack.length > 0 && (
+        <div className="flex items-center gap-1 mb-4 text-sm flex-wrap" data-testid="breadcrumb-trail">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleBack}
+            aria-label="Go back"
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
+          {navStack.map((entry, i) => (
+            <span key={`${entry.entityId}-${i}`} className="flex items-center gap-1">
+              <button
+                className="text-muted-foreground hover:text-gold transition-colors cursor-pointer"
+                onClick={() => handleBreadcrumbClick(i)}
+              >
+                {entry.entityName}
+              </button>
+              <ChevronRight className="size-3 text-muted-foreground" />
+            </span>
+          ))}
+          <span className="text-foreground font-medium">{currentName}</span>
+        </div>
+      )}
+
+      {/* Animated content */}
+      {loadingEntity ? (
+        <div className="space-y-3 pt-2">
+          <Skeleton className="h-8 w-1/2" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      ) : (
+        <div
+          key={currentId}
+          className={slideDirection === "left" ? "animate-slide-in-right" : "animate-slide-in-left"}
+        >
+          {deepDiveEntity ? (
+            <EntityDeepDiveDetail
+              entityType={deepDiveEntity.type}
+              entityData={deepDiveEntity.data}
+              campaignId={campaignId}
+              userId={userId}
+              role={role}
+              onEntityClick={handleEntityClick}
+            />
+          ) : (
+            <NpcDetail
+              npc={npc}
+              campaignId={campaignId}
+              userId={userId}
+              role={role}
+              onUpdated={onUpdated}
+              onEntityClick={handleEntityClick}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Generic deep-dive detail (read-only, for non-NPC entities) ──
+
+const ENTITY_TYPE_LABELS: Record<string, string> = {
+  npc: "NPC",
+  location: "Location",
+  faction: "Faction",
+  item: "Item",
+  character: "Character",
+};
+
+function EntityDeepDiveDetail({
+  entityType,
+  entityData,
+  campaignId,
+  userId,
+  role,
+  onEntityClick,
+}: {
+  entityType: string;
+  entityData: Record<string, unknown>;
+  campaignId: string;
+  userId: string;
+  role: string;
+  onEntityClick: (entityType: string, entityId: string, entityName: string) => void;
+}) {
+  const isGm = role === "gm";
+  const entityId = entityData.id as string;
+  const entityName = (entityData.name as string) ?? "Unknown";
+  const [activeTab, setActiveTab] = useState<string | null>("general");
+
+  // Lazy-loaded relations
+  const [relationsData, setRelationsData] = useState<RelationsData | null>(null);
+  const [relationsLoading, setRelationsLoading] = useState(false);
+
+  // Lazy-loaded history
+  const [historyData, setHistoryData] = useState<HistoryData | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  async function fetchRelations() {
+    if (relationsData) return;
+    setRelationsLoading(true);
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/entities/${entityType}/${entityId}/relations`);
+      if (res.ok) setRelationsData(await res.json());
+    } catch {
+      toast.error("Failed to load relationships");
+    }
+    setRelationsLoading(false);
+  }
+
+  async function fetchHistory() {
+    if (historyData) return;
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/entities/${entityType}/${entityId}/history`);
+      if (res.ok) setHistoryData(await res.json());
+    } catch {
+      toast.error("Failed to load history");
+    }
+    setHistoryLoading(false);
+  }
+
+  function handleTabChange(value: string | null) {
+    setActiveTab(value);
+    if (value === "relationships") fetchRelations();
+    if (value === "history") fetchHistory();
+  }
+
+  // Extract common fields
+  const description = entityData.description as string | null;
+  const gmNotes = entityData.gm_notes as string | null;
+  const playerNotes = entityData.player_notes as string | null;
+  const gmOnly = entityData.gm_only as boolean | undefined;
+  const aliases = entityData.aliases as string[] | null;
+  const status = entityData.status as string | null;
+  const goals = entityData.goals as string | null;
+  const appearance = entityData.appearance as string | null;
+  const type = entityData.type as string | null;
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-[10px]">
+            {ENTITY_TYPE_LABELS[entityType] ?? entityType}
+          </Badge>
+          {gmOnly && <GmOnlyBadge />}
+        </div>
+        <h3 className="text-xl font-heading font-semibold mt-1">{entityName}</h3>
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          {status && <Badge variant="outline" className="text-xs">{status}</Badge>}
+          {type && <Badge variant="secondary" className="text-xs">{type}</Badge>}
+          {aliases && aliases.length > 0 && (
+            <span className="text-xs text-muted-foreground italic">
+              aka {aliases.join(", ")}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList variant="line">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="relationships">Relationships</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general">
+          <div className="space-y-4 pt-2">
+            {description && (
+              <>
+                <SectionHeader>Description</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm font-lore">{description}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {appearance && (
+              <>
+                <SectionHeader>Appearance</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm">{appearance}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {goals && (
+              <>
+                <SectionHeader>Goals</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm">{goals}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {isGm && gmNotes && (
+              <>
+                <Separator />
+                <SectionHeader>GM Notes</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm italic">{gmNotes}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {playerNotes && (
+              <>
+                <Separator />
+                <SectionHeader>Player Notes</SectionHeader>
+                <Card className="grain">
+                  <CardContent className="py-3">
+                    <p className="text-sm">{playerNotes}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {!description && !gmNotes && !playerNotes && !goals && !appearance && (
+              <p className="text-sm text-muted-foreground font-lore">No details available.</p>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="relationships">
+          <div className="pt-2">
+            {relationsLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : relationsData ? (
+              <RelationsPanel
+                campaignId={campaignId}
+                entityType={entityType}
+                entityId={entityId}
+                entityName={entityName}
+                relations={relationsData.relations}
+                relationTypes={relationsData.relationTypes}
+                knownEntities={relationsData.knownEntities}
+                role={role}
+                userId={userId}
+                onEntityClick={onEntityClick}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground font-lore">No relationships yet.</p>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <div className="pt-2">
+            {historyLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : historyData ? (
+              <NpcHistory data={historyData} />
+            ) : (
+              <p className="text-sm text-muted-foreground font-lore">No history yet.</p>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

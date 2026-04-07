@@ -30,6 +30,20 @@ function chainable(finalValue: unknown) {
   return new Proxy(chain, handler);
 }
 
+// Deep-dive entity mock data
+const deepDiveEntities: Record<string, Record<string, unknown>> = {
+  "faction-1": {
+    id: "faction-1",
+    name: "Silver Order",
+    description: "A holy order of knights",
+    gm_notes: "Secret faction notes",
+    player_notes: null,
+    gm_only: false,
+    goals: "Protect the realm",
+    deleted_at: null,
+  },
+};
+
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     from: (table: string) => {
@@ -40,8 +54,14 @@ vi.mock("@/lib/supabase/client", () => ({
           update: (...args: unknown[]) => mockUpdate(table, ...args),
         };
       }
+      // Deep-dive entity fetch: from(table).select("*").eq("id", id).single()
       return {
-        select: () => chainable({ data: [], error: null }),
+        select: () => ({
+          eq: (_col: string, id: string) => ({
+            single: () => Promise.resolve({ data: deepDiveEntities[id] ?? null, error: null }),
+          }),
+          ...chainable({ data: [], error: null }),
+        }),
         insert: () => chainable({ data: null, error: null }),
         update: () => chainable({ data: null, error: null }),
       };
@@ -334,6 +354,71 @@ describe("NpcModal", () => {
       await user.click(screen.getByRole("tab", { name: /history/i }));
       await waitFor(() => {
         expect(screen.getByText(/no history/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("NPC Detail - Deep Dive Navigation", () => {
+    async function navigateToRelation() {
+      const user = userEvent.setup();
+      renderModal();
+      await waitFor(() => expect(screen.getByText("Gareth the Bold")).toBeInTheDocument());
+      await user.click(screen.getByText("Gareth the Bold"));
+      await waitFor(() => expect(screen.getByRole("tab", { name: /relationships/i })).toBeInTheDocument());
+      await user.click(screen.getByRole("tab", { name: /relationships/i }));
+      await waitFor(() => expect(screen.getByText("Silver Order")).toBeInTheDocument());
+      // Click the related entity name to deep-dive
+      await user.click(screen.getByText("Silver Order"));
+      return user;
+    }
+
+    it("shows breadcrumb trail when navigating to a related entity", async () => {
+      await navigateToRelation();
+      await waitFor(() => {
+        const trail = screen.getByTestId("breadcrumb-trail");
+        expect(trail).toBeInTheDocument();
+        // Original NPC should be in the breadcrumb
+        expect(within(trail).getByText("Gareth the Bold")).toBeInTheDocument();
+        // Current entity name should be shown
+        expect(within(trail).getByText("Silver Order")).toBeInTheDocument();
+      });
+    });
+
+    it("shows the deep-dive entity detail with type badge", async () => {
+      await navigateToRelation();
+      await waitFor(() => {
+        expect(screen.getByText("Faction")).toBeInTheDocument();
+        expect(screen.getByText("A holy order of knights")).toBeInTheDocument();
+      });
+    });
+
+    it("applies slide-in-right animation when navigating forward", async () => {
+      await navigateToRelation();
+      await waitFor(() => {
+        const animated = document.querySelector(".animate-slide-in-right");
+        expect(animated).toBeInTheDocument();
+      });
+    });
+
+    it("navigates back when clicking breadcrumb", async () => {
+      const user = await navigateToRelation();
+      await waitFor(() => expect(screen.getByTestId("breadcrumb-trail")).toBeInTheDocument());
+      // Click "Gareth the Bold" in the breadcrumb to go back
+      await user.click(within(screen.getByTestId("breadcrumb-trail")).getByText("Gareth the Bold"));
+      await waitFor(() => {
+        // Breadcrumb should disappear (back to root)
+        expect(screen.queryByTestId("breadcrumb-trail")).not.toBeInTheDocument();
+        // Original NPC detail should be visible
+        expect(screen.getAllByText("Gareth the Bold").length).toBeGreaterThanOrEqual(1);
+      });
+    });
+
+    it("navigates back when clicking the back arrow", async () => {
+      const user = await navigateToRelation();
+      await waitFor(() => expect(screen.getByLabelText("Go back")).toBeInTheDocument());
+      await user.click(screen.getByLabelText("Go back"));
+      await waitFor(() => {
+        expect(screen.queryByTestId("breadcrumb-trail")).not.toBeInTheDocument();
       });
     });
   });

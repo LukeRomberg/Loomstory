@@ -60,6 +60,7 @@ interface RelationsPanelProps {
   knownEntities: KnownEntity[];
   role: string;
   userId: string;
+  onEntityClick?: (entityType: string, entityId: string, entityName: string) => void;
 }
 
 export function RelationsPanel({
@@ -72,6 +73,7 @@ export function RelationsPanel({
   knownEntities,
   role,
   userId,
+  onEntityClick,
 }: RelationsPanelProps) {
   const router = useRouter();
   const isGm = role === "gm";
@@ -336,9 +338,11 @@ export function RelationsPanel({
                   <div
                     className="flex items-center gap-2 cursor-pointer hover:text-gold transition-colors"
                     onClick={() =>
-                      router.push(
-                        `/campaign/${campaignId}/${ENTITY_ROUTES[other.type] ?? other.type}/${other.id}`
-                      )
+                      onEntityClick
+                        ? onEntityClick(other.type, other.id, other.name)
+                        : router.push(
+                            `/campaign/${campaignId}/${ENTITY_ROUTES[other.type] ?? other.type}/${other.id}`
+                          )
                     }
                   >
                     <Badge variant="outline" className="text-[10px]">
