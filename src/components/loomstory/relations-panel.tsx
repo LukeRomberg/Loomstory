@@ -164,12 +164,15 @@ export function RelationsPanel({
   // Edit relation
   const [editOpen, setEditOpen] = useState(false);
   const [editingRelation, setEditingRelation] = useState<Relation | null>(null);
+  const [editTargetId, setEditTargetId] = useState("");
   const [editRelationType, setEditRelationType] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
   function openEdit(rel: Relation) {
     setEditingRelation(rel);
+    const other = getOtherEntity(rel);
+    setEditTargetId(other.id);
     setEditRelationType(rel.relation_type);
     setEditDescription(rel.description ?? "");
     setEditOpen(true);
@@ -180,10 +183,19 @@ export function RelationsPanel({
     if (!editingRelation) return;
     setSavingEdit(true);
 
+    const target = knownEntities.find((e) => e.id === editTargetId);
+    if (!target) {
+      toast.error("Please select an entity");
+      setSavingEdit(false);
+      return;
+    }
+
     const supabase = createClient();
     const { error } = await supabase
       .from("entity_relations")
       .update({
+        target_type: target.entity_type,
+        target_id: target.id,
         relation_type: editRelationType || "knows",
         description: editDescription || null,
       })
@@ -198,7 +210,17 @@ export function RelationsPanel({
     setRelations((prev) =>
       prev.map((r) =>
         r.id === editingRelation.id
-          ? { ...r, relation_type: editRelationType, description: editDescription || null }
+          ? {
+              ...r,
+              target_type: target.entity_type,
+              target_id: target.id,
+              target_name: target.name,
+              source_type: entityType,
+              source_id: entityId,
+              source_name: entityName,
+              relation_type: editRelationType,
+              description: editDescription || null,
+            }
           : r
       )
     );
@@ -368,10 +390,34 @@ export function RelationsPanel({
             <DialogHeader>
               <DialogTitle className="font-heading">Edit Relationship</DialogTitle>
               <DialogDescription>
-                Update the relationship type or description.
+                Update the related entity, relationship type, or description.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Related Entity</Label>
+                <Select value={editTargetId} onValueChange={(v) => setEditTargetId(v ?? "")}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select entity...">
+                      {editTargetId ? knownEntities.find((e) => e.id === editTargetId)?.name : undefined}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(knownEntities ?? [])
+                      .filter((e) => e.id !== entityId)
+                      .map((e) => (
+                        <SelectItem key={e.id} value={e.id}>
+                          <span className="flex items-center gap-1.5">
+                            <Badge variant="outline" className="text-[10px] px-1">
+                              {e.entity_type}
+                            </Badge>
+                            {e.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Relationship Type</Label>
                 <Select value={editRelationType} onValueChange={(v) => setEditRelationType(v ?? "")}>
@@ -396,7 +442,7 @@ export function RelationsPanel({
             </div>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setEditOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={savingEdit} className="gold-glow">
+              <Button type="submit" disabled={savingEdit || !editTargetId} className="gold-glow">
                 {savingEdit ? "Saving..." : "Save"}
               </Button>
             </DialogFooter>
