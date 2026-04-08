@@ -19,21 +19,27 @@ export function useStepData(
   systemId: string | null,
   dependValue?: string | null
 ): UseStepDataResult {
+  const ds = stepConfig?.dataSource;
+  const table = ds?.table ?? null;
+  const filterJson = JSON.stringify(ds?.filter ?? null);
+  const dependsOn = ds?.dependsOn ?? null;
+  const dependColumn = ds?.dependColumn ?? null;
+  const shouldFetch = !!(table && systemId);
+
   const [data, setData] = useState<Record<string, unknown>[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(shouldFetch);
   const [error, setError] = useState<string | null>(null);
 
-  const ds = stepConfig?.dataSource;
-  const table = ds?.table;
-  const filter = ds?.filter;
-  const dependColumn = ds?.dependColumn;
-
   useEffect(() => {
-    if (!table || !systemId) return;
+    if (!table || !systemId) {
+      setLoading(false);
+      return;
+    }
 
     // If step depends on a parent value and it's not set yet, don't fetch
-    if (ds?.dependsOn && !dependValue) {
+    if (dependsOn && !dependValue) {
       setData([]);
+      setLoading(false);
       return;
     }
 
@@ -46,9 +52,10 @@ export function useStepData(
       let query = supabase.from(table!).select("*").eq("system_id", systemId!);
 
       // Apply static filters
+      const filter = JSON.parse(filterJson);
       if (filter) {
         for (const [key, value] of Object.entries(filter)) {
-          query = query.eq(key, value);
+          query = query.eq(key, value as string | number | boolean);
         }
       }
 
@@ -76,7 +83,7 @@ export function useStepData(
     return () => {
       cancelled = true;
     };
-  }, [table, systemId, JSON.stringify(filter), dependColumn, dependValue]);
+  }, [table, systemId, filterJson, dependsOn, dependColumn, dependValue]);
 
   return { data, loading, error };
 }

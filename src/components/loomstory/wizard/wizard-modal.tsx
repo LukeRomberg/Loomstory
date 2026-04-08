@@ -32,12 +32,12 @@ export function WizardModal({ open, onClose, title, children }: WizardModalProps
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] bg-void flex items-start justify-center p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-void flex items-start justify-center p-6 overflow-y-auto">
       {/* Close button */}
       <button
         onClick={onClose}
         aria-label="Close"
-        className="fixed top-4 right-4 z-[60] size-8 rounded-full border border-rune/40 bg-black/40 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-rune transition-colors"
+        className="fixed top-4 right-4 z-50 size-8 rounded-full border border-rune/40 bg-black/40 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-rune transition-colors"
       >
         <X className="size-4" />
       </button>
