@@ -77,7 +77,10 @@ export function CharacterModal({
         onOpenChange={onOpenChange}
         items={characters}
         loading={loading}
-        onCreateClick={() => setWizardOpen(true)}
+        onCreateClick={() => {
+          onOpenChange(false);
+          setWizardOpen(true);
+        }}
         createLabel="New Character"
         emptyMessage="No characters yet. Create one to get started."
         renderListItem={(char, isSelected) => (
