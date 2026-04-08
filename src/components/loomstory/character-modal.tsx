@@ -3,13 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { MasterDetailModal } from "@/components/shared/master-detail-modal";
-import { EntityFormTemplate } from "@/components/shared/entity-form-template";
+import { CharacterWizard } from "@/components/loomstory/wizard/character-wizard";
+import { getWizardConfig } from "@/lib/character/wizard-registry";
 import { Heart } from "lucide-react";
 
 interface Character {
@@ -29,6 +26,7 @@ interface CharacterModalProps {
   userId: string;
   role: string;
   systemId: string | null;
+  systemSlug: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -38,15 +36,16 @@ export function CharacterModal({
   userId,
   role,
   systemId,
+  systemSlug,
   open,
   onOpenChange,
 }: CharacterModalProps) {
   const router = useRouter();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [createName, setCreateName] = useState("");
-  const [savingCreate, setSavingCreate] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  const wizardConfig = systemSlug ? getWizardConfig(systemSlug) : null;
 
   const fetchCharacters = useCallback(async () => {
     setLoading(true);
@@ -65,36 +64,6 @@ export function CharacterModal({
     if (open) fetchCharacters();
   }, [open, fetchCharacters]);
 
-  async function handleCreate() {
-    setSavingCreate(true);
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("characters")
-      .insert({
-        campaign_id: campaignId,
-        system_id: systemId,
-        name: createName,
-        created_by: userId,
-        updated_by: userId,
-        user_id: role === "gm" ? null : userId,
-      })
-      .select()
-      .single();
-
-    if (error || !data) {
-      toast.error("Failed to create character", { description: error?.message });
-      setSavingCreate(false);
-      return;
-    }
-
-    toast.success("Character created");
-    setCreateName("");
-    setSavingCreate(false);
-    setCreating(false);
-    onOpenChange(false);
-    router.push(`/campaign/${campaignId}/characters/${data.id}`);
-  }
-
   const classLabel = (char: Character) =>
     (char.data?.class as string) ?? (char.data?.playbook as string) ?? null;
   const raceLabel = (char: Character) =>
@@ -108,7 +77,7 @@ export function CharacterModal({
         onOpenChange={onOpenChange}
         items={characters}
         loading={loading}
-        onCreateClick={() => setCreating(true)}
+        onCreateClick={() => setWizardOpen(true)}
         createLabel="New Character"
         emptyMessage="No characters yet. Create one to get started."
         renderListItem={(char, isSelected) => (
@@ -134,29 +103,21 @@ export function CharacterModal({
         )}
       />
 
-      <Dialog open={creating} onOpenChange={setCreating}>
-        <DialogContent>
-          <EntityFormTemplate
-            mode="create"
-            entityType="Character"
-            onSubmit={handleCreate}
-            onCancel={() => setCreating(false)}
-            saving={savingCreate}
-            disabled={!createName.trim()}
-          >
-            <div className="space-y-2">
-              <Label htmlFor="create-char-name">Character Name</Label>
-              <Input
-                id="create-char-name"
-                placeholder="Durk Stonefeld"
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                required
-              />
-            </div>
-          </EntityFormTemplate>
-        </DialogContent>
-      </Dialog>
+      {/* Character Creation Wizard */}
+      {wizardConfig && systemId && (
+        <CharacterWizard
+          open={wizardOpen}
+          onClose={() => {
+            setWizardOpen(false);
+            fetchCharacters();
+          }}
+          campaignId={campaignId}
+          systemId={systemId}
+          systemSlug={systemSlug!}
+          userId={userId}
+          wizardConfig={wizardConfig}
+        />
+      )}
     </>
   );
 }

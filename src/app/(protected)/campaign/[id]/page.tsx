@@ -85,6 +85,7 @@ export default async function CampaignPage({
       campaign={campaign}
       role={membership.role}
       systemName={system?.name ?? null}
+      systemSlug={system?.slug ?? null}
       sessions={sessions ?? []}
       entityCounts={entityCounts}
       userId={user.id}

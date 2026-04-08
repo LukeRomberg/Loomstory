@@ -70,6 +70,7 @@ interface CampaignDashboardProps {
   };
   role: string;
   systemName: string | null;
+  systemSlug: string | null;
   sessions: Session[];
   entityCounts: {
     npcs: number;
@@ -89,6 +90,7 @@ export function CampaignDashboard({
   campaign,
   role,
   systemName,
+  systemSlug,
   sessions: initialSessions,
   entityCounts,
   userId,
@@ -501,7 +503,7 @@ export function CampaignDashboard({
       <LoreModal campaignId={campaign.id} userId={userId} role={role} open={loreModalOpen} onOpenChange={setLoreModalOpen} />
       <EventModal campaignId={campaign.id} userId={userId} role={role} open={eventModalOpen} onOpenChange={setEventModalOpen} />
       <ConversationModal campaignId={campaign.id} userId={userId} role={role} open={conversationModalOpen} onOpenChange={setConversationModalOpen} />
-      <CharacterModal campaignId={campaign.id} userId={userId} role={role} systemId={campaign.system_id} open={characterModalOpen} onOpenChange={setCharacterModalOpen} />
+      <CharacterModal campaignId={campaign.id} userId={userId} role={role} systemId={campaign.system_id} systemSlug={systemSlug} open={characterModalOpen} onOpenChange={setCharacterModalOpen} />
       {isGm && (
         <SettingsModal campaignId={campaign.id} userId={userId} open={settingsOpen} onOpenChange={setSettingsOpen} />
       )}
