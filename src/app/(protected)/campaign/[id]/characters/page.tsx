@@ -22,6 +22,11 @@ export default async function CharactersPage({
     .eq("id", id).is("deleted_at", null).single();
   if (!campaign) notFound();
 
+  // Fetch system slug for wizard config lookup
+  const { data: system } = campaign.system_id
+    ? await supabase.from("systems").select("slug").eq("id", campaign.system_id).single()
+    : { data: null };
+
   const { data: characters } = await supabase
     .from("characters")
     .select("id, name, level, hp_current, hp_max, system_id, user_id, portrait_url, data")
@@ -35,6 +40,7 @@ export default async function CharactersPage({
       role={membership.role}
       userId={user.id}
       systemId={campaign.system_id}
+      systemSlug={system?.slug ?? null}
     />
   );
 }

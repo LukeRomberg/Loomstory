@@ -2,17 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
 import { EmptyState } from "@/components/loomstory/empty-state";
+import { CharacterWizard } from "@/components/loomstory/wizard/character-wizard";
+import { getWizardConfig } from "@/lib/character/wizard-registry";
 import { ChevronLeft, Plus, UserCircle, Heart } from "lucide-react";
 
 interface Character {
@@ -34,6 +29,7 @@ interface CharacterListProps {
   role: string;
   userId: string;
   systemId: string | null;
+  systemSlug: string | null;
 }
 
 function hpColor(percent: number): string {
@@ -49,43 +45,13 @@ export function CharacterList({
   role,
   userId,
   systemId,
+  systemSlug,
 }: CharacterListProps) {
   const router = useRouter();
-  const isGm = role === "gm";
   const [characters] = useState(initialCharacters);
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    setCreating(true);
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("characters")
-      .insert({
-        campaign_id: campaignId,
-        system_id: systemId,
-        name,
-        created_by: userId,
-        updated_by: userId,
-        user_id: isGm ? null : userId,
-      })
-      .select()
-      .single();
-
-    if (error || !data) {
-      toast.error("Failed to create character", { description: error?.message });
-      setCreating(false);
-      return;
-    }
-
-    toast.success("Character created");
-    setOpen(false);
-    setName("");
-    setCreating(false);
-    router.push(`/campaign/${campaignId}/characters/${data.id}`);
-  }
+  const wizardConfig = systemSlug ? getWizardConfig(systemSlug) : null;
 
   const classLabel = (char: Character) => {
     const d = char.data;
@@ -113,49 +79,20 @@ export function CharacterList({
             {characters.length} character{characters.length !== 1 ? "s" : ""} in this campaign
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger
-            render={
-              <Button className="gold-glow font-heading">
-                <Plus className="size-4 mr-1.5" />
-                New Character
-              </Button>
-            }
-          />
-          <DialogContent>
-            <form onSubmit={handleCreate}>
-              <DialogHeader>
-                <DialogTitle className="font-heading">New Character</DialogTitle>
-                <DialogDescription>Create a character and fill in details on the next page.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="char-name">Character Name</Label>
-                  <Input
-                    id="char-name"
-                    placeholder="Durk Stonefeld"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={creating || !name.trim()} className="gold-glow">
-                  {creating ? "Creating..." : "Create Character"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button
+          onClick={() => setWizardOpen(true)}
+          className="gold-glow font-heading"
+        >
+          <Plus className="size-4 mr-1.5" />
+          New Character
+        </Button>
       </div>
 
       {characters.length === 0 ? (
         <EmptyState
           icon={UserCircle}
           message="No characters yet. Create one to get started."
-          action={{ label: "New Character", onClick: () => setOpen(true) }}
+          action={{ label: "New Character", onClick: () => setWizardOpen(true) }}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -191,6 +128,22 @@ export function CharacterList({
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Character Creation Wizard */}
+      {wizardConfig && systemId && (
+        <CharacterWizard
+          open={wizardOpen}
+          onClose={() => {
+            setWizardOpen(false);
+            router.refresh();
+          }}
+          campaignId={campaignId}
+          systemId={systemId}
+          systemSlug={systemSlug!}
+          userId={userId}
+          wizardConfig={wizardConfig}
+        />
       )}
     </div>
   );
