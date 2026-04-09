@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -65,7 +65,7 @@ function classToPickerCard(
   return {
     id: cls.id,
     title: cls.name,
-    description: "", // Could add a description field to compendium_classes in the future
+    description: (data.description as string) ?? "",
     badges,
     stats,
     details,
@@ -118,15 +118,23 @@ export function CharacterWizard({
   const classStepConfig = wizardConfig.steps.class_pick;
   const subclassStepConfig = wizardConfig.steps.subclass_pick;
 
-  const { data: classesRaw, loading: classesLoading } = useStepData(
+  const { data: classesRaw, loading: classesLoading, error: classesError } = useStepData(
     classStepConfig,
     systemId
   );
-  const { data: subclassesRaw, loading: subclassesLoading } = useStepData(
+  const { data: subclassesRaw, loading: subclassesLoading, error: subclassesError } = useStepData(
     subclassStepConfig,
     systemId,
     wizardState.classId
   );
+
+  // Surface data fetch errors
+  useEffect(() => {
+    if (classesError) toast.error("Failed to load classes", { description: classesError });
+  }, [classesError]);
+  useEffect(() => {
+    if (subclassesError) toast.error("Failed to load subclasses", { description: subclassesError });
+  }, [subclassesError]);
 
   const classes = classesRaw as unknown as CompendiumClass[];
   const subclasses = subclassesRaw as unknown as CompendiumClass[];

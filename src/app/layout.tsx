@@ -20,12 +20,14 @@ const lora = Lora({
   variable: "--font-lore",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  preload: false,
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
   weight: ["400"],
+  preload: false,
 });
 
 export const viewport: Viewport = {
