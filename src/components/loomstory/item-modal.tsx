@@ -112,7 +112,7 @@ function ItemDetail({ item: initial, campaignId, role, onUpdated }: { item: Item
   async function handleDelete() {
     setDeleting(true);
     const supabase = createClient();
-    const { error } = await supabase.from("items").update({ deleted_at: new Date().toISOString() }).eq("id", item.id);
+    const { error } = await supabase.rpc("soft_delete_entity", { p_entity_type: "item", p_entity_id: item.id });
     if (error) { toast.error("Failed to delete"); setDeleting(false); return; }
     toast.success("Item archived"); setDeleteOpen(false); setDeleting(false); onUpdated();
   }

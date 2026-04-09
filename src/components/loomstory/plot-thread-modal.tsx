@@ -112,7 +112,7 @@ function PlotThreadDetail({ thread: initial, campaignId, role, onUpdated }: { th
   async function handleDelete() {
     setDeleting(true);
     const supabase = createClient();
-    const { error } = await supabase.from("plot_threads").update({ deleted_at: new Date().toISOString() }).eq("id", thread.id);
+    const { error } = await supabase.rpc("soft_delete_entity", { p_entity_type: "plot_thread", p_entity_id: thread.id });
     if (error) { toast.error("Failed to delete"); setDeleting(false); return; }
     toast.success("Thread archived"); setDeleteOpen(false); setDeleting(false); onUpdated();
   }

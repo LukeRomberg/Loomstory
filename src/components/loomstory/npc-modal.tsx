@@ -368,9 +368,7 @@ function NpcDetail({
     setDeleting(true);
     const supabase = createClient();
     const { error } = await supabase
-      .from("npcs")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", npc.id);
+      .rpc("soft_delete_entity", { p_entity_type: "npc", p_entity_id: npc.id });
 
     if (error) {
       toast.error("Failed to delete", { description: error.message });

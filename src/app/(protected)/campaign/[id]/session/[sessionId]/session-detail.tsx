@@ -230,9 +230,7 @@ export function SessionDetail({
     setDeleting(true);
     const supabase = createClient();
     const { error } = await supabase
-      .from("sessions")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", session.id);
+      .rpc("soft_delete_entity", { p_entity_type: "session", p_entity_id: session.id });
 
     if (error) {
       toast.error("Failed to delete", { description: error.message });

@@ -179,9 +179,7 @@ export function SettingsModal({
     const supabase = createClient();
 
     const { error } = await supabase
-      .from("campaigns")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", campaignId);
+      .rpc("soft_delete_entity", { p_entity_type: "campaign", p_entity_id: campaignId });
 
     if (error) {
       toast.error("Failed to archive", { description: error.message });

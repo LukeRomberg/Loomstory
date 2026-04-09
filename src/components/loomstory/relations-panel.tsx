@@ -151,9 +151,7 @@ export function RelationsPanel({
   async function handleRemove(relationId: string) {
     const supabase = createClient();
     const { error } = await supabase
-      .from("entity_relations")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", relationId);
+      .rpc("soft_delete_entity", { p_entity_type: "entity_relation", p_entity_id: relationId });
 
     if (error) {
       toast.error("Failed to remove", { description: error.message });

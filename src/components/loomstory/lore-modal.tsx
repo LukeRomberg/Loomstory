@@ -107,7 +107,7 @@ function LoreDetail({ entry: initial, campaignId, role, onUpdated }: { entry: Lo
   async function handleDelete() {
     setDeleting(true);
     const supabase = createClient();
-    const { error } = await supabase.from("lore_entries").update({ deleted_at: new Date().toISOString() }).eq("id", entry.id);
+    const { error } = await supabase.rpc("soft_delete_entity", { p_entity_type: "lore_entry", p_entity_id: entry.id });
     if (error) { toast.error("Failed to delete"); setDeleting(false); return; }
     toast.success("Lore entry archived"); setDeleteOpen(false); setDeleting(false); onUpdated();
   }

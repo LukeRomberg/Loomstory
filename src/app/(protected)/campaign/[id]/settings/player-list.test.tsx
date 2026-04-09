@@ -9,15 +9,11 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: mockRefresh }),
 }));
 
-const mockUpdate = vi.fn().mockReturnValue({
-  eq: vi.fn().mockResolvedValue({ error: null }),
-});
+const mockRpc = vi.fn().mockResolvedValue({ error: null });
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
-    from: () => ({
-      update: mockUpdate,
-    }),
+    rpc: mockRpc,
   }),
 }));
 
@@ -98,11 +94,10 @@ describe("PlayerList", () => {
     await user.click(confirmBtn);
 
     await waitFor(() => {
-      expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          deleted_at: expect.any(String),
-        })
-      );
+      expect(mockRpc).toHaveBeenCalledWith("soft_delete_entity", {
+        p_entity_type: "campaign_member",
+        p_entity_id: mockMembers[1].id,
+      });
     });
   });
 
@@ -127,7 +122,7 @@ describe("PlayerList", () => {
     const cancelBtn = await screen.findByRole("button", { name: /cancel/i });
     await user.click(cancelBtn);
 
-    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockRpc).not.toHaveBeenCalled();
     expect(screen.getByText("Player One")).toBeInTheDocument();
   });
 });

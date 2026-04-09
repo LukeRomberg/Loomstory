@@ -98,9 +98,7 @@ export function CampaignSettings({
     const supabase = createClient();
 
     const { error: archiveError } = await supabase
-      .from("campaigns")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", campaign.id);
+      .rpc("soft_delete_entity", { p_entity_type: "campaign", p_entity_id: campaign.id });
 
     if (archiveError) {
       toast.error("Failed to archive", { description: archiveError.message });

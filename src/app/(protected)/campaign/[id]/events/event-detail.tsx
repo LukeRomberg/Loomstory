@@ -168,9 +168,7 @@ export function EventDetail({
     setDeleting(true);
     const supabase = createClient();
     const { error } = await supabase
-      .from("campaign_events")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", event.id);
+      .rpc("soft_delete_entity", { p_entity_type: "event", p_entity_id: event.id });
 
     if (error) {
       toast.error("Failed to delete", { description: error.message });

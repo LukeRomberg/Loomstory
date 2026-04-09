@@ -279,9 +279,7 @@ function ConversationDetailPanel({
     setDeleting(true);
     const supabase = createClient();
     const { error } = await supabase
-      .from("conversation_logs")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", conv.id);
+      .rpc("soft_delete_entity", { p_entity_type: "conversation", p_entity_id: conv.id });
 
     if (error) {
       toast.error("Failed to delete", { description: error.message });

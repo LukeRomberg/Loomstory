@@ -106,7 +106,7 @@ function FactionDetail({ faction: initial, campaignId, role, onUpdated }: { fact
   async function handleDelete() {
     setDeleting(true);
     const supabase = createClient();
-    const { error } = await supabase.from("factions").update({ deleted_at: new Date().toISOString() }).eq("id", fac.id);
+    const { error } = await supabase.rpc("soft_delete_entity", { p_entity_type: "faction", p_entity_id: fac.id });
     if (error) { toast.error("Failed to delete"); setDeleting(false); return; }
     toast.success("Faction archived"); setDeleteOpen(false); setDeleting(false); onUpdated();
   }

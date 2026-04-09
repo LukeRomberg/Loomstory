@@ -145,7 +145,7 @@ function LocationDetail({ location: initial, campaignId, role, onUpdated }: { lo
   async function handleDelete() {
     setDeleting(true);
     const supabase = createClient();
-    const { error } = await supabase.from("locations").update({ deleted_at: new Date().toISOString() }).eq("id", loc.id);
+    const { error } = await supabase.rpc("soft_delete_entity", { p_entity_type: "location", p_entity_id: loc.id });
     if (error) { toast.error("Failed to delete", { description: error.message }); setDeleting(false); return; }
     toast.success("Location archived"); setDeleteOpen(false); setDeleting(false); onUpdated();
   }

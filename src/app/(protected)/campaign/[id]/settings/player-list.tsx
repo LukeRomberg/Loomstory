@@ -56,9 +56,7 @@ export function PlayerList({
     const supabase = createClient();
 
     const { error } = await supabase
-      .from("campaign_members")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", member.id);
+      .rpc("soft_delete_entity", { p_entity_type: "campaign_member", p_entity_id: member.id });
 
     if (error) {
       toast.error("Failed to remove player", { description: error.message });
