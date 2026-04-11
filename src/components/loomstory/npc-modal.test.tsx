@@ -21,7 +21,7 @@ function chainable(finalValue: unknown) {
   const handler: ProxyHandler<Record<string, unknown>> = {
     get(_t, prop) {
       if (prop === "then") return undefined;
-      if (typeof finalValue === "object" && finalValue !== null && prop in finalValue) {
+      if (typeof prop === "string" && typeof finalValue === "object" && finalValue !== null && prop in finalValue) {
         return (finalValue as Record<string, unknown>)[prop];
       }
       return (..._args: unknown[]) => new Proxy(chain, handler);
@@ -240,7 +240,7 @@ describe("NpcModal", () => {
       await selectNpc();
       await waitFor(() => expect(screen.getByRole("tab", { name: /general/i })).toBeInTheDocument());
       // No fetch calls should have been made for relations or history
-      const fetchCalls = mockFetchResponse.mock.calls.map(([url]: [string]) => url);
+      const fetchCalls = mockFetchResponse.mock.calls.map(([url]) => url as string);
       expect(fetchCalls.some((u: string) => u.includes("/relations"))).toBe(false);
       expect(fetchCalls.some((u: string) => u.includes("/history"))).toBe(false);
     });
@@ -250,11 +250,11 @@ describe("NpcModal", () => {
       await waitFor(() => expect(screen.getByRole("tab", { name: /relationships/i })).toBeInTheDocument());
       await user.click(screen.getByRole("tab", { name: /relationships/i }));
       await waitFor(() => {
-        const fetchCalls = mockFetchResponse.mock.calls.map(([url]: [string]) => url);
+        const fetchCalls = mockFetchResponse.mock.calls.map(([url]) => url as string);
         expect(fetchCalls.some((u: string) => u.includes("/relations"))).toBe(true);
       });
       // History should NOT have been fetched
-      const fetchCalls = mockFetchResponse.mock.calls.map(([url]: [string]) => url);
+      const fetchCalls = mockFetchResponse.mock.calls.map(([url]) => url as string);
       expect(fetchCalls.some((u: string) => u.includes("/history"))).toBe(false);
     });
 
@@ -263,11 +263,11 @@ describe("NpcModal", () => {
       await waitFor(() => expect(screen.getByRole("tab", { name: /history/i })).toBeInTheDocument());
       await user.click(screen.getByRole("tab", { name: /history/i }));
       await waitFor(() => {
-        const fetchCalls = mockFetchResponse.mock.calls.map(([url]: [string]) => url);
+        const fetchCalls = mockFetchResponse.mock.calls.map(([url]) => url as string);
         expect(fetchCalls.some((u: string) => u.includes("/history"))).toBe(true);
       });
       // Relations should NOT have been fetched
-      const fetchCalls = mockFetchResponse.mock.calls.map(([url]: [string]) => url);
+      const fetchCalls = mockFetchResponse.mock.calls.map(([url]) => url as string);
       expect(fetchCalls.some((u: string) => u.includes("/relations"))).toBe(false);
     });
 

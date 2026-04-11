@@ -131,7 +131,7 @@ describe("saveNewCharacter", () => {
     // Override from() to return different chains per table
     let callIndex = 0;
     const calls: Record<string, unknown> = {};
-    mockSupabase.from = vi.fn((table: string) => {
+    (mockSupabase as Record<string, unknown>).from = vi.fn((table: string) => {
       callIndex++;
       if (table === "characters" && callIndex === 1) {
         return {
