@@ -15,6 +15,7 @@ import { LoreModal } from "@/components/loomstory/lore-modal";
 import { EventModal } from "@/components/loomstory/event-modal";
 import { ConversationModal } from "@/components/loomstory/conversation-modal";
 import { CharacterModal } from "@/components/loomstory/character-modal";
+import { CampaignTimeline, type TimelineEvent } from "@/components/loomstory/campaign-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +85,7 @@ interface CampaignDashboardProps {
     characters: number;
   };
   userId: string;
+  timelineEvents: TimelineEvent[];
 }
 
 export function CampaignDashboard({
@@ -94,6 +96,7 @@ export function CampaignDashboard({
   sessions: initialSessions,
   entityCounts,
   userId,
+  timelineEvents,
 }: CampaignDashboardProps) {
   const router = useRouter();
   const isGm = role === "gm";
@@ -201,6 +204,9 @@ export function CampaignDashboard({
           />
         )}
       </div>
+
+      {/* Timeline */}
+      <CampaignTimeline events={timelineEvents} />
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

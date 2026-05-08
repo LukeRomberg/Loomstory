@@ -1,0 +1,134 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { ScrollText } from "lucide-react";
+
+export interface TimelineEntity {
+  entity_type: string;
+  entity_id: string;
+  name: string;
+}
+
+export interface TimelineEvent {
+  id: string;
+  title: string;
+  narrative_day: number | null;
+  narrative_time: number | null;
+  sequence: number;
+  gm_only: boolean;
+  entities: TimelineEntity[];
+}
+
+interface CampaignTimelineProps {
+  events: TimelineEvent[];
+}
+
+const UNROLL_DURATION_MS = 1500;
+
+function formatNarrativeTime(t: number | null): string | null {
+  if (t === null) return null;
+  const hh = Math.floor(t / 100);
+  const mm = t % 100;
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+
+export function CampaignTimeline({ events }: CampaignTimelineProps) {
+  const [unrolling, setUnrolling] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setUnrolling(false), 50);
+    return () => clearTimeout(t);
+  }, []);
+
+  const visibleEvents = useMemo(() => {
+    return events
+      .filter((e): e is TimelineEvent & { narrative_day: number } => e.narrative_day !== null)
+      .sort((a, b) => {
+        if (a.narrative_day !== b.narrative_day) return a.narrative_day - b.narrative_day;
+        const ta = a.narrative_time ?? -1;
+        const tb = b.narrative_time ?? -1;
+        if (ta !== tb) return ta - tb;
+        return a.sequence - b.sequence;
+      });
+  }, [events]);
+
+  return (
+    <div
+      data-testid="timeline-container"
+      data-unrolling={unrolling ? "true" : "false"}
+      className="relative h-[300px] grain rounded-md border border-border/40 bg-[oklch(0.93_0.04_85)] shadow-inner overflow-hidden"
+      style={{
+        clipPath: unrolling ? "inset(0 50% 0 50%)" : "inset(0 0 0 0)",
+        transition: `clip-path ${UNROLL_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+      }}
+    >
+      <div
+        data-testid="scroll-end-left"
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[oklch(0.55_0.08_60)] to-transparent shadow-[inset_-4px_0_8px_rgba(0,0,0,0.3)] z-10"
+      />
+      <div
+        data-testid="scroll-end-right"
+        aria-hidden
+        className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[oklch(0.55_0.08_60)] to-transparent shadow-[inset_4px_0_8px_rgba(0,0,0,0.3)] z-10"
+      />
+
+      <div
+        data-testid="timeline-rail"
+        className="h-full overflow-x-auto overflow-y-hidden px-10 py-6 flex items-center"
+      >
+        {visibleEvents.length === 0 ? (
+          <div className="flex-1 text-center">
+            <ScrollText className="size-10 text-rune mx-auto mb-3 opacity-50" />
+            <p className="font-lore text-muted-foreground">
+              Your timeline is blank. Log an event to begin the tale.
+            </p>
+          </div>
+        ) : (
+          <div className="relative flex items-stretch gap-8 min-w-full">
+            <div className="absolute left-0 right-0 top-1/2 h-px bg-foreground/30" aria-hidden />
+            {visibleEvents.map((event) => {
+              const time = formatNarrativeTime(event.narrative_time);
+              return (
+                <div
+                  key={event.id}
+                  data-testid="timeline-marker"
+                  data-event-id={event.id}
+                  className="relative flex flex-col items-center min-w-[180px] max-w-[220px] z-[1]"
+                >
+                  <div
+                    data-testid="timeline-day-stamp"
+                    className="font-mono text-xs text-foreground/70 mb-2 whitespace-nowrap"
+                  >
+                    <span>Day {event.narrative_day}</span>
+                    {time && <span className="ml-1.5">{time}</span>}
+                  </div>
+                  <div className="w-px h-4 bg-foreground/40" aria-hidden />
+                  <div className="size-2 rounded-full bg-foreground/70 -mt-px" aria-hidden />
+                  <div className="w-px h-4 bg-foreground/40" aria-hidden />
+                  <p className="font-lore text-sm text-foreground text-center mt-2 line-clamp-2">
+                    {event.title}
+                  </p>
+                  {event.entities.length > 0 && (
+                    <div className="flex flex-wrap gap-1 justify-center mt-2">
+                      {event.entities.map((ent) => (
+                        <Badge
+                          key={`${ent.entity_type}:${ent.entity_id}`}
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0"
+                        >
+                          {ent.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
