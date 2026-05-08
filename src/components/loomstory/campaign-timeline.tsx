@@ -134,11 +134,6 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
         clipPath: unrolling ? "inset(0 50% 0 50%)" : "inset(0 0 0 0)",
         transition: `clip-path ${UNROLL_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
         color: INK_COLOR,
-        backgroundImage:
-          "radial-gradient(ellipse at 50% 50%, transparent 60%, oklch(0.45 0.10 45 / 0.28) 100%), url('/decorations/ParchmentTexture.png')",
-        backgroundSize: "100% 100%, auto 100%",
-        backgroundRepeat: "no-repeat, repeat-x",
-        backgroundPosition: "center, left center",
         backgroundColor: "oklch(0.93 0.04 85)",
         boxShadow: "inset 0 0 70px oklch(0.45 0.10 45 / 0.20)",
       }}
@@ -160,6 +155,7 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
       >
         {visibleEvents.length === 0 ? (
           <div className="relative h-full w-max min-w-full">
+            <MirrorTileBackground spanPx={5120} />
             <DecorationLayer decorations={decorations} />
             <div className="relative h-full flex flex-col items-center justify-center px-10 z-[1]">
               <ScrollText className="size-10 mx-auto mb-3 opacity-50" style={{ color: INK_MUTED }} />
@@ -173,6 +169,7 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
             className="relative h-full"
             style={{ width: `${railContentWidth}px`, paddingLeft: `${RAIL_PADDING}px`, paddingRight: `${RAIL_PADDING}px`, display: "flex", alignItems: "stretch", boxSizing: "border-box" }}
           >
+            <MirrorTileBackground spanPx={railContentWidth} />
             <DecorationLayer decorations={decorations} />
             <svg
               aria-hidden
@@ -243,6 +240,33 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+const PARCHMENT_TILE_WIDTH = 2560;
+
+function MirrorTileBackground({ spanPx }: { spanPx: number }) {
+  const tileCount = Math.max(1, Math.ceil(spanPx / PARCHMENT_TILE_WIDTH) + 1);
+  return (
+    <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      {Array.from({ length: tileCount }, (_, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={i}
+          src="/decorations/ParchmentTexture.png"
+          alt=""
+          width={PARCHMENT_TILE_WIDTH}
+          height={RAIL_HEIGHT}
+          style={{
+            position: "absolute",
+            left: `${i * PARCHMENT_TILE_WIDTH}px`,
+            top: 0,
+            transform: i % 2 === 1 ? "scaleX(-1)" : undefined,
+            transformOrigin: "center",
+          }}
+        />
+      ))}
     </div>
   );
 }
