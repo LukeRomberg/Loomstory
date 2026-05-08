@@ -134,17 +134,13 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
         clipPath: unrolling ? "inset(0 50% 0 50%)" : "inset(0 0 0 0)",
         transition: `clip-path ${UNROLL_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
         color: INK_COLOR,
-        background: [
-          "radial-gradient(ellipse at 18% 22%, oklch(0.84 0.09 50 / 0.55) 0%, transparent 45%)",
-          "radial-gradient(ellipse at 78% 72%, oklch(0.97 0.03 95 / 0.6) 0%, transparent 55%)",
-          "radial-gradient(circle at 60% 12%, oklch(0.74 0.10 40 / 0.45) 0%, transparent 18%)",
-          "radial-gradient(circle at 32% 82%, oklch(0.78 0.09 50 / 0.45) 0%, transparent 22%)",
-          "radial-gradient(circle at 88% 38%, oklch(0.82 0.08 55 / 0.40) 0%, transparent 16%)",
-          "radial-gradient(circle at 12% 60%, oklch(0.80 0.08 55 / 0.40) 0%, transparent 14%)",
-          "radial-gradient(circle at 50% 50%, transparent 55%, oklch(0.55 0.10 50 / 0.30) 100%)",
-          "oklch(0.93 0.04 85)",
-        ].join(", "),
-        boxShadow: "inset 0 0 70px oklch(0.45 0.10 45 / 0.25)",
+        backgroundImage:
+          "radial-gradient(ellipse at 50% 50%, transparent 60%, oklch(0.45 0.10 45 / 0.28) 100%), url('/decorations/ParchmentTexture.png')",
+        backgroundSize: "100% 100%, auto 100%",
+        backgroundRepeat: "no-repeat, repeat-x",
+        backgroundPosition: "center, left center",
+        backgroundColor: "oklch(0.93 0.04 85)",
+        boxShadow: "inset 0 0 70px oklch(0.45 0.10 45 / 0.20)",
       }}
     >
       <div
