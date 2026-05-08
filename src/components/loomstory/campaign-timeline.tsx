@@ -25,6 +25,8 @@ interface CampaignTimelineProps {
 }
 
 const UNROLL_DURATION_MS = 1500;
+const INK_COLOR = "oklch(0.2 0.04 60)";
+const INK_MUTED = "oklch(0.4 0.03 60)";
 
 function formatNarrativeTime(t: number | null): string | null {
   if (t === null) return null;
@@ -61,6 +63,7 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
       style={{
         clipPath: unrolling ? "inset(0 50% 0 50%)" : "inset(0 0 0 0)",
         transition: `clip-path ${UNROLL_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+        color: INK_COLOR,
       }}
     >
       <div
@@ -76,53 +79,65 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
 
       <div
         data-testid="timeline-rail"
-        className="h-full overflow-x-auto overflow-y-hidden px-10 py-6 flex items-center"
+        className="h-full overflow-x-auto overflow-y-hidden"
       >
         {visibleEvents.length === 0 ? (
-          <div className="flex-1 text-center">
-            <ScrollText className="size-10 text-rune mx-auto mb-3 opacity-50" />
-            <p className="font-lore text-muted-foreground">
+          <div className="h-full flex flex-col items-center justify-center px-10">
+            <ScrollText className="size-10 mx-auto mb-3 opacity-50" style={{ color: INK_MUTED }} />
+            <p className="font-lore" style={{ color: INK_MUTED }}>
               Your timeline is blank. Log an event to begin the tale.
             </p>
           </div>
         ) : (
-          <div className="relative flex items-stretch gap-8 min-w-full">
-            <div className="absolute left-0 right-0 top-1/2 h-px bg-foreground/30" aria-hidden />
-            {visibleEvents.map((event) => {
+          <div className="relative h-full min-w-full px-12 flex items-stretch">
+            <div
+              aria-hidden
+              className="absolute left-12 right-12 top-1/2 -translate-y-1/2"
+              style={{
+                height: "2px",
+                background: INK_COLOR,
+                opacity: 0.65,
+              }}
+            />
+            {visibleEvents.map((event, idx) => {
+              const above = idx % 2 === 0;
               const time = formatNarrativeTime(event.narrative_time);
               return (
                 <div
                   key={event.id}
                   data-testid="timeline-marker"
                   data-event-id={event.id}
-                  className="relative flex flex-col items-center min-w-[180px] max-w-[220px] z-[1]"
+                  className="relative h-full flex flex-col items-center min-w-[180px] max-w-[220px] z-[1]"
                 >
                   <div
-                    data-testid="timeline-day-stamp"
-                    className="font-mono text-xs text-foreground/70 mb-2 whitespace-nowrap"
+                    className="flex flex-col items-center justify-end w-full pb-4"
+                    style={{ height: "50%" }}
                   >
-                    <span>Day {event.narrative_day}</span>
-                    {time && <span className="ml-1.5">{time}</span>}
+                    {above && <MarkerContent event={event} time={time} />}
                   </div>
-                  <div className="w-px h-4 bg-foreground/40" aria-hidden />
-                  <div className="size-2 rounded-full bg-foreground/70 -mt-px" aria-hidden />
-                  <div className="w-px h-4 bg-foreground/40" aria-hidden />
-                  <p className="font-lore text-sm text-foreground text-center mt-2 line-clamp-2">
-                    {event.title}
-                  </p>
-                  {event.entities.length > 0 && (
-                    <div className="flex flex-wrap gap-1 justify-center mt-2">
-                      {event.entities.map((ent) => (
-                        <Badge
-                          key={`${ent.entity_type}:${ent.entity_id}`}
-                          variant="outline"
-                          className="text-[10px] px-1.5 py-0"
-                        >
-                          {ent.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+
+                  <div
+                    aria-hidden
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      width: "2px",
+                      height: "20px",
+                      background: INK_COLOR,
+                      opacity: 0.85,
+                    }}
+                  />
+                  <div
+                    aria-hidden
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-2 rounded-full"
+                    style={{ background: INK_COLOR }}
+                  />
+
+                  <div
+                    className="flex flex-col items-center justify-start w-full pt-4"
+                    style={{ height: "50%" }}
+                  >
+                    {!above && <MarkerContent event={event} time={time} />}
+                  </div>
                 </div>
               );
             })}
@@ -130,5 +145,46 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
         )}
       </div>
     </div>
+  );
+}
+
+function MarkerContent({
+  event,
+  time,
+}: {
+  event: TimelineEvent & { narrative_day: number };
+  time: string | null;
+}) {
+  return (
+    <>
+      <div
+        data-testid="timeline-day-stamp"
+        className="font-mono text-xs whitespace-nowrap mb-1"
+        style={{ color: INK_MUTED }}
+      >
+        <span>Day {event.narrative_day}</span>
+        {time && <span className="ml-1.5">{time}</span>}
+      </div>
+      <p
+        className="font-lore text-sm text-center line-clamp-2 leading-snug px-1"
+        style={{ color: INK_COLOR }}
+      >
+        {event.title}
+      </p>
+      {event.entities.length > 0 && (
+        <div className="flex flex-wrap gap-1 justify-center mt-1.5 px-1">
+          {event.entities.map((ent) => (
+            <Badge
+              key={`${ent.entity_type}:${ent.entity_id}`}
+              variant="outline"
+              className="text-[10px] px-1.5 py-0 border-[oklch(0.4_0.04_60)/0.5]"
+              style={{ color: INK_COLOR }}
+            >
+              {ent.name}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </>
   );
 }
