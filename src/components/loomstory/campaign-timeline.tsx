@@ -18,20 +18,20 @@ interface Decoration {
   size: number;
 }
 
-function generateDecorations(spanPx: number, baseGap: number): Decoration[] {
+function generateDecorations(spanPx: number): Decoration[] {
   const out: Decoration[] = [];
-  let cursor = 40;
+  let cursor = 80;
   let i = 0;
   const TOP_PADDING = 12;
   const BOTTOM_PADDING = 12;
   const CONTAINER_HEIGHT = 300;
-  while (cursor < spanPx - 40) {
+  while (cursor < spanPx - 100) {
     const src = DECORATION_IMAGES[(i * 5 + 2) % DECORATION_IMAGES.length];
-    const size = 56 + ((i * 3) % 36);
-    const onTop = i % 2 === 0;
+    const size = 112 + ((i * 3) % 72);
+    const onTop = ((i * 1481 + 3) % 100) < 50;
     const y = onTop ? TOP_PADDING : CONTAINER_HEIGHT - BOTTOM_PADDING - size;
     out.push({ src, x: cursor, y, size });
-    cursor += baseGap + ((i * 11) % 60);
+    cursor += 700 + (((i * 1009 + 7) % 600) - 300);
     i++;
   }
   return out;
@@ -90,9 +90,7 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
 
   const decorations = useMemo(() => {
     const spanPx = Math.max(1400, visibleEvents.length * 220 + 240);
-    const n = visibleEvents.length;
-    const baseGap = n === 0 ? 95 : n < 4 ? 105 : n < 10 ? 140 : 180;
-    return generateDecorations(spanPx, baseGap);
+    return generateDecorations(spanPx);
   }, [visibleEvents.length]);
 
   return (
