@@ -143,17 +143,15 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
         aria-hidden
         className="absolute inset-y-0 left-0 z-10"
         style={{
-          width: "70px",
-          background: [
-            "repeating-linear-gradient(0deg, transparent 0, transparent 7px, oklch(0.18 0.04 30 / 0.20) 7px, oklch(0.18 0.04 30 / 0.20) 8px)",
-            "linear-gradient(to right, oklch(0.16 0.04 30) 0%, oklch(0.32 0.07 40) 10%, oklch(0.58 0.10 55) 24%, oklch(0.46 0.09 45) 50%, oklch(0.30 0.07 38) 78%, oklch(0.16 0.04 30) 100%)",
-          ].join(", "),
-          borderRadius: "0 6px 6px 0",
+          width: "35px",
+          background:
+            "linear-gradient(to right, oklch(0.42 0.06 35) 0%, oklch(0.55 0.08 45) 10%, oklch(0.80 0.10 60) 30%, oklch(0.68 0.09 50) 55%, oklch(0.52 0.07 40) 80%, oklch(0.40 0.06 35) 100%)",
+          borderRadius: "0 5px 5px 0",
           boxShadow: [
-            "inset -3px 0 8px rgba(0,0,0,0.55)",
-            "inset 0 6px 8px rgba(0,0,0,0.35)",
-            "inset 0 -6px 8px rgba(0,0,0,0.35)",
-            "8px 0 14px -4px rgba(0,0,0,0.45)",
+            "inset -2px 0 6px rgba(0,0,0,0.30)",
+            "inset 0 5px 7px rgba(0,0,0,0.20)",
+            "inset 0 -5px 7px rgba(0,0,0,0.20)",
+            "6px 0 12px -4px rgba(0,0,0,0.30)",
           ].join(", "),
         }}
       />
@@ -162,17 +160,15 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
         aria-hidden
         className="absolute inset-y-0 right-0 z-10"
         style={{
-          width: "70px",
-          background: [
-            "repeating-linear-gradient(0deg, transparent 0, transparent 7px, oklch(0.18 0.04 30 / 0.20) 7px, oklch(0.18 0.04 30 / 0.20) 8px)",
-            "linear-gradient(to left, oklch(0.16 0.04 30) 0%, oklch(0.32 0.07 40) 10%, oklch(0.58 0.10 55) 24%, oklch(0.46 0.09 45) 50%, oklch(0.30 0.07 38) 78%, oklch(0.16 0.04 30) 100%)",
-          ].join(", "),
-          borderRadius: "6px 0 0 6px",
+          width: "35px",
+          background:
+            "linear-gradient(to left, oklch(0.42 0.06 35) 0%, oklch(0.55 0.08 45) 10%, oklch(0.80 0.10 60) 30%, oklch(0.68 0.09 50) 55%, oklch(0.52 0.07 40) 80%, oklch(0.40 0.06 35) 100%)",
+          borderRadius: "5px 0 0 5px",
           boxShadow: [
-            "inset 3px 0 8px rgba(0,0,0,0.55)",
-            "inset 0 6px 8px rgba(0,0,0,0.35)",
-            "inset 0 -6px 8px rgba(0,0,0,0.35)",
-            "-8px 0 14px -4px rgba(0,0,0,0.45)",
+            "inset 2px 0 6px rgba(0,0,0,0.30)",
+            "inset 0 5px 7px rgba(0,0,0,0.20)",
+            "inset 0 -5px 7px rgba(0,0,0,0.20)",
+            "-6px 0 12px -4px rgba(0,0,0,0.30)",
           ].join(", "),
         }}
       />
