@@ -141,12 +141,40 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
       <div
         data-testid="scroll-end-left"
         aria-hidden
-        className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[oklch(0.55_0.08_60)] to-transparent shadow-[inset_-4px_0_8px_rgba(0,0,0,0.3)] z-10"
+        className="absolute inset-y-0 left-0 z-10"
+        style={{
+          width: "70px",
+          background: [
+            "repeating-linear-gradient(0deg, transparent 0, transparent 7px, oklch(0.18 0.04 30 / 0.20) 7px, oklch(0.18 0.04 30 / 0.20) 8px)",
+            "linear-gradient(to right, oklch(0.16 0.04 30) 0%, oklch(0.32 0.07 40) 10%, oklch(0.58 0.10 55) 24%, oklch(0.46 0.09 45) 50%, oklch(0.30 0.07 38) 78%, oklch(0.16 0.04 30) 100%)",
+          ].join(", "),
+          borderRadius: "0 6px 6px 0",
+          boxShadow: [
+            "inset -3px 0 8px rgba(0,0,0,0.55)",
+            "inset 0 6px 8px rgba(0,0,0,0.35)",
+            "inset 0 -6px 8px rgba(0,0,0,0.35)",
+            "8px 0 14px -4px rgba(0,0,0,0.45)",
+          ].join(", "),
+        }}
       />
       <div
         data-testid="scroll-end-right"
         aria-hidden
-        className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[oklch(0.55_0.08_60)] to-transparent shadow-[inset_4px_0_8px_rgba(0,0,0,0.3)] z-10"
+        className="absolute inset-y-0 right-0 z-10"
+        style={{
+          width: "70px",
+          background: [
+            "repeating-linear-gradient(0deg, transparent 0, transparent 7px, oklch(0.18 0.04 30 / 0.20) 7px, oklch(0.18 0.04 30 / 0.20) 8px)",
+            "linear-gradient(to left, oklch(0.16 0.04 30) 0%, oklch(0.32 0.07 40) 10%, oklch(0.58 0.10 55) 24%, oklch(0.46 0.09 45) 50%, oklch(0.30 0.07 38) 78%, oklch(0.16 0.04 30) 100%)",
+          ].join(", "),
+          borderRadius: "6px 0 0 6px",
+          boxShadow: [
+            "inset 3px 0 8px rgba(0,0,0,0.55)",
+            "inset 0 6px 8px rgba(0,0,0,0.35)",
+            "inset 0 -6px 8px rgba(0,0,0,0.35)",
+            "-8px 0 14px -4px rgba(0,0,0,0.45)",
+          ].join(", "),
+        }}
       />
 
       <div
