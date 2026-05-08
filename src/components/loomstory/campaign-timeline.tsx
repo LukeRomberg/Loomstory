@@ -44,13 +44,15 @@ function generateDecorations(spanPx: number, baseGap: number): Decoration[] {
   const out: Decoration[] = [];
   let cursor = 40;
   let i = 0;
+  const TOP_PADDING = 12;
+  const BOTTOM_PADDING = 12;
+  const CONTAINER_HEIGHT = 300;
   while (cursor < spanPx - 40) {
     const iconName = DECORATION_ICONS[(i * 5 + 2) % DECORATION_ICONS.length];
-    const yJitter = ((i * 7919) % 110) - 55;
-    const yBase = i % 2 === 0 ? 60 : 230;
-    const rotation = ((i * 13) % 70) - 35;
     const size = 56 + ((i * 3) % 36);
-    out.push({ iconName, x: cursor, y: yBase + yJitter, rotation, size });
+    const onTop = i % 2 === 0;
+    const y = onTop ? TOP_PADDING : CONTAINER_HEIGHT - BOTTOM_PADDING - size;
+    out.push({ iconName, x: cursor, y, rotation: 0, size });
     cursor += baseGap + ((i * 11) % 60);
     i++;
   }
@@ -248,9 +250,8 @@ function DecorationLayer({ decorations }: { decorations: Decoration[] }) {
               position: "absolute",
               left: `${d.x}px`,
               top: `${d.y}px`,
-              transform: `rotate(${d.rotation}deg)`,
-              color: INK_COLOR,
-              opacity: 0.45,
+              color: "#000",
+              opacity: 0.55,
               filter: "url(#ink-roughen)",
             }}
           />
