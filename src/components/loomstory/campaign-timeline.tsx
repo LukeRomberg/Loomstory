@@ -2,35 +2,34 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import {
-  ScrollText,
-  Crown,
-  Sword,
-  Shield,
-  Castle,
-  Mountain,
-  BookOpen,
-  Skull,
-  Flame,
-  Sparkles,
-  Feather,
-  Tent,
-  Trees,
-  Wand2,
-  Anchor,
-  Compass,
-  Bone,
-  Map,
-  type LucideIcon,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
+import { ScrollText } from "lucide-react";
 
-const DECORATION_ICONS: LucideIcon[] = [
-  Crown, Sword, Shield, Castle, Mountain, BookOpen, Skull, Flame,
-  Sparkles, Feather, Tent, Trees, Wand2, Anchor, Compass, Bone, Map,
+const DECORATION_ICONS: string[] = [
+  "game-icons:wizard-staff",
+  "game-icons:dragon-head",
+  "game-icons:spell-book",
+  "game-icons:medieval-pavilion",
+  "game-icons:sword-clash",
+  "game-icons:battle-axe",
+  "game-icons:wolf-howl",
+  "game-icons:treasure-chest",
+  "game-icons:potion-ball",
+  "game-icons:scroll-unfurled",
+  "game-icons:fairy-wand",
+  "game-icons:campfire",
+  "game-icons:cauldron",
+  "game-icons:crystal-ball",
+  "game-icons:knight-banner",
+  "game-icons:tower-fall",
+  "game-icons:crown",
+  "game-icons:village",
+  "game-icons:dungeon-gate",
+  "game-icons:axe-in-stump",
 ];
 
 interface Decoration {
-  Icon: LucideIcon;
+  iconName: string;
   x: number;
   y: number;
   rotation: number;
@@ -42,12 +41,12 @@ function generateDecorations(spanPx: number, baseGap: number): Decoration[] {
   let cursor = 40;
   let i = 0;
   while (cursor < spanPx - 40) {
-    const Icon = DECORATION_ICONS[(i * 5 + 2) % DECORATION_ICONS.length];
+    const iconName = DECORATION_ICONS[(i * 5 + 2) % DECORATION_ICONS.length];
     const yJitter = ((i * 7919) % 110) - 55;
     const yBase = i % 2 === 0 ? 60 : 230;
     const rotation = ((i * 13) % 70) - 35;
-    const size = 28 + ((i * 3) % 18);
-    out.push({ Icon, x: cursor, y: yBase + yJitter, rotation, size });
+    const size = 56 + ((i * 3) % 36);
+    out.push({ iconName, x: cursor, y: yBase + yJitter, rotation, size });
     cursor += baseGap + ((i * 11) % 60);
     i++;
   }
@@ -212,24 +211,22 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
 function DecorationLayer({ decorations }: { decorations: Decoration[] }) {
   return (
     <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-      {decorations.map((d, i) => {
-        const Icon = d.Icon;
-        return (
-          <Icon
-            key={i}
-            style={{
-              position: "absolute",
-              left: `${d.x}px`,
-              top: `${d.y}px`,
-              width: `${d.size}px`,
-              height: `${d.size}px`,
-              transform: `rotate(${d.rotation}deg)`,
-              color: INK_COLOR,
-              opacity: 0.1,
-            }}
-          />
-        );
-      })}
+      {decorations.map((d, i) => (
+        <Icon
+          key={i}
+          icon={d.iconName}
+          width={d.size}
+          height={d.size}
+          style={{
+            position: "absolute",
+            left: `${d.x}px`,
+            top: `${d.y}px`,
+            transform: `rotate(${d.rotation}deg)`,
+            color: INK_COLOR,
+            opacity: 0.15,
+          }}
+        />
+      ))}
     </div>
   );
 }
