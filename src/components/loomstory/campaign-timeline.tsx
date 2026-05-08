@@ -11,6 +11,32 @@ const DECORATION_IMAGES: string[] = [
   "/decorations/Trees.png",
 ];
 
+const RAIL_HEIGHT = 300;
+const RAIL_CENTER_Y = 150;
+const RAIL_PADDING = 48;
+const MARKER_WIDTH = 200;
+const WAVE_AMPLITUDE = 45;
+const WAVE_PERIOD = 880;
+const TICK_HEIGHT = 24;
+const TICK_DOT_SIZE = 8;
+const DECORATION_TOP_PADDING = 12;
+const DECORATION_BOTTOM_PADDING = 12;
+
+function lineY(x: number): number {
+  return RAIL_CENTER_Y + WAVE_AMPLITUDE * Math.sin((x * 2 * Math.PI) / WAVE_PERIOD);
+}
+
+function buildWavePath(railWidth: number): string {
+  const startX = RAIL_PADDING;
+  const endX = railWidth - RAIL_PADDING;
+  if (endX <= startX) return "";
+  let path = `M ${startX} ${lineY(startX).toFixed(1)}`;
+  for (let x = startX + 6; x <= endX; x += 6) {
+    path += ` L ${x} ${lineY(x).toFixed(1)}`;
+  }
+  return path;
+}
+
 interface Decoration {
   src: string;
   x: number;
@@ -22,14 +48,16 @@ function generateDecorations(spanPx: number): Decoration[] {
   const out: Decoration[] = [];
   let cursor = 80;
   let i = 0;
-  const TOP_PADDING = 12;
-  const BOTTOM_PADDING = 12;
-  const CONTAINER_HEIGHT = 300;
   while (cursor < spanPx - 100) {
     const src = DECORATION_IMAGES[(i * 5 + 2) % DECORATION_IMAGES.length];
-    const size = 112 + ((i * 3) % 72);
-    const onTop = ((i * 1481 + 3) % 100) < 50;
-    const y = onTop ? TOP_PADDING : CONTAINER_HEIGHT - BOTTOM_PADDING - size;
+    const requested = 112 + ((i * 3) % 72);
+    const lineYHere = lineY(cursor + requested / 2);
+    const onTop = lineYHere > RAIL_CENTER_Y;
+    const available = onTop
+      ? lineYHere - DECORATION_TOP_PADDING - 6
+      : RAIL_HEIGHT - lineYHere - DECORATION_BOTTOM_PADDING - 6;
+    const size = Math.max(64, Math.min(requested, available));
+    const y = onTop ? DECORATION_TOP_PADDING : RAIL_HEIGHT - DECORATION_BOTTOM_PADDING - size;
     out.push({ src, x: cursor, y, size });
     cursor += 700 + (((i * 1009 + 7) % 600) - 300);
     i++;
@@ -88,10 +116,14 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
       });
   }, [events]);
 
-  const decorations = useMemo(() => {
-    const spanPx = Math.max(1400, visibleEvents.length * 220 + 240);
-    return generateDecorations(spanPx);
+  const railContentWidth = useMemo(() => {
+    return RAIL_PADDING * 2 + visibleEvents.length * MARKER_WIDTH;
   }, [visibleEvents.length]);
+
+  const decorations = useMemo(() => {
+    const spanPx = Math.max(1400, railContentWidth);
+    return generateDecorations(spanPx);
+  }, [railContentWidth]);
 
   return (
     <div
@@ -130,55 +162,73 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
             </div>
           </div>
         ) : (
-          <div className="relative h-full w-max min-w-full px-12 flex items-stretch">
+          <div
+            className="relative h-full"
+            style={{ width: `${railContentWidth}px`, paddingLeft: `${RAIL_PADDING}px`, paddingRight: `${RAIL_PADDING}px`, display: "flex", alignItems: "stretch", boxSizing: "border-box" }}
+          >
             <DecorationLayer decorations={decorations} />
-            <div
+            <svg
               aria-hidden
-              className="absolute left-12 right-12 top-1/2 -translate-y-1/2"
-              style={{
-                height: "2px",
-                background: INK_COLOR,
-                opacity: 0.65,
-              }}
-            />
+              className="absolute pointer-events-none"
+              style={{ left: 0, top: 0, width: `${railContentWidth}px`, height: `${RAIL_HEIGHT}px`, zIndex: 0 }}
+              viewBox={`0 0 ${railContentWidth} ${RAIL_HEIGHT}`}
+            >
+              <path
+                d={buildWavePath(railContentWidth)}
+                stroke={INK_COLOR}
+                strokeWidth="2"
+                strokeOpacity="0.7"
+                strokeLinecap="round"
+                fill="none"
+              />
+            </svg>
             {visibleEvents.map((event, idx) => {
-              const above = idx % 2 === 0;
+              const labelAbove = idx % 2 === 0;
               const time = formatNarrativeTime(event.narrative_time);
+              const markerCenterX = RAIL_PADDING + idx * MARKER_WIDTH + MARKER_WIDTH / 2;
+              const lineYHere = lineY(markerCenterX);
               return (
                 <div
                   key={event.id}
                   data-testid="timeline-marker"
                   data-event-id={event.id}
-                  className="relative h-full flex flex-col items-center min-w-[180px] max-w-[220px] z-[1]"
+                  className="relative h-full flex flex-col items-center flex-shrink-0"
+                  style={{ width: `${MARKER_WIDTH}px`, zIndex: 1 }}
                 >
                   <div
-                    className="flex flex-col items-center justify-end w-full pb-4"
-                    style={{ height: "50%" }}
+                    className="flex flex-col items-center justify-end w-full pb-3"
+                    style={{ height: `${lineYHere}px` }}
                   >
-                    {above && <MarkerContent event={event} time={time} />}
+                    {labelAbove && <MarkerContent event={event} time={time} />}
                   </div>
 
                   <div
                     aria-hidden
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                    className="absolute left-1/2 -translate-x-1/2"
                     style={{
+                      top: `${lineYHere - TICK_HEIGHT / 2}px`,
                       width: "2px",
-                      height: "20px",
+                      height: `${TICK_HEIGHT}px`,
                       background: INK_COLOR,
                       opacity: 0.85,
                     }}
                   />
                   <div
                     aria-hidden
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-2 rounded-full"
-                    style={{ background: INK_COLOR }}
+                    className="absolute left-1/2 -translate-x-1/2 rounded-full"
+                    style={{
+                      top: `${lineYHere - TICK_DOT_SIZE / 2}px`,
+                      width: `${TICK_DOT_SIZE}px`,
+                      height: `${TICK_DOT_SIZE}px`,
+                      background: INK_COLOR,
+                    }}
                   />
 
                   <div
-                    className="flex flex-col items-center justify-start w-full pt-4"
-                    style={{ height: "50%" }}
+                    className="flex flex-col items-center justify-start w-full pt-3"
+                    style={{ height: `${RAIL_HEIGHT - lineYHere}px` }}
                   >
-                    {!above && <MarkerContent event={event} time={time} />}
+                    {!labelAbove && <MarkerContent event={event} time={time} />}
                   </div>
                 </div>
               );
