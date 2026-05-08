@@ -2,7 +2,57 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { ScrollText } from "lucide-react";
+import {
+  ScrollText,
+  Crown,
+  Sword,
+  Shield,
+  Castle,
+  Mountain,
+  BookOpen,
+  Skull,
+  Flame,
+  Sparkles,
+  Feather,
+  Tent,
+  Trees,
+  Wand2,
+  Anchor,
+  Compass,
+  Bone,
+  Map,
+  type LucideIcon,
+} from "lucide-react";
+
+const DECORATION_ICONS: LucideIcon[] = [
+  Crown, Sword, Shield, Castle, Mountain, BookOpen, Skull, Flame,
+  Sparkles, Feather, Tent, Trees, Wand2, Anchor, Compass, Bone, Map,
+];
+
+interface Decoration {
+  Icon: LucideIcon;
+  x: number;
+  y: number;
+  rotation: number;
+  size: number;
+}
+
+function generateDecorations(spanPx: number, baseGap: number): Decoration[] {
+  const out: Decoration[] = [];
+  let cursor = 40;
+  let i = 0;
+  while (cursor < spanPx - 40) {
+    const Icon = DECORATION_ICONS[(i * 5 + 2) % DECORATION_ICONS.length];
+    const yJitter = ((i * 7919) % 110) - 55;
+    const yBase = i % 2 === 0 ? 60 : 230;
+    const rotation = ((i * 13) % 70) - 35;
+    const size = 28 + ((i * 3) % 18);
+    out.push({ Icon, x: cursor, y: yBase + yJitter, rotation, size });
+    cursor += baseGap + ((i * 11) % 60);
+    i++;
+  }
+  return out;
+}
 
 export interface TimelineEntity {
   entity_type: string;
@@ -55,6 +105,13 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
       });
   }, [events]);
 
+  const decorations = useMemo(() => {
+    const spanPx = Math.max(1400, visibleEvents.length * 220 + 240);
+    const n = visibleEvents.length;
+    const baseGap = n === 0 ? 95 : n < 4 ? 105 : n < 10 ? 140 : 180;
+    return generateDecorations(spanPx, baseGap);
+  }, [visibleEvents.length]);
+
   return (
     <div
       data-testid="timeline-container"
@@ -82,14 +139,18 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
         className="h-full overflow-x-auto overflow-y-hidden"
       >
         {visibleEvents.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center px-10">
-            <ScrollText className="size-10 mx-auto mb-3 opacity-50" style={{ color: INK_MUTED }} />
-            <p className="font-lore" style={{ color: INK_MUTED }}>
-              Your timeline is blank. Log an event to begin the tale.
-            </p>
+          <div className="relative h-full w-max min-w-full">
+            <DecorationLayer decorations={decorations} />
+            <div className="relative h-full flex flex-col items-center justify-center px-10 z-[1]">
+              <ScrollText className="size-10 mx-auto mb-3 opacity-50" style={{ color: INK_MUTED }} />
+              <p className="font-lore" style={{ color: INK_MUTED }}>
+                Your timeline is blank. Log an event to begin the tale.
+              </p>
+            </div>
           </div>
         ) : (
           <div className="relative h-full w-max min-w-full px-12 flex items-stretch">
+            <DecorationLayer decorations={decorations} />
             <div
               aria-hidden
               className="absolute left-12 right-12 top-1/2 -translate-y-1/2"
@@ -144,6 +205,31 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function DecorationLayer({ decorations }: { decorations: Decoration[] }) {
+  return (
+    <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      {decorations.map((d, i) => {
+        const Icon = d.Icon;
+        return (
+          <Icon
+            key={i}
+            style={{
+              position: "absolute",
+              left: `${d.x}px`,
+              top: `${d.y}px`,
+              width: `${d.size}px`,
+              height: `${d.size}px`,
+              transform: `rotate(${d.rotation}deg)`,
+              color: INK_COLOR,
+              opacity: 0.1,
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
