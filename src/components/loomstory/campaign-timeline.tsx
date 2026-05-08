@@ -2,41 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Icon } from "@iconify/react";
 import { ScrollText } from "lucide-react";
 
-const DECORATION_ICONS: string[] = [
-  "game-icons:wizard-staff",
-  "game-icons:dragon-head",
-  "game-icons:spell-book",
-  "game-icons:medieval-pavilion",
-  "game-icons:sword-clash",
-  "game-icons:battle-axe",
-  "game-icons:wolf-howl",
-  "game-icons:chest",
-  "game-icons:potion-ball",
-  "game-icons:scroll-unfurled",
-  "game-icons:fairy-wand",
-  "game-icons:campfire",
-  "game-icons:cauldron",
-  "game-icons:crystal-ball",
-  "game-icons:knight-banner",
-  "game-icons:tower-fall",
-  "game-icons:stone-tower",
-  "game-icons:crown",
-  "game-icons:village",
-  "game-icons:dungeon-gate",
-  "game-icons:axe-in-stump",
-  "game-icons:mountain-cave",
-  "game-icons:forest-camp",
-  "game-icons:ancient-ruins",
+const DECORATION_IMAGES: string[] = [
+  "/decorations/Dragon.png",
+  "/decorations/Mountains.png",
+  "/decorations/Ship.png",
+  "/decorations/Trees.png",
 ];
 
 interface Decoration {
-  iconName: string;
+  src: string;
   x: number;
   y: number;
-  rotation: number;
   size: number;
 }
 
@@ -48,11 +26,11 @@ function generateDecorations(spanPx: number, baseGap: number): Decoration[] {
   const BOTTOM_PADDING = 12;
   const CONTAINER_HEIGHT = 300;
   while (cursor < spanPx - 40) {
-    const iconName = DECORATION_ICONS[(i * 5 + 2) % DECORATION_ICONS.length];
+    const src = DECORATION_IMAGES[(i * 5 + 2) % DECORATION_IMAGES.length];
     const size = 56 + ((i * 3) % 36);
     const onTop = i % 2 === 0;
     const y = onTop ? TOP_PADDING : CONTAINER_HEIGHT - BOTTOM_PADDING - size;
-    out.push({ iconName, x: cursor, y, rotation: 0, size });
+    out.push({ src, x: cursor, y, size });
     cursor += baseGap + ((i * 11) % 60);
     i++;
   }
@@ -216,48 +194,29 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
 
 function DecorationLayer({ decorations }: { decorations: Decoration[] }) {
   return (
-    <>
-      <svg
-        aria-hidden
-        width="0"
-        height="0"
-        style={{ position: "absolute", pointerEvents: "none" }}
-      >
-        <defs>
-          <filter id="ink-roughen" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.04"
-              numOctaves="2"
-              seed="7"
-            />
-            <feDisplacementMap in="SourceGraphic" scale="1.6" />
-          </filter>
-        </defs>
-      </svg>
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none overflow-hidden z-0"
-        style={{ mixBlendMode: "multiply" }}
-      >
-        {decorations.map((d, i) => (
-          <Icon
-            key={i}
-            icon={d.iconName}
-            width={d.size}
-            height={d.size}
-            style={{
-              position: "absolute",
-              left: `${d.x}px`,
-              top: `${d.y}px`,
-              color: "#000",
-              opacity: 0.55,
-              filter: "url(#ink-roughen)",
-            }}
-          />
-        ))}
-      </div>
-    </>
+    <div
+      aria-hidden
+      className="absolute inset-0 pointer-events-none overflow-hidden z-0"
+      style={{ mixBlendMode: "multiply" }}
+    >
+      {decorations.map((d, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={i}
+          src={d.src}
+          alt=""
+          width={d.size}
+          height={d.size}
+          loading="lazy"
+          style={{
+            position: "absolute",
+            left: `${d.x}px`,
+            top: `${d.y}px`,
+            opacity: 0.85,
+          }}
+        />
+      ))}
+    </div>
   );
 }
 
