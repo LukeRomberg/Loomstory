@@ -104,12 +104,6 @@ describe("CampaignTimeline", () => {
     expect(rail.className).toMatch(/overflow-x-auto/);
   });
 
-  it("renders decorative scroll-end ornaments on both edges", () => {
-    render(<CampaignTimeline events={[baseEvent()]} />);
-    expect(screen.getByTestId("scroll-end-left")).toBeInTheDocument();
-    expect(screen.getByTestId("scroll-end-right")).toBeInTheDocument();
-  });
-
   it("applies the parchment, font-lore, and font-mono styling conventions", () => {
     const events: TimelineEvent[] = [
       baseEvent({ id: "evt-1", title: "Aged ink", narrative_day: 3, narrative_time: 900 }),

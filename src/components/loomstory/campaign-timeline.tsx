@@ -139,41 +139,6 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
       }}
     >
       <div
-        data-testid="scroll-end-left"
-        aria-hidden
-        className="absolute inset-y-0 left-0 z-10"
-        style={{
-          width: "35px",
-          background:
-            "linear-gradient(to right, oklch(0.42 0.06 35) 0%, oklch(0.55 0.08 45) 10%, oklch(0.80 0.10 60) 30%, oklch(0.68 0.09 50) 55%, oklch(0.52 0.07 40) 80%, oklch(0.40 0.06 35) 100%)",
-          borderRadius: "0 5px 5px 0",
-          boxShadow: [
-            "inset -2px 0 6px rgba(0,0,0,0.30)",
-            "inset 0 5px 7px rgba(0,0,0,0.20)",
-            "inset 0 -5px 7px rgba(0,0,0,0.20)",
-            "6px 0 12px -4px rgba(0,0,0,0.30)",
-          ].join(", "),
-        }}
-      />
-      <div
-        data-testid="scroll-end-right"
-        aria-hidden
-        className="absolute inset-y-0 right-0 z-10"
-        style={{
-          width: "35px",
-          background:
-            "linear-gradient(to left, oklch(0.42 0.06 35) 0%, oklch(0.55 0.08 45) 10%, oklch(0.80 0.10 60) 30%, oklch(0.68 0.09 50) 55%, oklch(0.52 0.07 40) 80%, oklch(0.40 0.06 35) 100%)",
-          borderRadius: "5px 0 0 5px",
-          boxShadow: [
-            "inset 2px 0 6px rgba(0,0,0,0.30)",
-            "inset 0 5px 7px rgba(0,0,0,0.20)",
-            "inset 0 -5px 7px rgba(0,0,0,0.20)",
-            "-6px 0 12px -4px rgba(0,0,0,0.30)",
-          ].join(", "),
-        }}
-      />
-
-      <div
         data-testid="timeline-rail"
         className="h-full overflow-x-auto overflow-y-hidden"
       >
