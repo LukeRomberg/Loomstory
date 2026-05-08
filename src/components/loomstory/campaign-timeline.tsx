@@ -13,7 +13,7 @@ const DECORATION_ICONS: string[] = [
   "game-icons:sword-clash",
   "game-icons:battle-axe",
   "game-icons:wolf-howl",
-  "game-icons:treasure-chest",
+  "game-icons:chest",
   "game-icons:potion-ball",
   "game-icons:scroll-unfurled",
   "game-icons:fairy-wand",
@@ -22,10 +22,14 @@ const DECORATION_ICONS: string[] = [
   "game-icons:crystal-ball",
   "game-icons:knight-banner",
   "game-icons:tower-fall",
+  "game-icons:stone-tower",
   "game-icons:crown",
   "game-icons:village",
   "game-icons:dungeon-gate",
   "game-icons:axe-in-stump",
+  "game-icons:mountain-cave",
+  "game-icons:forest-camp",
+  "game-icons:ancient-ruins",
 ];
 
 interface Decoration {
@@ -210,24 +214,49 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
 
 function DecorationLayer({ decorations }: { decorations: Decoration[] }) {
   return (
-    <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-      {decorations.map((d, i) => (
-        <Icon
-          key={i}
-          icon={d.iconName}
-          width={d.size}
-          height={d.size}
-          style={{
-            position: "absolute",
-            left: `${d.x}px`,
-            top: `${d.y}px`,
-            transform: `rotate(${d.rotation}deg)`,
-            color: INK_COLOR,
-            opacity: 0.15,
-          }}
-        />
-      ))}
-    </div>
+    <>
+      <svg
+        aria-hidden
+        width="0"
+        height="0"
+        style={{ position: "absolute", pointerEvents: "none" }}
+      >
+        <defs>
+          <filter id="ink-roughen" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.04"
+              numOctaves="2"
+              seed="7"
+            />
+            <feDisplacementMap in="SourceGraphic" scale="1.6" />
+          </filter>
+        </defs>
+      </svg>
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none overflow-hidden z-0"
+        style={{ mixBlendMode: "multiply" }}
+      >
+        {decorations.map((d, i) => (
+          <Icon
+            key={i}
+            icon={d.iconName}
+            width={d.size}
+            height={d.size}
+            style={{
+              position: "absolute",
+              left: `${d.x}px`,
+              top: `${d.y}px`,
+              transform: `rotate(${d.rotation}deg)`,
+              color: INK_COLOR,
+              opacity: 0.45,
+              filter: "url(#ink-roughen)",
+            }}
+          />
+        ))}
+      </div>
+    </>
   );
 }
 
