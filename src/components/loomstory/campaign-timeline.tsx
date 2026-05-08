@@ -89,7 +89,7 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
             </p>
           </div>
         ) : (
-          <div className="relative h-full min-w-full px-12 flex items-stretch">
+          <div className="relative h-full w-max min-w-full px-12 flex items-stretch">
             <div
               aria-hidden
               className="absolute left-12 right-12 top-1/2 -translate-y-1/2"
