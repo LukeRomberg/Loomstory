@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@iconify/react";
 import { ScrollText } from "lucide-react";
@@ -51,6 +51,8 @@ interface CampaignTimelineProps {
 }
 
 const UNROLL_DURATION_MS = 1500;
+const AUTOSCROLL_START_DELAY_MS = 1100;
+const AUTOSCROLL_DURATION_MS = 1300;
 const INK_COLOR = "oklch(0.2 0.04 60)";
 const INK_MUTED = "oklch(0.4 0.03 60)";
 
@@ -63,10 +65,49 @@ function formatNarrativeTime(t: number | null): string | null {
 
 export function CampaignTimeline({ events, campaignName }: CampaignTimelineProps) {
   const [unrolling, setUnrolling] = useState(true);
+  const railRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setUnrolling(false), 50);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let rafId = 0;
+    const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
+
+    const cancel = () => {
+      cancelled = true;
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+
+    const startScroll = window.setTimeout(() => {
+      const rail = railRef.current;
+      if (!rail || cancelled) return;
+      const maxScroll = rail.scrollWidth - rail.clientWidth;
+      if (maxScroll <= 1) return;
+
+      rail.addEventListener("wheel", cancel, { once: true, passive: true });
+      rail.addEventListener("touchstart", cancel, { once: true, passive: true });
+      rail.addEventListener("mousedown", cancel, { once: true, passive: true });
+
+      const startTime = performance.now();
+      const tick = (now: number) => {
+        if (cancelled || !railRef.current) return;
+        const elapsed = now - startTime;
+        const t = Math.min(1, elapsed / AUTOSCROLL_DURATION_MS);
+        railRef.current.scrollLeft = maxScroll * easeOutCubic(t);
+        if (t < 1) rafId = requestAnimationFrame(tick);
+      };
+      rafId = requestAnimationFrame(tick);
+    }, AUTOSCROLL_START_DELAY_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(startScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   const visibleEvents = useMemo(() => {
@@ -103,6 +144,7 @@ export function CampaignTimeline({ events, campaignName }: CampaignTimelineProps
       <TitleBanner campaignName={campaignName} />
 
       <div
+        ref={railRef}
         data-testid="timeline-rail"
         className="h-full overflow-x-auto overflow-y-hidden"
       >
