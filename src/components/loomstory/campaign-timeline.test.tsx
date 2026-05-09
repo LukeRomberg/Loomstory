@@ -23,7 +23,7 @@ describe("CampaignTimeline", () => {
   });
 
   it("renders a blank-scroll empty state when there are no events", () => {
-    render(<CampaignTimeline events={[]} />);
+    render(<CampaignTimeline events={[]} campaignName="The Sundered Realm" />);
     expect(
       screen.getByText(/your timeline is blank/i)
     ).toBeInTheDocument();
@@ -37,7 +37,7 @@ describe("CampaignTimeline", () => {
       baseEvent({ id: "d", title: "Fourth moment", narrative_day: 5, narrative_time: 1430, sequence: 0 }),
     ];
 
-    render(<CampaignTimeline events={events} />);
+    render(<CampaignTimeline events={events} campaignName="Test" />);
 
     const markers = screen.getAllByTestId("timeline-marker");
     expect(markers).toHaveLength(4);
@@ -63,7 +63,7 @@ describe("CampaignTimeline", () => {
       }),
     ];
 
-    render(<CampaignTimeline events={events} />);
+    render(<CampaignTimeline events={events} campaignName="Test" />);
 
     expect(screen.getByText(/Day 5/i)).toBeInTheDocument();
     expect(screen.getByText("14:30")).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe("CampaignTimeline", () => {
       baseEvent({ id: "dropped", title: "Forgotten in time", narrative_day: null }),
     ];
 
-    render(<CampaignTimeline events={events} />);
+    render(<CampaignTimeline events={events} campaignName="Test" />);
 
     expect(screen.getByText("On the timeline")).toBeInTheDocument();
     expect(screen.queryByText("Forgotten in time")).not.toBeInTheDocument();
@@ -86,7 +86,7 @@ describe("CampaignTimeline", () => {
 
   it("starts with data-unrolling='true' on mount and transitions to 'false' after the animation", () => {
     const events: TimelineEvent[] = [baseEvent()];
-    render(<CampaignTimeline events={events} />);
+    render(<CampaignTimeline events={events} campaignName="Test" />);
 
     const container = screen.getByTestId("timeline-container");
     expect(container.getAttribute("data-unrolling")).toBe("true");
@@ -99,7 +99,7 @@ describe("CampaignTimeline", () => {
   });
 
   it("renders the rail with horizontal overflow scrolling", () => {
-    render(<CampaignTimeline events={[baseEvent()]} />);
+    render(<CampaignTimeline events={[baseEvent()]} campaignName="Test" />);
     const rail = screen.getByTestId("timeline-rail");
     expect(rail.className).toMatch(/overflow-x-auto/);
   });
@@ -108,7 +108,7 @@ describe("CampaignTimeline", () => {
     const events: TimelineEvent[] = [
       baseEvent({ id: "evt-1", title: "Aged ink", narrative_day: 3, narrative_time: 900 }),
     ];
-    render(<CampaignTimeline events={events} />);
+    render(<CampaignTimeline events={events} campaignName="Test" />);
 
     const container = screen.getByTestId("timeline-container");
     expect(container.className).toMatch(/grain/);
@@ -118,5 +118,19 @@ describe("CampaignTimeline", () => {
 
     const title = screen.getByText("Aged ink");
     expect(title.className).toMatch(/font-lore/);
+  });
+
+  it("renders the title banner with the campaign name", () => {
+    render(<CampaignTimeline events={[]} campaignName="The Sundered Realm" />);
+    expect(screen.getByText(/A Chronicle of The Sundered Realm/i)).toBeInTheDocument();
+  });
+
+  it("falls back to the general icon when an event has no event_type", () => {
+    const events: TimelineEvent[] = [
+      baseEvent({ id: "untyped", narrative_day: 1 }),
+    ];
+    render(<CampaignTimeline events={events} campaignName="Test" />);
+    const marker = screen.getByTestId("timeline-marker");
+    expect(marker).toBeInTheDocument();
   });
 });

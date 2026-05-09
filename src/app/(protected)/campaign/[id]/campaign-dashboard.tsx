@@ -206,7 +206,7 @@ export function CampaignDashboard({
       </div>
 
       {/* Timeline */}
-      <CampaignTimeline events={timelineEvents} />
+      <CampaignTimeline events={timelineEvents} campaignName={campaign.name} />
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

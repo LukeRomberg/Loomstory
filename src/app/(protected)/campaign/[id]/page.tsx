@@ -95,7 +95,7 @@ export default async function CampaignPage({
   const isGm = membership.role === "gm";
   let eventsQuery = supabase
     .from("campaign_events")
-    .select("id, summary, content, narrative_day, narrative_time, sequence, gm_only")
+    .select("id, summary, content, narrative_day, narrative_time, sequence, gm_only, event_type")
     .eq("campaign_id", id)
     .is("deleted_at", null)
     .not("narrative_day", "is", null)
@@ -162,6 +162,7 @@ export default async function CampaignPage({
       narrative_time: e.narrative_time,
       sequence: e.sequence ?? 0,
       gm_only: e.gm_only,
+      event_type: e.event_type,
       entities,
     };
   });

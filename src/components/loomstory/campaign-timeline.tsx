@@ -2,68 +2,31 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Icon } from "@iconify/react";
 import { ScrollText } from "lucide-react";
 
-const DECORATION_IMAGES: string[] = [
-  "/decorations/Dragon.png",
-  "/decorations/Mountains.png",
-  "/decorations/Ship.png",
-  "/decorations/Trees.png",
-];
-
 const RAIL_HEIGHT = 300;
-const RAIL_CENTER_Y = 150;
+const BANNER_HEIGHT = 44;
 const RAIL_PADDING = 48;
 const MARKER_WIDTH = 200;
-const WAVE_AMPLITUDE = 45;
-const WAVE_PERIOD = 880;
 const TICK_HEIGHT = 24;
 const TICK_DOT_SIZE = 8;
-const DECORATION_TOP_PADDING = 12;
-const DECORATION_BOTTOM_PADDING = 12;
+const ICON_SIZE = 36;
+const PARCHMENT_TILE_WIDTH = 2560;
 
-function lineY(x: number): number {
-  return RAIL_CENTER_Y + WAVE_AMPLITUDE * Math.sin((x * 2 * Math.PI) / WAVE_PERIOD);
-}
-
-function buildWavePath(railWidth: number): string {
-  const startX = RAIL_PADDING;
-  const endX = railWidth - RAIL_PADDING;
-  if (endX <= startX) return "";
-  let path = `M ${startX} ${lineY(startX).toFixed(1)}`;
-  for (let x = startX + 6; x <= endX; x += 6) {
-    path += ` L ${x} ${lineY(x).toFixed(1)}`;
-  }
-  return path;
-}
-
-interface Decoration {
-  src: string;
-  x: number;
-  y: number;
-  size: number;
-}
-
-function generateDecorations(spanPx: number): Decoration[] {
-  const out: Decoration[] = [];
-  let cursor = 80;
-  let i = 0;
-  while (cursor < spanPx - 100) {
-    const src = DECORATION_IMAGES[(i * 5 + 2) % DECORATION_IMAGES.length];
-    const requested = 112 + ((i * 3) % 72);
-    const lineYHere = lineY(cursor + requested / 2);
-    const onTop = lineYHere > RAIL_CENTER_Y;
-    const available = onTop
-      ? lineYHere - DECORATION_TOP_PADDING - 6
-      : RAIL_HEIGHT - lineYHere - DECORATION_BOTTOM_PADDING - 6;
-    const size = Math.max(64, Math.min(requested, available));
-    const y = onTop ? DECORATION_TOP_PADDING : RAIL_HEIGHT - DECORATION_BOTTOM_PADDING - size;
-    out.push({ src, x: cursor, y, size });
-    cursor += 700 + (((i * 1009 + 7) % 600) - 300);
-    i++;
-  }
-  return out;
-}
+const ICON_FOR_EVENT_TYPE: Record<string, string> = {
+  general: "game-icons:scroll-unfurled",
+  scene: "game-icons:campfire",
+  decision: "game-icons:crossroad",
+  discovery: "game-icons:compass",
+  conversation: "game-icons:talk",
+  promise: "game-icons:knot",
+  todo: "game-icons:checklist",
+  upcoming: "game-icons:hourglass",
+  milestone: "game-icons:trophy",
+  mood: "game-icons:two-shadows",
+  quote: "game-icons:quill-ink",
+};
 
 export interface TimelineEntity {
   entity_type: string;
@@ -78,11 +41,13 @@ export interface TimelineEvent {
   narrative_time: number | null;
   sequence: number;
   gm_only: boolean;
+  event_type?: string;
   entities: TimelineEntity[];
 }
 
 interface CampaignTimelineProps {
   events: TimelineEvent[];
+  campaignName: string;
 }
 
 const UNROLL_DURATION_MS = 1500;
@@ -96,7 +61,7 @@ function formatNarrativeTime(t: number | null): string | null {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-export function CampaignTimeline({ events }: CampaignTimelineProps) {
+export function CampaignTimeline({ events, campaignName }: CampaignTimelineProps) {
   const [unrolling, setUnrolling] = useState(true);
 
   useEffect(() => {
@@ -120,10 +85,7 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
     return RAIL_PADDING * 2 + visibleEvents.length * MARKER_WIDTH;
   }, [visibleEvents.length]);
 
-  const decorations = useMemo(() => {
-    const spanPx = Math.max(1400, railContentWidth);
-    return generateDecorations(spanPx);
-  }, [railContentWidth]);
+  const lineCenterY = (RAIL_HEIGHT + BANNER_HEIGHT) / 2;
 
   return (
     <div
@@ -138,6 +100,8 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
         boxShadow: "inset 0 0 70px oklch(0.45 0.10 45 / 0.20)",
       }}
     >
+      <TitleBanner campaignName={campaignName} />
+
       <div
         data-testid="timeline-rail"
         className="h-full overflow-x-auto overflow-y-hidden"
@@ -145,8 +109,10 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
         {visibleEvents.length === 0 ? (
           <div className="relative h-full w-max min-w-full">
             <MirrorTileBackground spanPx={5120} />
-            <DecorationLayer decorations={decorations} />
-            <div className="relative h-full flex flex-col items-center justify-center px-10 z-[1]">
+            <div
+              className="relative h-full flex flex-col items-center justify-center px-10 z-[1]"
+              style={{ paddingTop: BANNER_HEIGHT }}
+            >
               <ScrollText className="size-10 mx-auto mb-3 opacity-50" style={{ color: INK_MUTED }} />
               <p className="font-lore" style={{ color: INK_MUTED }}>
                 Your timeline is blank. Log an event to begin the tale.
@@ -156,50 +122,66 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
         ) : (
           <div
             className="relative h-full"
-            style={{ width: `${railContentWidth}px`, paddingLeft: `${RAIL_PADDING}px`, paddingRight: `${RAIL_PADDING}px`, display: "flex", alignItems: "stretch", boxSizing: "border-box" }}
+            style={{
+              width: `${railContentWidth}px`,
+              paddingLeft: `${RAIL_PADDING}px`,
+              paddingRight: `${RAIL_PADDING}px`,
+              paddingTop: `${BANNER_HEIGHT}px`,
+              display: "flex",
+              alignItems: "stretch",
+              boxSizing: "border-box",
+            }}
           >
             <MirrorTileBackground spanPx={railContentWidth} />
-            <DecorationLayer decorations={decorations} />
-            <svg
+            <div
               aria-hidden
-              className="absolute pointer-events-none"
-              style={{ left: 0, top: 0, width: `${railContentWidth}px`, height: `${RAIL_HEIGHT}px`, zIndex: 0 }}
-              viewBox={`0 0 ${railContentWidth} ${RAIL_HEIGHT}`}
-            >
-              <path
-                d={buildWavePath(railContentWidth)}
-                stroke={INK_COLOR}
-                strokeWidth="2"
-                strokeOpacity="0.7"
-                strokeLinecap="round"
-                fill="none"
-              />
-            </svg>
+              className="absolute"
+              style={{
+                left: RAIL_PADDING,
+                right: RAIL_PADDING,
+                top: lineCenterY,
+                height: "2px",
+                background: INK_COLOR,
+                opacity: 0.7,
+                transform: "translateY(-50%)",
+              }}
+            />
             {visibleEvents.map((event, idx) => {
               const labelAbove = idx % 2 === 0;
               const time = formatNarrativeTime(event.narrative_time);
-              const markerCenterX = RAIL_PADDING + idx * MARKER_WIDTH + MARKER_WIDTH / 2;
-              const lineYHere = lineY(markerCenterX);
+              const eventType = event.event_type ?? "general";
+              const iconName = ICON_FOR_EVENT_TYPE[eventType] ?? ICON_FOR_EVENT_TYPE.general;
               return (
                 <div
                   key={event.id}
                   data-testid="timeline-marker"
                   data-event-id={event.id}
-                  className="relative h-full flex flex-col items-center flex-shrink-0"
-                  style={{ width: `${MARKER_WIDTH}px`, zIndex: 1 }}
+                  className="relative flex flex-col items-center flex-shrink-0"
+                  style={{ width: `${MARKER_WIDTH}px`, height: `${RAIL_HEIGHT - BANNER_HEIGHT}px`, zIndex: 1 }}
                 >
                   <div
-                    className="flex flex-col items-center justify-end w-full pb-3"
-                    style={{ height: `${lineYHere}px` }}
+                    className="w-full"
+                    style={{ height: `${(RAIL_HEIGHT - BANNER_HEIGHT) / 2}px` }}
                   >
-                    {labelAbove && <MarkerContent event={event} time={time} />}
+                    {labelAbove && (
+                      <div className="h-full flex flex-col items-center justify-between pb-3 pt-2">
+                        <Icon
+                          icon={iconName}
+                          width={ICON_SIZE}
+                          height={ICON_SIZE}
+                          style={{ color: INK_COLOR, opacity: 0.85 }}
+                        />
+                        <MarkerContent event={event} time={time} />
+                      </div>
+                    )}
                   </div>
 
                   <div
                     aria-hidden
                     className="absolute left-1/2 -translate-x-1/2"
                     style={{
-                      top: `${lineYHere - TICK_HEIGHT / 2}px`,
+                      top: "50%",
+                      transform: "translate(-50%, -50%)",
                       width: "2px",
                       height: `${TICK_HEIGHT}px`,
                       background: INK_COLOR,
@@ -208,9 +190,10 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
                   />
                   <div
                     aria-hidden
-                    className="absolute left-1/2 -translate-x-1/2 rounded-full"
+                    className="absolute left-1/2 rounded-full"
                     style={{
-                      top: `${lineYHere - TICK_DOT_SIZE / 2}px`,
+                      top: "50%",
+                      transform: "translate(-50%, -50%)",
                       width: `${TICK_DOT_SIZE}px`,
                       height: `${TICK_DOT_SIZE}px`,
                       background: INK_COLOR,
@@ -218,10 +201,20 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
                   />
 
                   <div
-                    className="flex flex-col items-center justify-start w-full pt-3"
-                    style={{ height: `${RAIL_HEIGHT - lineYHere}px` }}
+                    className="w-full"
+                    style={{ height: `${(RAIL_HEIGHT - BANNER_HEIGHT) / 2}px` }}
                   >
-                    {!labelAbove && <MarkerContent event={event} time={time} />}
+                    {!labelAbove && (
+                      <div className="h-full flex flex-col items-center justify-between pt-3 pb-2">
+                        <MarkerContent event={event} time={time} />
+                        <Icon
+                          icon={iconName}
+                          width={ICON_SIZE}
+                          height={ICON_SIZE}
+                          style={{ color: INK_COLOR, opacity: 0.85 }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -233,7 +226,30 @@ export function CampaignTimeline({ events }: CampaignTimelineProps) {
   );
 }
 
-const PARCHMENT_TILE_WIDTH = 2560;
+function TitleBanner({ campaignName }: { campaignName: string }) {
+  return (
+    <div
+      aria-hidden={false}
+      className="absolute left-0 right-0 top-0 z-[5] flex items-center justify-center pointer-events-none"
+      style={{ height: `${BANNER_HEIGHT}px` }}
+    >
+      <div
+        className="px-6 py-1 font-heading text-base text-center"
+        style={{
+          color: INK_COLOR,
+          letterSpacing: "0.04em",
+          textShadow: "0 1px 0 oklch(0.95 0.04 85)",
+          maxWidth: "70%",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        A Chronicle of {campaignName}
+      </div>
+    </div>
+  );
+}
 
 function MirrorTileBackground({ spanPx }: { spanPx: number }) {
   const tileCount = Math.max(1, Math.ceil(spanPx / PARCHMENT_TILE_WIDTH) + 1);
@@ -260,34 +276,6 @@ function MirrorTileBackground({ spanPx }: { spanPx: number }) {
   );
 }
 
-function DecorationLayer({ decorations }: { decorations: Decoration[] }) {
-  return (
-    <div
-      aria-hidden
-      className="absolute inset-0 pointer-events-none overflow-hidden z-0"
-      style={{ mixBlendMode: "multiply" }}
-    >
-      {decorations.map((d, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={i}
-          src={d.src}
-          alt=""
-          width={d.size}
-          height={d.size}
-          loading="lazy"
-          style={{
-            position: "absolute",
-            left: `${d.x}px`,
-            top: `${d.y}px`,
-            opacity: 0.85,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 function MarkerContent({
   event,
   time,
@@ -296,7 +284,7 @@ function MarkerContent({
   time: string | null;
 }) {
   return (
-    <>
+    <div className="flex flex-col items-center w-full">
       <div
         data-testid="timeline-day-stamp"
         className="font-mono text-xs whitespace-nowrap mb-1"
@@ -325,6 +313,6 @@ function MarkerContent({
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 }
