@@ -271,7 +271,6 @@ export function CampaignTimeline({ events, campaignName }: CampaignTimelineProps
 function TitleBanner({ campaignName }: { campaignName: string }) {
   return (
     <div
-      aria-hidden={false}
       className="absolute left-0 right-0 top-0 z-[5] flex items-center justify-center pointer-events-none"
       style={{ height: `${BANNER_HEIGHT}px` }}
     >
