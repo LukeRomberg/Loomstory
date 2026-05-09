@@ -214,7 +214,7 @@ export function CampaignTimeline({ events, campaignName }: CampaignTimelineProps
                           height={ICON_SIZE}
                           style={{ color: INK_COLOR, opacity: 0.85 }}
                         />
-                        <MarkerContent event={event} time={time} />
+                        <MarkerContent event={event} time={time} orientation="above" />
                       </div>
                     )}
                   </div>
@@ -249,7 +249,7 @@ export function CampaignTimeline({ events, campaignName }: CampaignTimelineProps
                   >
                     {!labelAbove && (
                       <div className="h-full flex flex-col items-center justify-between pt-3 pb-2">
-                        <MarkerContent event={event} time={time} />
+                        <MarkerContent event={event} time={time} orientation="below" />
                         <Icon
                           icon={iconName}
                           width={ICON_SIZE}
@@ -321,15 +321,18 @@ function MirrorTileBackground({ spanPx }: { spanPx: number }) {
 function MarkerContent({
   event,
   time,
+  orientation,
 }: {
   event: TimelineEvent & { narrative_day: number };
   time: string | null;
+  orientation: "above" | "below";
 }) {
+  const directionClass = orientation === "above" ? "flex-col-reverse" : "flex-col";
   return (
-    <div className="flex flex-col items-center w-full">
+    <div className={`flex ${directionClass} items-center w-full gap-1.5`}>
       <div
         data-testid="timeline-day-stamp"
-        className="font-mono text-xs whitespace-nowrap mb-1"
+        className="font-mono text-xs whitespace-nowrap"
         style={{ color: INK_MUTED }}
       >
         <span>Day {event.narrative_day}</span>
@@ -342,7 +345,7 @@ function MarkerContent({
         {event.title}
       </p>
       {event.entities.length > 0 && (
-        <div className="flex flex-wrap gap-1 justify-center mt-1.5 px-1">
+        <div className="flex flex-wrap gap-1 justify-center px-1">
           {event.entities.slice(0, MAX_VISIBLE_ENTITIES).map((ent) => (
             <Badge
               key={`${ent.entity_type}:${ent.entity_id}`}
