@@ -57,6 +57,7 @@ export function PlotThreadModal({ campaignId, userId, role, open, onOpenChange }
       title="Plot Threads" open={open} onOpenChange={onOpenChange} items={threads} loading={loading}
       onCreateClick={isGm ? () => setCreating(true) : undefined} createLabel="New Thread"
       emptyMessage="No plot threads yet. Create one to start tracking story arcs."
+      searchPlaceholder="Search plot threads..."
       renderListItem={(thread, isSelected) => (
         <div>
           <div className="flex items-center justify-between">

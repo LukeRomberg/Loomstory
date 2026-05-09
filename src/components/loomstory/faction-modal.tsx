@@ -56,6 +56,7 @@ export function FactionModal({ campaignId, userId, role, open, onOpenChange }: F
       title="Factions" open={open} onOpenChange={onOpenChange} items={factions} loading={loading}
       onCreateClick={isGm ? () => setCreating(true) : undefined} createLabel="New Faction"
       emptyMessage="No factions yet. Process a session or create one manually."
+      searchPlaceholder="Search factions..."
       renderListItem={(fac, isSelected) => (
         <div>
           <div className="flex items-center justify-between">

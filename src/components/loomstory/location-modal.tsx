@@ -82,6 +82,7 @@ export function LocationModal({ campaignId, userId, role, open, onOpenChange }: 
       title="Locations" open={open} onOpenChange={onOpenChange} items={locations} loading={loading}
       onCreateClick={isGm ? () => setCreating(true) : undefined} createLabel="New Location"
       emptyMessage="No locations yet. Process a session or create one manually."
+      searchPlaceholder="Search locations..."
       renderListItem={(loc, isSelected) => (
         <div>
           <div className="flex items-center justify-between">

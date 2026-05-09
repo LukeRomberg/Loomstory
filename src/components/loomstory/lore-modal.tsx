@@ -56,6 +56,7 @@ export function LoreModal({ campaignId, userId, role, open, onOpenChange }: Lore
       title="Lore" open={open} onOpenChange={onOpenChange} items={entries} loading={loading}
       onCreateClick={isGm ? () => setCreating(true) : undefined} createLabel="New Entry"
       emptyMessage="No lore entries yet. Create one to start building your world."
+      searchPlaceholder="Search lore..."
       renderListItem={(entry, isSelected) => (
         <div>
           <div className="flex items-center justify-between">

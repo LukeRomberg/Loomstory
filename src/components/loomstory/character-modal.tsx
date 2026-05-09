@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { MasterDetailModal } from "@/components/shared/master-detail-modal";
@@ -78,11 +79,18 @@ export function CharacterModal({
         items={characters}
         loading={loading}
         onCreateClick={() => {
+          if (!wizardConfig || !systemId) {
+            toast.error("Character creation not available", {
+              description: "Character creation is currently only set up for Daggerheart.",
+            });
+            return;
+          }
           onOpenChange(false);
           setWizardOpen(true);
         }}
         createLabel="New Character"
         emptyMessage="No characters yet. Create one to get started."
+        searchPlaceholder="Search characters..."
         renderListItem={(char, isSelected) => (
           <div>
             <div className="flex items-center justify-between">

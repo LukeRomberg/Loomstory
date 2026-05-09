@@ -122,6 +122,7 @@ export function NpcModal({
       onCreateClick={isGm ? () => setCreating(true) : undefined}
       createLabel="New NPC"
       emptyMessage="No NPCs yet. Process a session or create one manually."
+      searchPlaceholder="Search NPCs..."
       renderListItem={(npc, isSelected) => (
         <div>
           <div className="flex items-center justify-between">

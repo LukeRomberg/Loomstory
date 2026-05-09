@@ -79,7 +79,6 @@ export function ConversationModal({
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [sessionFilter, setSessionFilter] = useState<string>("all");
-  const [search, setSearch] = useState("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -125,23 +124,9 @@ export function ConversationModal({
   }, [open, fetchData]);
 
   const filtered = useMemo(() => {
-    let result = conversations;
-    if (sessionFilter !== "all") {
-      result = result.filter((c) => c.session_id === sessionFilter);
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter((c) => {
-        const participantMatch = c.participants.some((p) =>
-          p.name.toLowerCase().includes(q)
-        );
-        const titleMatch = c.title?.toLowerCase().includes(q);
-        const contentMatch = c.content_plain?.toLowerCase().includes(q);
-        return participantMatch || titleMatch || contentMatch;
-      });
-    }
-    return result;
-  }, [conversations, sessionFilter, search]);
+    if (sessionFilter === "all") return conversations;
+    return conversations.filter((c) => c.session_id === sessionFilter);
+  }, [conversations, sessionFilter]);
 
   return (
     <>
@@ -154,28 +139,21 @@ export function ConversationModal({
         onCreateClick={isGm ? () => setCreating(true) : undefined}
         createLabel="New Conversation"
         emptyMessage="No conversations yet. Process a session to extract dialogues."
+        searchPlaceholder="Search conversations..."
         renderFilters={() => (
-          <div className="flex items-center gap-3 flex-wrap">
-            <Input
-              placeholder="Search by participant or content..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-[250px]"
-            />
-            <Select value={sessionFilter} onValueChange={(v) => setSessionFilter(v ?? "all")}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue>
-                  {sessionFilter === "all" ? "All Sessions" : sessions.find((s) => s.id === sessionFilter)?.title ?? "Unknown"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sessions</SelectItem>
-                {sessions.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={sessionFilter} onValueChange={(v) => setSessionFilter(v ?? "all")}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue>
+                {sessionFilter === "all" ? "All Sessions" : sessions.find((s) => s.id === sessionFilter)?.title ?? "Unknown"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sessions</SelectItem>
+              {sessions.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
         renderListItem={(conv, isSelected) => (
           <div>

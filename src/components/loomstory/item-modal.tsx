@@ -59,6 +59,7 @@ export function ItemModal({ campaignId, userId, role, open, onOpenChange }: Item
       title="Items" open={open} onOpenChange={onOpenChange} items={items} loading={loading}
       onCreateClick={isGm ? () => setCreating(true) : undefined} createLabel="New Item"
       emptyMessage="No items yet. Process a session or create one manually."
+      searchPlaceholder="Search items..."
       renderListItem={(item, isSelected) => (
         <div>
           <div className="flex items-center justify-between">
