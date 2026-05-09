@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 import { CampaignTimeline, type TimelineEvent } from "./campaign-timeline";
 
 const baseEvent = (overrides: Partial<TimelineEvent> = {}): TimelineEvent => ({
@@ -177,5 +177,45 @@ describe("CampaignTimeline", () => {
     render(<CampaignTimeline events={events} campaignName="Test" />);
     const marker = screen.getByTestId("timeline-marker");
     expect(marker).toBeInTheDocument();
+  });
+
+  it("renders each marker as a button when onEventClick is provided", () => {
+    const events: TimelineEvent[] = [
+      baseEvent({ id: "evt-1", narrative_day: 1 }),
+      baseEvent({ id: "evt-2", narrative_day: 2 }),
+    ];
+    render(
+      <CampaignTimeline events={events} campaignName="Test" onEventClick={() => {}} />
+    );
+    const markers = screen.getAllByTestId("timeline-marker");
+    markers.forEach((m) => {
+      expect(m.getAttribute("role")).toBe("button");
+      expect(m.className).toMatch(/cursor-pointer/);
+    });
+  });
+
+  it("calls onEventClick with the event id when a marker is clicked", () => {
+    const onEventClick = vi.fn();
+    const events: TimelineEvent[] = [
+      baseEvent({ id: "evt-clicked", narrative_day: 1 }),
+      baseEvent({ id: "evt-other", narrative_day: 2 }),
+    ];
+    render(
+      <CampaignTimeline events={events} campaignName="Test" onEventClick={onEventClick} />
+    );
+    const target = screen
+      .getAllByTestId("timeline-marker")
+      .find((m) => m.getAttribute("data-event-id") === "evt-clicked")!;
+    fireEvent.click(target);
+    expect(onEventClick).toHaveBeenCalledTimes(1);
+    expect(onEventClick).toHaveBeenCalledWith("evt-clicked");
+  });
+
+  it("does not make markers interactive when onEventClick is omitted", () => {
+    const events: TimelineEvent[] = [baseEvent({ id: "evt-1", narrative_day: 1 })];
+    render(<CampaignTimeline events={events} campaignName="Test" />);
+    const marker = screen.getByTestId("timeline-marker");
+    expect(marker.getAttribute("role")).not.toBe("button");
+    expect(marker.className).not.toMatch(/cursor-pointer/);
   });
 });

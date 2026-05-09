@@ -82,6 +82,7 @@ interface EventModalProps {
   role: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialSelectedId?: string;
 }
 
 export function EventModal({
@@ -90,6 +91,7 @@ export function EventModal({
   role,
   open,
   onOpenChange,
+  initialSelectedId,
 }: EventModalProps) {
   const isGm = role === "gm";
   const [events, setEvents] = useState<CampaignEvent[]>([]);
@@ -157,6 +159,8 @@ export function EventModal({
         onCreateClick={isGm ? () => setCreating(true) : undefined}
         createLabel="New Event"
         emptyMessage="No events yet. Process a session to extract events."
+        searchPlaceholder="Search events..."
+        initialSelectedId={initialSelectedId}
         renderFilters={() => (
           <div className="flex items-center gap-3 flex-wrap">
             <Select value={sessionFilter} onValueChange={(v) => setSessionFilter(v ?? "all")}>

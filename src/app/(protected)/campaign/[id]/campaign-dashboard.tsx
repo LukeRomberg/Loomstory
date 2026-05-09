@@ -112,6 +112,7 @@ export function CampaignDashboard({
   const [plotThreadModalOpen, setPlotThreadModalOpen] = useState(false);
   const [loreModalOpen, setLoreModalOpen] = useState(false);
   const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [eventModalInitialId, setEventModalInitialId] = useState<string | undefined>(undefined);
   const [conversationModalOpen, setConversationModalOpen] = useState(false);
   const [characterModalOpen, setCharacterModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -206,7 +207,14 @@ export function CampaignDashboard({
       </div>
 
       {/* Timeline */}
-      <CampaignTimeline events={timelineEvents} campaignName={campaign.name} />
+      <CampaignTimeline
+        events={timelineEvents}
+        campaignName={campaign.name}
+        onEventClick={(eventId) => {
+          setEventModalInitialId(eventId);
+          setEventModalOpen(true);
+        }}
+      />
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -507,7 +515,17 @@ export function CampaignDashboard({
       <ItemModal campaignId={campaign.id} userId={userId} role={role} open={itemModalOpen} onOpenChange={setItemModalOpen} />
       <PlotThreadModal campaignId={campaign.id} userId={userId} role={role} open={plotThreadModalOpen} onOpenChange={setPlotThreadModalOpen} />
       <LoreModal campaignId={campaign.id} userId={userId} role={role} open={loreModalOpen} onOpenChange={setLoreModalOpen} />
-      <EventModal campaignId={campaign.id} userId={userId} role={role} open={eventModalOpen} onOpenChange={setEventModalOpen} />
+      <EventModal
+        campaignId={campaign.id}
+        userId={userId}
+        role={role}
+        open={eventModalOpen}
+        onOpenChange={(next) => {
+          setEventModalOpen(next);
+          if (!next) setEventModalInitialId(undefined);
+        }}
+        initialSelectedId={eventModalInitialId}
+      />
       <ConversationModal campaignId={campaign.id} userId={userId} role={role} open={conversationModalOpen} onOpenChange={setConversationModalOpen} />
       <CharacterModal campaignId={campaign.id} userId={userId} role={role} systemId={campaign.system_id} systemSlug={systemSlug} open={characterModalOpen} onOpenChange={setCharacterModalOpen} />
       {isGm && (

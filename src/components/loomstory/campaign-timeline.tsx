@@ -49,6 +49,7 @@ export interface TimelineEvent {
 interface CampaignTimelineProps {
   events: TimelineEvent[];
   campaignName: string;
+  onEventClick?: (eventId: string) => void;
 }
 
 const UNROLL_DURATION_MS = 1500;
@@ -64,7 +65,7 @@ function formatNarrativeTime(t: number | null): string | null {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-export function CampaignTimeline({ events, campaignName }: CampaignTimelineProps) {
+export function CampaignTimeline({ events, campaignName, onEventClick }: CampaignTimelineProps) {
   const [unrolling, setUnrolling] = useState(true);
   const railRef = useRef<HTMLDivElement>(null);
 
@@ -199,7 +200,20 @@ export function CampaignTimeline({ events, campaignName }: CampaignTimelineProps
                   key={event.id}
                   data-testid="timeline-marker"
                   data-event-id={event.id}
-                  className="relative flex flex-col items-center flex-shrink-0"
+                  role={onEventClick ? "button" : undefined}
+                  tabIndex={onEventClick ? 0 : undefined}
+                  onClick={onEventClick ? () => onEventClick(event.id) : undefined}
+                  onKeyDown={
+                    onEventClick
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onEventClick(event.id);
+                          }
+                        }
+                      : undefined
+                  }
+                  className={`relative flex flex-col items-center flex-shrink-0 ${onEventClick ? "cursor-pointer transition-opacity hover:opacity-80" : ""}`}
                   style={{ width: `${MARKER_WIDTH}px`, height: `${RAIL_HEIGHT - BANNER_HEIGHT}px`, zIndex: 1 }}
                 >
                   <div
