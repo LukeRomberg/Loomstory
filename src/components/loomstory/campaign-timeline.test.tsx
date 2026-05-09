@@ -125,6 +125,51 @@ describe("CampaignTimeline", () => {
     expect(screen.getByText(/A Chronicle of The Sundered Realm/i)).toBeInTheDocument();
   });
 
+  it("caps entity chips at 2 and shows +N for the rest", () => {
+    const events: TimelineEvent[] = [
+      baseEvent({
+        id: "evt-many",
+        narrative_day: 1,
+        entities: [
+          { entity_type: "npc", entity_id: "1", name: "Kael Ashgrin" },
+          { entity_type: "npc", entity_id: "2", name: "Master Borin Grimguard" },
+          { entity_type: "npc", entity_id: "3", name: "Renauld Voss" },
+          { entity_type: "npc", entity_id: "4", name: "Aldous Pierren" },
+          { entity_type: "npc", entity_id: "5", name: "Faldren" },
+          { entity_type: "npc", entity_id: "6", name: "Dobbins" },
+          { entity_type: "npc", entity_id: "7", name: "Crawe" },
+        ],
+      }),
+    ];
+
+    render(<CampaignTimeline events={events} campaignName="Test" />);
+
+    expect(screen.getByText("Kael Ashgrin")).toBeInTheDocument();
+    expect(screen.getByText("Master Borin Grimguard")).toBeInTheDocument();
+    expect(screen.queryByText("Renauld Voss")).not.toBeInTheDocument();
+    expect(screen.queryByText("Faldren")).not.toBeInTheDocument();
+    expect(screen.getByText("+5")).toBeInTheDocument();
+  });
+
+  it("does not show +N when there are exactly 2 entities", () => {
+    const events: TimelineEvent[] = [
+      baseEvent({
+        id: "evt-two",
+        narrative_day: 1,
+        entities: [
+          { entity_type: "npc", entity_id: "1", name: "Gareth" },
+          { entity_type: "location", entity_id: "1", name: "Tavern" },
+        ],
+      }),
+    ];
+
+    render(<CampaignTimeline events={events} campaignName="Test" />);
+
+    expect(screen.getByText("Gareth")).toBeInTheDocument();
+    expect(screen.getByText("Tavern")).toBeInTheDocument();
+    expect(screen.queryByText(/^\+\d+$/)).not.toBeInTheDocument();
+  });
+
   it("falls back to the general icon when an event has no event_type", () => {
     const events: TimelineEvent[] = [
       baseEvent({ id: "untyped", narrative_day: 1 }),

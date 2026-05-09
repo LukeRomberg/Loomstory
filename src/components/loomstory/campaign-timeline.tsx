@@ -13,6 +13,7 @@ const TICK_HEIGHT = 24;
 const TICK_DOT_SIZE = 8;
 const ICON_SIZE = 36;
 const PARCHMENT_TILE_WIDTH = 2560;
+const MAX_VISIBLE_ENTITIES = 2;
 
 const ICON_FOR_EVENT_TYPE: Record<string, string> = {
   general: "game-icons:scroll-unfurled",
@@ -342,7 +343,7 @@ function MarkerContent({
       </p>
       {event.entities.length > 0 && (
         <div className="flex flex-wrap gap-1 justify-center mt-1.5 px-1">
-          {event.entities.map((ent) => (
+          {event.entities.slice(0, MAX_VISIBLE_ENTITIES).map((ent) => (
             <Badge
               key={`${ent.entity_type}:${ent.entity_id}`}
               variant="outline"
@@ -352,6 +353,15 @@ function MarkerContent({
               {ent.name}
             </Badge>
           ))}
+          {event.entities.length > MAX_VISIBLE_ENTITIES && (
+            <Badge
+              variant="outline"
+              className="text-[10px] px-1.5 py-0 border-[oklch(0.4_0.04_60)/0.5]"
+              style={{ color: INK_COLOR }}
+            >
+              +{event.entities.length - MAX_VISIBLE_ENTITIES}
+            </Badge>
+          )}
         </div>
       )}
     </div>
