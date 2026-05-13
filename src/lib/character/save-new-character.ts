@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { WizardState, CompendiumClass } from "./wizard-types";
+import type { WizardState, CompendiumClass, CompendiumAbility } from "./wizard-types";
 
 interface SaveParams {
   supabase: SupabaseClient;
@@ -9,6 +9,10 @@ interface SaveParams {
   wizardState: WizardState;
   selectedClass: CompendiumClass | null;
   selectedSubclass: CompendiumClass | null;
+  /** Ancestry features (both rows for the chosen ancestry, e.g. Faerie's Luckbender + Wings). */
+  ancestryFeatures?: CompendiumAbility[];
+  /** Community feature row(s) for the chosen community (usually 1). */
+  communityFeatures?: CompendiumAbility[];
 }
 
 interface SaveResult {
@@ -17,7 +21,8 @@ interface SaveResult {
 
 /**
  * Batch-saves a new character and all child rows from the wizard state.
- * Creates: character, character_classes, character_stats, character_resources.
+ * Creates: character, character_classes, character_stats, character_resources,
+ * and one character_abilities row per ancestry/community feature (linked via ability_ref_id).
  * On failure after character creation, deletes the character row (cascades children).
  */
 export async function saveNewCharacter({
@@ -28,6 +33,8 @@ export async function saveNewCharacter({
   wizardState,
   selectedClass,
   selectedSubclass,
+  ancestryFeatures = [],
+  communityFeatures = [],
 }: SaveParams): Promise<SaveResult> {
   const classData = (selectedClass?.data ?? {}) as Record<string, unknown>;
   const hpSlots = (classData.hp_slots as number) ?? 6;
@@ -45,8 +52,8 @@ export async function saveNewCharacter({
       hp_current: hpSlots,
       hp_max: hpSlots,
       data: {
-        ancestry: wizardState.textFields.ancestry ?? null,
-        community: wizardState.textFields.community ?? null,
+        ancestry: wizardState.ancestryName,
+        community: wizardState.communityName,
         evasion,
       },
       created_by: userId,
@@ -114,10 +121,51 @@ export async function saveNewCharacter({
       ]);
     if (resourceError) throw resourceError;
 
+    // 5. Insert character_abilities for ancestry + community features (one row per feature)
+    const abilityRows = [
+      ...ancestryFeatures.map((f) => compendiumAbilityToCharacterRow(characterId, f)),
+      ...communityFeatures.map((f) => compendiumAbilityToCharacterRow(characterId, f)),
+    ];
+    if (abilityRows.length > 0) {
+      const { error: abilitiesError } = await supabase
+        .from("character_abilities")
+        .insert(abilityRows);
+      if (abilitiesError) throw abilitiesError;
+    }
+
     return { characterId };
   } catch (err) {
-    // Rollback: delete the character (cascades to children)
-    await supabase.from("characters").delete().eq("id", characterId);
+    // Rollback: delete the character (cascades to children). If the cleanup itself fails,
+    // log it — the original error still rethrows below, but the GM may be left with an
+    // orphaned character row that needs manual cleanup.
+    const { error: rollbackError } = await supabase
+      .from("characters")
+      .delete()
+      .eq("id", characterId);
+    if (rollbackError) {
+      console.error("Failed to rollback character after save error:", rollbackError);
+    }
     throw err;
   }
+}
+
+/**
+ * Build a character_abilities row from a compendium_abilities row, linking via ability_ref_id.
+ * `data` is intentionally an empty object — the compendium row already carries the typed data
+ * (e.g. `{ancestry: "Faerie", position: "top"}`) and can be looked up by following the ref id.
+ */
+function compendiumAbilityToCharacterRow(
+  characterId: string,
+  feature: CompendiumAbility
+): Record<string, unknown> {
+  return {
+    character_id: characterId,
+    ability_type: feature.ability_type,
+    ability_ref_id: feature.id,
+    name: feature.name,
+    source: feature.source,
+    level_acquired: 1,
+    effect_text: feature.description,
+    data: {},
+  };
 }

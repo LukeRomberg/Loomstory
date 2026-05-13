@@ -73,8 +73,10 @@ export interface WizardState {
   className: string | null;
   subclassId: string | null;
   subclassName: string | null;
-  /** Freeform text fields: ancestry, community, backstory, etc. */
-  textFields: Record<string, string>;
+  /** Daggerheart ancestry name (e.g. "Faerie"). Names live in characters.data.ancestry. */
+  ancestryName: string | null;
+  /** Daggerheart community name (e.g. "Highborne"). Names live in characters.data.community. */
+  communityName: string | null;
   /** Stat/trait assignments: stat_key → value */
   statValues: Record<string, number>;
   /** Marked trait keys (Daggerheart) */
@@ -92,7 +94,8 @@ export function createEmptyWizardState(): WizardState {
     className: null,
     subclassId: null,
     subclassName: null,
-    textFields: {},
+    ancestryName: null,
+    communityName: null,
     statValues: {},
     markedKeys: [],
     selections: {},
@@ -119,5 +122,6 @@ export interface CompendiumAbility {
   description: string | null;
   level: number | null;
   classes: string[] | null;
+  source: string | null;
   data: Record<string, unknown>;
 }

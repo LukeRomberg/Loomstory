@@ -21,7 +21,8 @@ describe("getVisibleSteps", () => {
       "name",
       "class_pick",
       "subclass_pick",
-      "ancestry",
+      "ancestry_pick",
+      "community_pick",
       "traits",
       "review",
     ]);
@@ -66,11 +67,11 @@ describe("getVisibleSteps", () => {
       ...config,
       steps: {
         ...config.steps,
-        ancestry: { ...config.steps.ancestry, enabled: false },
+        ancestry_pick: { ...config.steps.ancestry_pick, enabled: false },
       },
     };
 
     const steps = getVisibleSteps(modifiedConfig, {});
-    expect(steps).not.toContain("ancestry");
+    expect(steps).not.toContain("ancestry_pick");
   });
 });

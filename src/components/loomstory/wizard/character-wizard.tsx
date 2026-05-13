@@ -68,7 +68,7 @@ function classToPickerCard(
     featureGroups.push({
       label: "Hope Feature",
       features: hopeFeatures.map((f) => ({
-        name: stripClassPrefix(f.name, cls.name),
+        name: stripPrefix(f.name, `${cls.name}: `),
         description: f.description ?? "",
       })),
     });
@@ -81,7 +81,7 @@ function classToPickerCard(
     featureGroups.push({
       label: "Class Feature",
       features: classFeats.map((f) => ({
-        name: stripClassPrefix(f.name, cls.name),
+        name: stripPrefix(f.name, `${cls.name}: `),
         description: f.description ?? "",
       })),
     });
@@ -105,15 +105,8 @@ function classToPickerCard(
   };
 }
 
-/** Strips the "{Class}: " prefix from a feature name. */
-function stripClassPrefix(name: string, cls: string): string {
-  const prefix = `${cls}: `;
-  return name.startsWith(prefix) ? name.slice(prefix.length) : name;
-}
-
-/** Strips the "{Subclass}: " prefix from a feature name, returning the bare feature name. */
-function stripSubclassPrefix(name: string, subclass: string): string {
-  const prefix = `${subclass}: `;
+/** Strips a "{Prefix}" from the start of a name, returning the bare suffix. */
+function stripPrefix(name: string, prefix: string): string {
   return name.startsWith(prefix) ? name.slice(prefix.length) : name;
 }
 
@@ -162,7 +155,7 @@ function subclassToPickerCard(
     featureGroups.push({
       label: FEATURE_GROUP_LABELS[bucket],
       features: bucketFeatures.map((f) => ({
-        name: stripSubclassPrefix(f.name, sub.name),
+        name: stripPrefix(f.name, `${sub.name}: `),
         description: f.description ?? "",
       })),
     });
@@ -177,6 +170,56 @@ function subclassToPickerCard(
     gradient: theme?.gradient,
     borderColor: theme?.borderColor,
     textColor: theme?.textColor,
+  };
+}
+
+/**
+ * Returns the distinct values of `data[dataKey]` across a list of compendium feature rows.
+ * Used to derive picker options for ancestries and communities — each ancestry has 2 feature
+ * rows tagged with the same `data.ancestry` name; we collapse those into one card per group.
+ */
+function distinctDataValues(features: CompendiumAbility[], dataKey: string): string[] {
+  const names = new Set<string>();
+  for (const f of features) {
+    const value = (f.data as Record<string, unknown>)?.[dataKey] as string | undefined;
+    if (value) names.add(value);
+  }
+  return Array.from(names).sort();
+}
+
+/**
+ * Build a picker card for a heritage option (ancestry or community).
+ *
+ * NOTE: PickerCard.id is the heritage NAME (e.g. "Faerie"), not a UUID — ancestries and
+ * communities don't have stable per-row UUIDs in wizard state; the name is what we store
+ * in characters.data.ancestry / .community and use for filtering features on save.
+ */
+function heritageToPickerCard(
+  value: string,
+  dataKey: string,
+  groupLabel: string,
+  allFeatures: CompendiumAbility[]
+): PickerCard {
+  const features = allFeatures.filter(
+    (f) => (f.data as Record<string, unknown>)?.[dataKey] === value
+  );
+
+  return {
+    id: value,
+    title: value,
+    description: "",
+    featureGroups:
+      features.length > 0
+        ? [
+            {
+              label: groupLabel,
+              features: features.map((f) => ({
+                name: stripPrefix(f.name, `${value}: `),
+                description: f.description ?? "",
+              })),
+            },
+          ]
+        : [],
   };
 }
 
@@ -255,6 +298,8 @@ export function CharacterWizard({
   // Data fetching
   const classStepConfig = wizardConfig.steps.class_pick;
   const subclassStepConfig = wizardConfig.steps.subclass_pick;
+  const ancestryStepConfig = wizardConfig.steps.ancestry_pick;
+  const communityStepConfig = wizardConfig.steps.community_pick;
 
   const { data: classesRaw, loading: classesLoading, error: classesError } = useStepData(
     classStepConfig,
@@ -276,6 +321,11 @@ export function CharacterWizard({
     systemId,
     wizardState.className
   );
+  // Fetch ancestry features and community features up-front (no dependency)
+  const { data: ancestryFeaturesRaw, loading: ancestryLoading, error: ancestryError } =
+    useStepData(ancestryStepConfig, systemId);
+  const { data: communityFeaturesRaw, loading: communityLoading, error: communityError } =
+    useStepData(communityStepConfig, systemId);
 
   // Surface data fetch errors
   useEffect(() => {
@@ -294,11 +344,19 @@ export function CharacterWizard({
       toast.error("Failed to load subclass features", { description: subclassFeaturesError });
     }
   }, [subclassFeaturesError]);
+  useEffect(() => {
+    if (ancestryError) toast.error("Failed to load ancestries", { description: ancestryError });
+  }, [ancestryError]);
+  useEffect(() => {
+    if (communityError) toast.error("Failed to load communities", { description: communityError });
+  }, [communityError]);
 
   const classes = classesRaw as unknown as CompendiumClass[];
   const subclasses = subclassesRaw as unknown as CompendiumClass[];
   const classFeatures = classFeaturesRaw as unknown as CompendiumAbility[];
   const subclassFeatures = subclassFeaturesRaw as unknown as CompendiumAbility[];
+  const ancestryFeatures = ancestryFeaturesRaw as unknown as CompendiumAbility[];
+  const communityFeatures = communityFeaturesRaw as unknown as CompendiumAbility[];
 
   const selectedClass = classes.find((c) => c.id === wizardState.classId) ?? null;
   const selectedSubclass = subclasses.find((c) => c.id === wizardState.subclassId) ?? null;
@@ -321,8 +379,10 @@ export function CharacterWizard({
         return wizardState.classId !== null;
       case "subclass_pick":
         return wizardState.subclassId !== null;
-      case "ancestry":
-        return true; // optional
+      case "ancestry_pick":
+        return wizardState.ancestryName !== null;
+      case "community_pick":
+        return wizardState.communityName !== null;
       case "traits": {
         const cfg = currentStep?.config as { slots?: { key: string }[]; markCount?: number } | undefined;
         const slotCount = cfg?.slots?.length ?? 6;
@@ -345,11 +405,11 @@ export function CharacterWizard({
       label: "Identity",
       items: [
         { label: "Name", value: wizardState.name },
-        ...(wizardState.textFields.ancestry
-          ? [{ label: "Ancestry", value: wizardState.textFields.ancestry }]
+        ...(wizardState.ancestryName
+          ? [{ label: "Ancestry", value: wizardState.ancestryName }]
           : []),
-        ...(wizardState.textFields.community
-          ? [{ label: "Community", value: wizardState.textFields.community }]
+        ...(wizardState.communityName
+          ? [{ label: "Community", value: wizardState.communityName }]
           : []),
       ],
     });
@@ -388,6 +448,13 @@ export function CharacterWizard({
     setCreating(true);
     try {
       const supabase = createClient();
+      // Filter the loaded feature lists down to just the chosen ancestry's + community's features
+      const selectedAncestryFeatures = ancestryFeatures.filter(
+        (f) => (f.data as Record<string, unknown>)?.ancestry === wizardState.ancestryName
+      );
+      const selectedCommunityFeatures = communityFeatures.filter(
+        (f) => (f.data as Record<string, unknown>)?.community === wizardState.communityName
+      );
       const { characterId } = await saveNewCharacter({
         supabase,
         campaignId,
@@ -396,6 +463,8 @@ export function CharacterWizard({
         wizardState,
         selectedClass,
         selectedSubclass,
+        ancestryFeatures: selectedAncestryFeatures,
+        communityFeatures: selectedCommunityFeatures,
       });
 
       toast.success("Character created");
@@ -516,26 +585,49 @@ export function CharacterWizard({
         </div>
       )}
 
-      {/* ── Ancestry step ── */}
-      {currentStepKey === "ancestry" && currentStep && (
-        <div key="ancestry" className="animate-fade-in space-y-6">
+      {/* ── Ancestry pick step ── */}
+      {currentStepKey === "ancestry_pick" && currentStep && (
+        <div key="ancestry_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
           <BackButton onClick={goBack} />
           <StepHeading
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
           />
-          <TextFieldGroup
-            fields={(currentStep.config?.fields as { key: string; label: string; placeholder?: string }[]) ?? []}
-            values={wizardState.textFields}
-            onChange={(vals) =>
-              setWizardState((prev) => ({
-                ...prev,
-                textFields: { ...prev.textFields, ...vals },
-              }))
-            }
+          <CardPicker
+            cards={distinctDataValues(ancestryFeatures, "ancestry").map((name) =>
+              heritageToPickerCard(name, "ancestry", "Ancestry Features", ancestryFeatures)
+            )}
+            loading={ancestryLoading}
+            selectedId={wizardState.ancestryName ?? undefined}
+            onSelect={(id) => {
+              setWizardState((prev) => ({ ...prev, ancestryName: id }));
+              goForward();
+            }}
           />
-          <WizardFooter onContinue={goForward} />
+        </div>
+      )}
+
+      {/* ── Community pick step ── */}
+      {currentStepKey === "community_pick" && currentStep && (
+        <div key="community_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
+          <BackButton onClick={goBack} />
+          <StepHeading
+            title={currentStep.label}
+            subtitle={currentStep.subtitle}
+            helpText={currentStep.helpText}
+          />
+          <CardPicker
+            cards={distinctDataValues(communityFeatures, "community").map((name) =>
+              heritageToPickerCard(name, "community", "Community Feature", communityFeatures)
+            )}
+            loading={communityLoading}
+            selectedId={wizardState.communityName ?? undefined}
+            onSelect={(id) => {
+              setWizardState((prev) => ({ ...prev, communityName: id }));
+              goForward();
+            }}
+          />
         </div>
       )}
 

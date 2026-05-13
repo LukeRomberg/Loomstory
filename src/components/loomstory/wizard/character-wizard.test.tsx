@@ -88,6 +88,67 @@ const mockClassFeatures = [
   },
 ];
 
+const mockAncestryFeatures = [
+  // Faerie — 2 features
+  {
+    id: "feat-faerie-luckbender",
+    name: "Faerie: Luckbender",
+    ability_type: "ancestry_feature",
+    description:
+      "Once per session, after you or a willing ally within Close range makes an action roll, you can spend 3 Hope to reroll the Duality Dice.",
+    classes: null,
+    data: { ancestry: "Faerie", position: "top" },
+  },
+  {
+    id: "feat-faerie-wings",
+    name: "Faerie: Wings",
+    ability_type: "ancestry_feature",
+    description:
+      "You can fly. While flying, you can mark a Stress after an adversary makes an attack against you to gain a +2 bonus to your Evasion against that attack.",
+    classes: null,
+    data: { ancestry: "Faerie", position: "bottom" },
+  },
+  // Katari — 2 features
+  {
+    id: "feat-katari-instincts",
+    name: "Katari: Feline Instincts",
+    ability_type: "ancestry_feature",
+    description: "When you make an Agility Roll, you can spend 2 Hope to reroll your Hope Die.",
+    classes: null,
+    data: { ancestry: "Katari", position: "top" },
+  },
+  {
+    id: "feat-katari-claws",
+    name: "Katari: Retracting Claws",
+    ability_type: "ancestry_feature",
+    description:
+      "Make an Agility Roll to scratch a target within Melee range. On a success, they become temporarily Vulnerable.",
+    classes: null,
+    data: { ancestry: "Katari", position: "bottom" },
+  },
+];
+
+const mockCommunityFeatures = [
+  {
+    id: "feat-highborne",
+    name: "Highborne: Privilege",
+    ability_type: "community_feature",
+    description:
+      "You have advantage on rolls to consort with nobles, negotiate prices, or leverage your reputation to get what you want.",
+    classes: null,
+    data: { community: "Highborne" },
+  },
+  {
+    id: "feat-wanderborne",
+    name: "Wanderborne: Nomadic Pack",
+    ability_type: "community_feature",
+    description:
+      "Add a Nomadic Pack to your inventory. Once per session, you can spend a Hope to reach into this pack and pull out a mundane item.",
+    classes: null,
+    data: { community: "Wanderborne" },
+  },
+];
+
 const mockSubclassFeatures = [
   {
     id: "feat-brave-foundation",
@@ -156,6 +217,16 @@ vi.mock("@/lib/character/use-step-data", () => ({
     // compendium_abilities — class features (all classes, fetched up-front)
     if (table === "compendium_abilities" && filter?.ability_type === "class_feature") {
       return { data: mockClassFeatures, loading: false, error: null };
+    }
+
+    // compendium_abilities — ancestry features (fetched up-front, no dependency)
+    if (table === "compendium_abilities" && filter?.ability_type === "ancestry_feature") {
+      return { data: mockAncestryFeatures, loading: false, error: null };
+    }
+
+    // compendium_abilities — community features (fetched up-front, no dependency)
+    if (table === "compendium_abilities" && filter?.ability_type === "community_feature") {
+      return { data: mockCommunityFeatures, loading: false, error: null };
     }
 
     return { data: [], loading: false, error: null };
@@ -326,5 +397,108 @@ describe("CharacterWizard", () => {
     // Mastery feature
     expect(screen.getByText("Mastery Features")).toBeInTheDocument();
     expect(screen.getByText("Unstoppable")).toBeInTheDocument();
+  });
+
+  // ─── Heritage step (ancestry + community card pickers) ─────
+
+  it("ancestry step shows one card per ancestry (grouped by data.ancestry)", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Walk: name → class → subclass → ancestry
+    await user.type(screen.getByRole("textbox"), "Kael");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+
+    // Heritage step (ancestry first)
+    expect(screen.getByText(/Choose Your Ancestry|Your Heritage|Ancestry/)).toBeInTheDocument();
+
+    // Faerie + Katari each show up once as cards (mock has 4 feature rows → 2 ancestries)
+    const faerieMatches = screen.getAllByText("Faerie");
+    expect(faerieMatches.length).toBeGreaterThanOrEqual(1);
+    const katariMatches = screen.getAllByText("Katari");
+    expect(katariMatches.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("ancestry card shows both ancestry features with descriptions when expanded", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    await user.type(screen.getByRole("textbox"), "Kael");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+
+    // Expand the Faerie card
+    await user.click(screen.getByText("Faerie"));
+
+    expect(screen.getByText("Luckbender")).toBeInTheDocument();
+    expect(screen.getByText(/Once per session, after you or a willing ally/)).toBeInTheDocument();
+    expect(screen.getByText("Wings")).toBeInTheDocument();
+    expect(screen.getByText(/You can fly\. While flying/)).toBeInTheDocument();
+  });
+
+  it("community step shows one card per community with its feature", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Walk through to community step
+    await user.type(screen.getByRole("textbox"), "Kael");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+    // Pick Faerie as ancestry to advance to community step
+    await user.click(screen.getByText("Faerie"));
+    await user.click(screen.getByRole("button", { name: /choose faerie/i }));
+
+    // Both communities should now be visible
+    expect(screen.getByText("Highborne")).toBeInTheDocument();
+    expect(screen.getByText("Wanderborne")).toBeInTheDocument();
+
+    // Expand Highborne — should show its Privilege feature
+    await user.click(screen.getByText("Highborne"));
+    expect(screen.getByText("Privilege")).toBeInTheDocument();
+    expect(screen.getByText(/advantage on rolls to consort with nobles/)).toBeInTheDocument();
+  });
+
+  it("selecting ancestry and community shows them in the review summary", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Full happy path — fastest viable inputs at each step
+    await user.type(screen.getByRole("textbox"), "Kael");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+    await user.click(screen.getByText("Katari"));
+    await user.click(screen.getByRole("button", { name: /choose katari/i }));
+    await user.click(screen.getByText("Wanderborne"));
+    await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
+
+    // Pick the standard array for the 6 traits
+    const selects = screen.getAllByRole("combobox");
+    const values = ["3", "2", "1", "1", "0", "-1"];
+    for (let i = 0; i < selects.length; i++) {
+      await user.selectOptions(selects[i], values[i]);
+    }
+    // Mark two traits (any two checkboxes)
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[0]);
+    await user.click(checkboxes[1]);
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Review summary should list ancestry + community
+    expect(screen.getByText("Katari")).toBeInTheDocument();
+    expect(screen.getByText("Wanderborne")).toBeInTheDocument();
   });
 });

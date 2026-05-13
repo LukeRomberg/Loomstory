@@ -69,4 +69,35 @@ describe("Daggerheart Wizard Config", () => {
     expect(step.dataSource?.dependsOn).toBe("class_pick");
     expect(step.dataSource?.dependColumn).toBe("parent_class_id");
   });
+
+  // ─── Heritage steps (ancestry + community) ─────────────────
+
+  it("Heritage phase contains ancestry_pick then community_pick", () => {
+    const heritage = DAGGERHEART_WIZARD_CONFIG.phases.find((p) => p.label === "Heritage");
+    expect(heritage).toBeDefined();
+    expect(heritage?.steps).toEqual(["ancestry_pick", "community_pick"]);
+  });
+
+  it("does not define the legacy free-text 'ancestry' step", () => {
+    expect(DAGGERHEART_WIZARD_CONFIG.steps.ancestry).toBeUndefined();
+  });
+
+  it("ancestry_pick is a card_picker fetching ancestry_feature rows", () => {
+    const step = DAGGERHEART_WIZARD_CONFIG.steps.ancestry_pick;
+    expect(step).toBeDefined();
+    expect(step.component).toBe("card_picker");
+    expect(step.dataSource?.table).toBe("compendium_abilities");
+    expect(step.dataSource?.filter).toEqual({ ability_type: "ancestry_feature" });
+    // No dependency — all ancestries are visible from the start
+    expect(step.dataSource?.dependsOn).toBeUndefined();
+  });
+
+  it("community_pick is a card_picker fetching community_feature rows", () => {
+    const step = DAGGERHEART_WIZARD_CONFIG.steps.community_pick;
+    expect(step).toBeDefined();
+    expect(step.component).toBe("card_picker");
+    expect(step.dataSource?.table).toBe("compendium_abilities");
+    expect(step.dataSource?.filter).toEqual({ ability_type: "community_feature" });
+    expect(step.dataSource?.dependsOn).toBeUndefined();
+  });
 });

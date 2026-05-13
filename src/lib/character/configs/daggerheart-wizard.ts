@@ -93,7 +93,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
   phases: [
     { label: "Name", steps: ["name"] },
     { label: "Class", steps: ["class_pick", "subclass_pick"] },
-    { label: "Heritage", steps: ["ancestry"] },
+    { label: "Heritage", steps: ["ancestry_pick", "community_pick"] },
     { label: "Traits", steps: ["traits"] },
     { label: "Create", steps: ["review"] },
   ],
@@ -133,17 +133,26 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
       },
       config: { columns: 2 },
     },
-    ancestry: {
+    ancestry_pick: {
       enabled: true,
-      label: "Your Heritage",
-      subtitle: "Where you come from shapes who you are.",
-      helpText: "Ancestry and community are narrative choices in Daggerheart — pick whatever feels right for your character.",
-      component: "text_field_group",
-      config: {
-        fields: [
-          { key: "ancestry", label: "Ancestry", placeholder: "e.g. Firbolg, Katari, Fungril" },
-          { key: "community", label: "Community", placeholder: "e.g. Highborne, Wanderborne" },
-        ],
+      label: "Choose Your Ancestry",
+      subtitle: "Your lineage shapes how you move through the world.",
+      helpText: "Each Daggerheart ancestry grants two ancestry features. Click a card to expand it and see what you'd gain.",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_abilities",
+        filter: { ability_type: "ancestry_feature" },
+      },
+    },
+    community_pick: {
+      enabled: true,
+      label: "Choose Your Community",
+      subtitle: "The culture or environment that raised you.",
+      helpText: "Each community grants a single community feature that reflects your upbringing.",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_abilities",
+        filter: { ability_type: "community_feature" },
       },
     },
     traits: {
