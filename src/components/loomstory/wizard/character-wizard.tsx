@@ -43,19 +43,48 @@ interface CharacterWizardProps {
 
 type Theme = { gradient: string; borderColor: string; textColor: string; domains?: string[] };
 
-function classToPickerCard(cls: CompendiumClass, themes?: Record<string, Theme>): PickerCard {
+function classToPickerCard(
+  cls: CompendiumClass,
+  classFeatures: CompendiumAbility[],
+  themes?: Record<string, Theme>
+): PickerCard {
   const theme = themes?.[cls.name];
   const data = cls.data as Record<string, unknown>;
   const stats: { label: string; value: string }[] = [];
-  const details: { label: string; items: string[] }[] = [];
 
   if (data.hp_slots) stats.push({ label: "HP Slots", value: String(data.hp_slots) });
   if (data.evasion) stats.push({ label: "Evasion", value: String(data.evasion) });
   if (data.spellcast_trait) stats.push({ label: "Spellcast", value: String(data.spellcast_trait) });
   if (data.hp_die) stats.push({ label: "Hit Die", value: String(data.hp_die) });
 
-  if (data.foundation_features && Array.isArray(data.foundation_features)) {
-    details.push({ label: "Foundation Features", items: data.foundation_features as string[] });
+  // Build feature groups — Hope Feature + Class Feature (with descriptions, from compendium)
+  const featureGroups: PickerCard["featureGroups"] = [];
+  const classOwnFeatures = classFeatures.filter((f) => f.classes?.includes(cls.name));
+
+  const hopeFeatures = classOwnFeatures.filter(
+    (f) => (f.data as Record<string, unknown>)?.feature_category === "hope_feature"
+  );
+  if (hopeFeatures.length > 0) {
+    featureGroups.push({
+      label: "Hope Feature",
+      features: hopeFeatures.map((f) => ({
+        name: stripClassPrefix(f.name, cls.name),
+        description: f.description ?? "",
+      })),
+    });
+  }
+
+  const classFeats = classOwnFeatures.filter(
+    (f) => (f.data as Record<string, unknown>)?.feature_category === "class_feature"
+  );
+  if (classFeats.length > 0) {
+    featureGroups.push({
+      label: "Class Feature",
+      features: classFeats.map((f) => ({
+        name: stripClassPrefix(f.name, cls.name),
+        description: f.description ?? "",
+      })),
+    });
   }
 
   const badges = theme?.domains?.map((d) => ({ label: d })) ??
@@ -69,11 +98,17 @@ function classToPickerCard(cls: CompendiumClass, themes?: Record<string, Theme>)
     description: (data.description as string) ?? "",
     badges,
     stats,
-    details,
+    featureGroups,
     gradient: theme?.gradient,
     borderColor: theme?.borderColor,
     textColor: theme?.textColor,
   };
+}
+
+/** Strips the "{Class}: " prefix from a feature name. */
+function stripClassPrefix(name: string, cls: string): string {
+  const prefix = `${cls}: `;
+  return name.startsWith(prefix) ? name.slice(prefix.length) : name;
 }
 
 /** Strips the "{Subclass}: " prefix from a feature name, returning the bare feature name. */
@@ -146,6 +181,20 @@ function subclassToPickerCard(
 }
 
 /**
+ * Synthetic step config for fetching ALL class features for the system.
+ * No dependsOn — fetched up-front so every class card can render its features.
+ */
+const CLASS_FEATURES_STEP_CONFIG: WizardStepConfig = {
+  enabled: true,
+  label: "Class Features (internal)",
+  component: "ability_picker",
+  dataSource: {
+    table: "compendium_abilities",
+    filter: { ability_type: "class_feature" },
+  },
+};
+
+/**
  * Synthetic step config for fetching subclass features for the selected class.
  * Subclass features in compendium_abilities have `classes` as a text array
  * containing the parent class name, so we filter via .contains().
@@ -216,6 +265,11 @@ export function CharacterWizard({
     systemId,
     wizardState.classId
   );
+  // Fetch all class features up-front — feeds the class card detail view (Hope Feature + Class Feature)
+  const { data: classFeaturesRaw, error: classFeaturesError } = useStepData(
+    CLASS_FEATURES_STEP_CONFIG,
+    systemId
+  );
   // Fetch all subclass features for the selected class — feeds the subclass card detail view
   const { data: subclassFeaturesRaw, error: subclassFeaturesError } = useStepData(
     SUBCLASS_FEATURES_STEP_CONFIG,
@@ -231,6 +285,11 @@ export function CharacterWizard({
     if (subclassesError) toast.error("Failed to load subclasses", { description: subclassesError });
   }, [subclassesError]);
   useEffect(() => {
+    if (classFeaturesError) {
+      toast.error("Failed to load class features", { description: classFeaturesError });
+    }
+  }, [classFeaturesError]);
+  useEffect(() => {
     if (subclassFeaturesError) {
       toast.error("Failed to load subclass features", { description: subclassFeaturesError });
     }
@@ -238,6 +297,7 @@ export function CharacterWizard({
 
   const classes = classesRaw as unknown as CompendiumClass[];
   const subclasses = subclassesRaw as unknown as CompendiumClass[];
+  const classFeatures = classFeaturesRaw as unknown as CompendiumAbility[];
   const subclassFeatures = subclassFeaturesRaw as unknown as CompendiumAbility[];
 
   const selectedClass = classes.find((c) => c.id === wizardState.classId) ?? null;
@@ -400,7 +460,7 @@ export function CharacterWizard({
             helpText={currentStep.helpText}
           />
           <CardPicker
-            cards={classes.map((c) => classToPickerCard(c, wizardConfig.classThemes))}
+            cards={classes.map((c) => classToPickerCard(c, classFeatures, wizardConfig.classThemes))}
             loading={classesLoading}
             selectedId={wizardState.classId ?? undefined}
             onSelect={(id) => {

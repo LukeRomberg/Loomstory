@@ -59,6 +59,35 @@ const mockSubclasses = [
   },
 ];
 
+const mockClassFeatures = [
+  {
+    id: "feat-warrior-hope",
+    name: "Warrior: No Mercy",
+    ability_type: "class_feature",
+    description:
+      "Spend 3 Hope to gain a +1 bonus to your attack rolls until your next rest.",
+    classes: ["Warrior"],
+    data: { feature_category: "hope_feature" },
+  },
+  {
+    id: "feat-warrior-class",
+    name: "Warrior: Attack of Opportunity",
+    ability_type: "class_feature",
+    description:
+      "When an adversary within Melee range tries to leave that range, you can mark a Stress to make a reaction attack.",
+    classes: ["Warrior"],
+    data: { feature_category: "class_feature" },
+  },
+  {
+    id: "feat-druid-hope",
+    name: "Druid: Druid's Hope",
+    ability_type: "class_feature",
+    description: "Druid hope description.",
+    classes: ["Druid"],
+    data: { feature_category: "hope_feature" },
+  },
+];
+
 const mockSubclassFeatures = [
   {
     id: "feat-brave-foundation",
@@ -122,6 +151,11 @@ vi.mock("@/lib/character/use-step-data", () => ({
         loading: false,
         error: null,
       };
+    }
+
+    // compendium_abilities — class features (all classes, fetched up-front)
+    if (table === "compendium_abilities" && filter?.ability_type === "class_feature") {
+      return { data: mockClassFeatures, loading: false, error: null };
     }
 
     return { data: [], loading: false, error: null };
@@ -234,6 +268,30 @@ describe("CharacterWizard", () => {
 
     await user.click(screen.getByRole("button", { name: /close/i }));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("class cards show Hope Feature and Class Feature with descriptions when expanded", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Step 1: enter name and advance to class pick
+    await user.type(screen.getByRole("textbox"), "Kael");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Expand the Warrior card
+    await user.click(screen.getByText("Warrior"));
+
+    // Hope Feature
+    expect(screen.getByText("Hope Feature")).toBeInTheDocument();
+    expect(screen.getByText("No Mercy")).toBeInTheDocument();
+    expect(screen.getByText(/Spend 3 Hope to gain a \+1 bonus/)).toBeInTheDocument();
+
+    // Class Feature
+    expect(screen.getByText("Class Feature")).toBeInTheDocument();
+    expect(screen.getByText("Attack of Opportunity")).toBeInTheDocument();
+    expect(
+      screen.getByText(/When an adversary within Melee range tries to leave/)
+    ).toBeInTheDocument();
   });
 
   it("subclass cards show feature details and parent class stats when expanded", async () => {
