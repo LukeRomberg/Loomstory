@@ -17,7 +17,7 @@ interface WizardModalProps {
 export function WizardModal({ open, onClose, title, children }: WizardModalProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent size="7xl">
+      <DialogContent size="full">
         {title && (
           <DialogHeader>
             <DialogTitle className="font-heading text-lg text-muted-foreground uppercase tracking-wider text-center">
