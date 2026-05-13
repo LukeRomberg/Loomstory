@@ -200,6 +200,30 @@ describe("CardPicker", () => {
     expect(screen.getByText("Vanishing Act")).toBeInTheDocument();
   });
 
+  it("switches from grid to master-detail layout when a card is expanded", async () => {
+    const user = userEvent.setup();
+    render(<CardPicker cards={mockCards} onSelect={vi.fn()} />);
+
+    // Initially: grid layout, no detail panel
+    expect(screen.getByTestId("card-picker-grid")).toBeInTheDocument();
+    expect(screen.queryByTestId("card-picker-detail")).not.toBeInTheDocument();
+
+    await user.click(screen.getByText("Warrior"));
+
+    // After expansion: master-detail (list on left, detail on right)
+    expect(screen.queryByTestId("card-picker-grid")).not.toBeInTheDocument();
+    expect(screen.getByTestId("card-picker-list")).toBeInTheDocument();
+    expect(screen.getByTestId("card-picker-detail")).toBeInTheDocument();
+
+    // Both cards still appear in the compact list (left), expanded detail shows on the right
+    const list = screen.getByTestId("card-picker-list");
+    expect(list).toHaveTextContent("Warrior");
+    expect(list).toHaveTextContent("Druid");
+
+    // The detail panel shows the expanded card's stats + select button
+    expect(screen.getByRole("button", { name: /choose warrior/i })).toBeInTheDocument();
+  });
+
   it("renders loading state", () => {
     render(<CardPicker cards={[]} onSelect={vi.fn()} loading />);
     expect(screen.getByTestId("card-picker-loading")).toBeInTheDocument();

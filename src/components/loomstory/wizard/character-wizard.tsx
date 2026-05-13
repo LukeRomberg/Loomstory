@@ -452,7 +452,7 @@ export function CharacterWizard({
 
       {/* ── Class pick step ── */}
       {currentStepKey === "class_pick" && currentStep && (
-        <div key="class_pick" className="animate-fade-in space-y-6">
+        <div key="class_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
           <BackButton onClick={goBack} />
           <StepHeading
             title={currentStep.label}
@@ -481,7 +481,7 @@ export function CharacterWizard({
 
       {/* ── Subclass pick step ── */}
       {currentStepKey === "subclass_pick" && currentStep && (
-        <div key="subclass_pick" className="animate-fade-in space-y-6">
+        <div key="subclass_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
           <BackButton onClick={goBack} />
           <StepHeading
             title={currentStep.label}
