@@ -25,15 +25,15 @@ export function WizardFooter({
       <Button
         onClick={onContinue}
         disabled={disabled || loading}
-        className="w-full gold-glow font-heading"
+        className="w-full gold-glow font-heading text-lg py-6"
       >
-        {loading && <Loader2 className="size-4 mr-1.5 animate-spin" />}
+        {loading && <Loader2 className="size-5 mr-1.5 animate-spin" />}
         {loading ? loadingLabel : label}
       </Button>
       {onSkip && skipLabel && (
         <button
           onClick={onSkip}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="text-base text-muted-foreground hover:text-foreground transition-colors"
         >
           {skipLabel}
         </button>

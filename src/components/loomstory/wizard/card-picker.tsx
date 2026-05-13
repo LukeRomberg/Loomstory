@@ -84,7 +84,7 @@ export function CardPicker({
                 <div
                   className={cn(
                     "font-heading mb-1",
-                    isExpanded ? "text-base" : "text-sm",
+                    isExpanded ? "text-xl" : "text-lg",
                     card.textColor ?? "text-gold"
                   )}
                 >
@@ -93,7 +93,7 @@ export function CardPicker({
                 <p
                   className={cn(
                     "text-muted-foreground leading-snug font-lore",
-                    isExpanded ? "text-xs" : "text-[10px] line-clamp-2"
+                    isExpanded ? "text-base" : "text-sm line-clamp-2"
                   )}
                 >
                   {card.description}
@@ -104,7 +104,7 @@ export function CardPicker({
                       <span
                         key={badge.label}
                         className={cn(
-                          "text-[9px] font-heading uppercase tracking-wider rounded px-1.5 py-0.5",
+                          "text-sm font-heading uppercase tracking-wider rounded px-1.5 py-0.5",
                           badge.className ?? "bg-black/30 text-muted-foreground border border-white/10"
                         )}
                       >
@@ -128,10 +128,10 @@ export function CardPicker({
                     <div className="flex flex-wrap gap-1.5">
                       {card.stats.map((stat) => (
                         <div key={stat.label} className="rounded bg-black/30 px-2.5 py-1.5 text-center">
-                          <div className="text-[9px] text-muted-foreground uppercase tracking-wider">
+                          <div className="text-sm text-muted-foreground uppercase tracking-wider">
                             {stat.label}
                           </div>
-                          <div className={cn("text-xs font-mono whitespace-nowrap", card.textColor ?? "text-gold")}>
+                          <div className={cn("text-base font-mono whitespace-nowrap", card.textColor ?? "text-gold")}>
                             {stat.value}
                           </div>
                         </div>
@@ -142,14 +142,14 @@ export function CardPicker({
                   {/* Detail sections */}
                   {card.details?.map((detail) => (
                     <div key={detail.label}>
-                      <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-1">
+                      <div className="text-sm text-muted-foreground uppercase tracking-wider mb-1">
                         {detail.label}
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {detail.items.map((item) => (
                           <span
                             key={item}
-                            className="text-[10px] rounded px-1.5 py-0.5 bg-black/30 text-muted-foreground"
+                            className="text-sm rounded px-1.5 py-0.5 bg-black/30 text-muted-foreground"
                           >
                             {item}
                           </span>
@@ -161,7 +161,7 @@ export function CardPicker({
                   {/* Feature groups (name + description) */}
                   {card.featureGroups?.map((group) => (
                     <div key={group.label}>
-                      <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-2">
+                      <div className="text-sm text-muted-foreground uppercase tracking-wider mb-2">
                         {group.label}
                       </div>
                       <div className="space-y-2">
@@ -169,13 +169,13 @@ export function CardPicker({
                           <div key={feature.name} className="rounded bg-black/30 px-2.5 py-2">
                             <div
                               className={cn(
-                                "text-xs font-heading mb-0.5",
+                                "text-base font-heading mb-0.5",
                                 card.textColor ?? "text-gold"
                               )}
                             >
                               {feature.name}
                             </div>
-                            <p className="text-[11px] leading-snug font-lore text-muted-foreground">
+                            <p className="text-base leading-snug font-lore text-muted-foreground">
                               {feature.description}
                             </p>
                           </div>
@@ -188,7 +188,7 @@ export function CardPicker({
                 <button
                   onClick={() => onSelect(card.id)}
                   className={cn(
-                    "w-full rounded-lg py-2 text-xs font-heading tracking-wider",
+                    "w-full rounded-lg py-2 text-base font-heading tracking-wider",
                     "border transition-all duration-150 hover:brightness-110",
                     "bg-black/40 border-current",
                     card.textColor ?? "text-gold"

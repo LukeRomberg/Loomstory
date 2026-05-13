@@ -17,10 +17,10 @@ interface WizardModalProps {
 export function WizardModal({ open, onClose, title, children }: WizardModalProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent size="4xl">
+      <DialogContent size="7xl">
         {title && (
           <DialogHeader>
-            <DialogTitle className="font-heading text-sm text-muted-foreground uppercase tracking-wider text-center">
+            <DialogTitle className="font-heading text-lg text-muted-foreground uppercase tracking-wider text-center">
               {title}
             </DialogTitle>
           </DialogHeader>

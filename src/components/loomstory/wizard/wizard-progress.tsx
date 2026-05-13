@@ -20,7 +20,7 @@ export function WizardProgress({ phases, currentStep }: WizardProgressProps) {
     <div className="mb-8">
       {/* Mobile: "Step x / y" */}
       <div className="flex sm:hidden items-center justify-center gap-1 mb-2">
-        <span className="text-xs text-muted-foreground font-heading tracking-wider">
+        <span className="text-base text-muted-foreground font-heading tracking-wider">
           Step <span className="text-gold">{currentPhase + 1}</span> / {total}
         </span>
       </div>
@@ -45,7 +45,7 @@ export function WizardProgress({ phases, currentStep }: WizardProgressProps) {
                 />
                 <span
                   className={cn(
-                    "text-[9px] font-heading uppercase tracking-wider whitespace-nowrap transition-colors",
+                    "text-sm font-heading uppercase tracking-wider whitespace-nowrap transition-colors",
                     isCurrent
                       ? "text-gold"
                       : isDone

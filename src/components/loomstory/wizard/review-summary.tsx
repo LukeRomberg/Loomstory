@@ -30,14 +30,14 @@ export function ReviewSummary({
     <div className="space-y-6">
       {sections.map((section) => (
         <div key={section.label} className="rounded-xl border border-rune/40 bg-black/20 p-4">
-          <div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground mb-3">
+          <div className="text-sm font-heading uppercase tracking-wider text-muted-foreground mb-3">
             {section.label}
           </div>
           <div className="space-y-1.5">
             {section.items.map((item) => (
               <div key={item.label} className="flex items-baseline justify-between gap-2">
-                <span className="text-xs text-muted-foreground">{item.label}</span>
-                <span className="text-sm font-heading text-foreground text-right">
+                <span className="text-base text-muted-foreground">{item.label}</span>
+                <span className="text-lg font-heading text-foreground text-right">
                   {item.value}
                 </span>
               </div>
@@ -49,7 +49,7 @@ export function ReviewSummary({
       <Button
         onClick={onCreate}
         disabled={creating}
-        className="w-full gold-glow font-heading text-base py-5"
+        className="w-full gold-glow font-heading text-xl py-6"
       >
         {creating ? (
           <>

@@ -45,14 +45,14 @@ export function ChipSelector({
       {(label || max != null) && (
         <div className="flex items-center gap-2">
           {label && (
-            <span className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
+            <span className="text-sm font-heading uppercase tracking-wider text-muted-foreground">
               {label}
             </span>
           )}
           {max != null && (
             <span
               className={cn(
-                "text-[10px] font-mono",
+                "text-sm font-mono",
                 selected.length === max ? "text-emerald-400" : "text-gold/70"
               )}
             >
@@ -73,7 +73,7 @@ export function ChipSelector({
               disabled={isDisabled}
               onClick={() => handleClick(option.id, isLocked)}
               className={cn(
-                "text-[11px] rounded px-2.5 py-1 border transition-colors",
+                "text-base rounded px-3 py-1.5 border transition-colors",
                 isSelected || isLocked
                   ? "border-gold/50 bg-gold/10 text-parchment"
                   : isDisabled
@@ -83,7 +83,7 @@ export function ChipSelector({
             >
               <span>{option.label}</span>
               {option.description && (
-                <span className="block text-[9px] text-muted-foreground/60 mt-0.5">
+                <span className="block text-sm text-muted-foreground/60 mt-0.5">
                   {option.description}
                 </span>
               )}
