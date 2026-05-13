@@ -17,7 +17,7 @@ interface WizardModalProps {
 export function WizardModal({ open, onClose, title, children }: WizardModalProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent size="full">
+      <DialogContent size="full" className="max-h-[95vh] overflow-hidden grid-rows-[auto_1fr]">
         {title && (
           <DialogHeader>
             <DialogTitle className="font-heading text-lg text-muted-foreground uppercase tracking-wider text-center">
@@ -25,7 +25,9 @@ export function WizardModal({ open, onClose, title, children }: WizardModalProps
             </DialogTitle>
           </DialogHeader>
         )}
-        {children}
+        <div className="overflow-y-auto pr-2 -mr-2">
+          {children}
+        </div>
       </DialogContent>
     </Dialog>
   );
