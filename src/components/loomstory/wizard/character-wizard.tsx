@@ -425,13 +425,20 @@ export function CharacterWizard({
 
       {/* ── Name step ── */}
       {currentStepKey === "name" && currentStep && (
-        <div key="name" className="animate-fade-in space-y-6">
+        <form
+          key="name"
+          className="animate-fade-in space-y-6"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (canContinue()) goForward();
+          }}
+        >
           <StepHeading
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
           />
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
             <TextFieldGroup
               fields={[
                 {
@@ -445,9 +452,9 @@ export function CharacterWizard({
                 setWizardState((prev) => ({ ...prev, name: vals.name ?? "" }))
               }
             />
+            <WizardFooter onContinue={goForward} disabled={!canContinue()} />
           </div>
-          <WizardFooter onContinue={goForward} disabled={!canContinue()} />
-        </div>
+        </form>
       )}
 
       {/* ── Class pick step ── */}
