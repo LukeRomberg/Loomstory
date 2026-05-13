@@ -11,6 +11,11 @@ export interface PickerCard {
   badges?: { label: string; className?: string }[];
   stats?: { label: string; value: string }[];
   details?: { label: string; items: string[] }[];
+  /** Feature groups with name + description (e.g. Foundation Feature, Specialization Features). */
+  featureGroups?: {
+    label: string;
+    features: { name: string; description: string }[];
+  }[];
   gradient?: string;
   borderColor?: string;
   textColor?: string;
@@ -148,6 +153,32 @@ export function CardPicker({
                           >
                             {item}
                           </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Feature groups (name + description) */}
+                  {card.featureGroups?.map((group) => (
+                    <div key={group.label}>
+                      <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-2">
+                        {group.label}
+                      </div>
+                      <div className="space-y-2">
+                        {group.features.map((feature) => (
+                          <div key={feature.name} className="rounded bg-black/30 px-2.5 py-2">
+                            <div
+                              className={cn(
+                                "text-xs font-heading mb-0.5",
+                                card.textColor ?? "text-gold"
+                              )}
+                            >
+                              {feature.name}
+                            </div>
+                            <p className="text-[11px] leading-snug font-lore text-muted-foreground">
+                              {feature.description}
+                            </p>
+                          </div>
                         ))}
                       </div>
                     </div>

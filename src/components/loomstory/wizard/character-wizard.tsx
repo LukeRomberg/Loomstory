@@ -21,7 +21,9 @@ import { saveNewCharacter } from "@/lib/character/save-new-character";
 import type {
   WizardConfig,
   WizardState,
+  WizardStepConfig,
   CompendiumClass,
+  CompendiumAbility,
 } from "@/lib/character/wizard-types";
 import { createEmptyWizardState } from "@/lib/character/wizard-types";
 
@@ -39,10 +41,9 @@ interface CharacterWizardProps {
 
 // ─── Helpers ────────────────────────────────────────────────
 
-function classToPickerCard(
-  cls: CompendiumClass,
-  themes?: Record<string, { gradient: string; borderColor: string; textColor: string; domains?: string[] }>
-): PickerCard {
+type Theme = { gradient: string; borderColor: string; textColor: string; domains?: string[] };
+
+function classToPickerCard(cls: CompendiumClass, themes?: Record<string, Theme>): PickerCard {
   const theme = themes?.[cls.name];
   const data = cls.data as Record<string, unknown>;
   const stats: { label: string; value: string }[] = [];
@@ -74,6 +75,94 @@ function classToPickerCard(
     textColor: theme?.textColor,
   };
 }
+
+/** Strips the "{Subclass}: " prefix from a feature name, returning the bare feature name. */
+function stripSubclassPrefix(name: string, subclass: string): string {
+  const prefix = `${subclass}: `;
+  return name.startsWith(prefix) ? name.slice(prefix.length) : name;
+}
+
+const FEATURE_GROUP_LABELS = {
+  foundation: "Foundation Feature",
+  specialization: "Specialization Features",
+  mastery: "Mastery Features",
+} as const;
+
+function subclassToPickerCard(
+  sub: CompendiumClass,
+  parentClass: CompendiumClass | null,
+  features: CompendiumAbility[],
+  themes?: Record<string, Theme>
+): PickerCard {
+  // Inherit theme from parent class so subclass cards match the class palette
+  const theme = parentClass ? themes?.[parentClass.name] : undefined;
+  const data = sub.data as Record<string, unknown>;
+  const parentData = (parentClass?.data ?? {}) as Record<string, unknown>;
+
+  // Inherit stats from the parent class — players want a reminder of the class numbers
+  const stats: { label: string; value: string }[] = [];
+  if (parentData.hp_slots) stats.push({ label: "HP Slots", value: String(parentData.hp_slots) });
+  if (parentData.evasion) stats.push({ label: "Evasion", value: String(parentData.evasion) });
+  if (parentData.spellcast_trait) {
+    stats.push({ label: "Spellcast", value: String(parentData.spellcast_trait) });
+  }
+
+  // Build feature groups (foundation / specialization / mastery)
+  const featureGroups: PickerCard["featureGroups"] = [];
+  const buckets: Array<keyof typeof FEATURE_GROUP_LABELS> = [
+    "foundation",
+    "specialization",
+    "mastery",
+  ];
+  for (const bucket of buckets) {
+    const bucketFeatures = features.filter((f) => {
+      const fdata = f.data as Record<string, unknown>;
+      return (
+        fdata?.subclass === sub.name &&
+        fdata?.feature_category === `${bucket}_feature`
+      );
+    });
+    if (bucketFeatures.length === 0) continue;
+
+    featureGroups.push({
+      label: FEATURE_GROUP_LABELS[bucket],
+      features: bucketFeatures.map((f) => ({
+        name: stripSubclassPrefix(f.name, sub.name),
+        description: f.description ?? "",
+      })),
+    });
+  }
+
+  return {
+    id: sub.id,
+    title: sub.name,
+    description: (data.description as string) ?? "",
+    stats,
+    featureGroups,
+    gradient: theme?.gradient,
+    borderColor: theme?.borderColor,
+    textColor: theme?.textColor,
+  };
+}
+
+/**
+ * Synthetic step config for fetching subclass features for the selected class.
+ * Subclass features in compendium_abilities have `classes` as a text array
+ * containing the parent class name, so we filter via .contains().
+ */
+const SUBCLASS_FEATURES_STEP_CONFIG: WizardStepConfig = {
+  enabled: true,
+  label: "Subclass Features (internal)",
+  component: "ability_picker",
+  dataSource: {
+    table: "compendium_abilities",
+    filter: { ability_type: "subclass_feature" },
+    dependsOn: "class_pick",
+    dependColumn: "classes",
+    dependType: "contains",
+    dependValueFrom: "name",
+  },
+};
 
 // ─── Component ──────────────────────────────────────────────
 
@@ -127,6 +216,12 @@ export function CharacterWizard({
     systemId,
     wizardState.classId
   );
+  // Fetch all subclass features for the selected class — feeds the subclass card detail view
+  const { data: subclassFeaturesRaw, error: subclassFeaturesError } = useStepData(
+    SUBCLASS_FEATURES_STEP_CONFIG,
+    systemId,
+    wizardState.className
+  );
 
   // Surface data fetch errors
   useEffect(() => {
@@ -135,9 +230,15 @@ export function CharacterWizard({
   useEffect(() => {
     if (subclassesError) toast.error("Failed to load subclasses", { description: subclassesError });
   }, [subclassesError]);
+  useEffect(() => {
+    if (subclassFeaturesError) {
+      toast.error("Failed to load subclass features", { description: subclassFeaturesError });
+    }
+  }, [subclassFeaturesError]);
 
   const classes = classesRaw as unknown as CompendiumClass[];
   const subclasses = subclassesRaw as unknown as CompendiumClass[];
+  const subclassFeatures = subclassFeaturesRaw as unknown as CompendiumAbility[];
 
   const selectedClass = classes.find((c) => c.id === wizardState.classId) ?? null;
   const selectedSubclass = subclasses.find((c) => c.id === wizardState.subclassId) ?? null;
@@ -328,7 +429,9 @@ export function CharacterWizard({
             helpText={currentStep.helpText}
           />
           <CardPicker
-            cards={subclasses.map((c) => classToPickerCard(c, wizardConfig.classThemes))}
+            cards={subclasses.map((c) =>
+              subclassToPickerCard(c, selectedClass, subclassFeatures, wizardConfig.classThemes)
+            )}
             loading={subclassesLoading}
             columns={2}
             selectedId={wizardState.subclassId ?? undefined}

@@ -124,6 +124,82 @@ describe("CardPicker", () => {
     expect(screen.getByText("Attack of Opportunity")).toBeInTheDocument();
   });
 
+  it("renders feature groups with name and description when card is expanded", async () => {
+    const user = userEvent.setup();
+    const cardsWithFeatures: PickerCard[] = [
+      {
+        id: "nightwalker",
+        title: "Nightwalker",
+        description: "Move through shadows",
+        featureGroups: [
+          {
+            label: "Foundation Feature",
+            features: [
+              {
+                name: "Shadow Stepper",
+                description:
+                  "You can move from shadow to shadow. When you move into an area of darkness, mark a Stress to disappear and reappear in another shadow within Far range.",
+              },
+            ],
+          },
+        ],
+      },
+    ];
+    render(<CardPicker cards={cardsWithFeatures} onSelect={vi.fn()} />);
+
+    await user.click(screen.getByText("Nightwalker"));
+
+    expect(screen.getByText("Foundation Feature")).toBeInTheDocument();
+    expect(screen.getByText("Shadow Stepper")).toBeInTheDocument();
+    expect(
+      screen.getByText(/You can move from shadow to shadow/)
+    ).toBeInTheDocument();
+  });
+
+  it("renders multiple feature groups in order (Foundation, Specialization, Mastery)", async () => {
+    const user = userEvent.setup();
+    const cardsWithFeatures: PickerCard[] = [
+      {
+        id: "nightwalker",
+        title: "Nightwalker",
+        description: "Move through shadows",
+        featureGroups: [
+          {
+            label: "Foundation Feature",
+            features: [{ name: "Shadow Stepper", description: "Foundation desc." }],
+          },
+          {
+            label: "Specialization Features",
+            features: [
+              { name: "Dark Cloud", description: "Spec desc one." },
+              { name: "Adrenaline", description: "Spec desc two." },
+            ],
+          },
+          {
+            label: "Mastery Features",
+            features: [
+              { name: "Fleeting Shadow", description: "Mastery desc one." },
+              { name: "Vanishing Act", description: "Mastery desc two." },
+            ],
+          },
+        ],
+      },
+    ];
+    render(<CardPicker cards={cardsWithFeatures} onSelect={vi.fn()} />);
+
+    await user.click(screen.getByText("Nightwalker"));
+
+    expect(screen.getByText("Foundation Feature")).toBeInTheDocument();
+    expect(screen.getByText("Specialization Features")).toBeInTheDocument();
+    expect(screen.getByText("Mastery Features")).toBeInTheDocument();
+
+    expect(screen.getByText("Shadow Stepper")).toBeInTheDocument();
+    expect(screen.getByText("Dark Cloud")).toBeInTheDocument();
+    expect(screen.getByText("Adrenaline")).toBeInTheDocument();
+    expect(screen.getByText("Fleeting Shadow")).toBeInTheDocument();
+    expect(screen.getByText("Vanishing Act")).toBeInTheDocument();
+  });
+
   it("renders loading state", () => {
     render(<CardPicker cards={[]} onSelect={vi.fn()} loading />);
     expect(screen.getByTestId("card-picker-loading")).toBeInTheDocument();

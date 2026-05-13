@@ -17,6 +17,10 @@ export interface WizardStepConfig {
     dependsOn?: string;
     /** Column to filter on using the dependsOn value */
     dependColumn?: string;
+    /** How to apply the dependent filter — "eq" (default) for scalar columns, "contains" for array columns (e.g. classes[]) */
+    dependType?: "eq" | "contains";
+    /** Which property of the dependent step's selection to use — "id" (default) or "name" */
+    dependValueFrom?: "id" | "name";
   };
   /** Component-specific configuration */
   config?: Record<string, unknown>;

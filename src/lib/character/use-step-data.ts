@@ -24,6 +24,7 @@ export function useStepData(
   const filterJson = JSON.stringify(ds?.filter ?? null);
   const dependsOn = ds?.dependsOn ?? null;
   const dependColumn = ds?.dependColumn ?? null;
+  const dependType = ds?.dependType ?? "eq";
   const shouldFetch = !!(table && systemId);
 
   const [data, setData] = useState<Record<string, unknown>[]>([]);
@@ -61,7 +62,11 @@ export function useStepData(
 
       // Apply dependent filter
       if (dependColumn && dependValue) {
-        query = query.eq(dependColumn, dependValue);
+        if (dependType === "contains") {
+          query = query.contains(dependColumn, [dependValue]);
+        } else {
+          query = query.eq(dependColumn, dependValue);
+        }
       }
 
       query = query.order("name");
@@ -83,7 +88,7 @@ export function useStepData(
     return () => {
       cancelled = true;
     };
-  }, [table, systemId, filterJson, dependsOn, dependColumn, dependValue]);
+  }, [table, systemId, filterJson, dependsOn, dependColumn, dependType, dependValue]);
 
   return { data, loading, error };
 }
