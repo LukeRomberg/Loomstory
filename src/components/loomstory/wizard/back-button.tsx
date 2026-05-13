@@ -8,9 +8,9 @@ export function BackButton({ onClick }: BackButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 text-lg text-muted-foreground hover:text-foreground transition-colors mb-6"
+      className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
     >
-      <ArrowLeft className="size-5" />
+      <ArrowLeft className="size-3.5" />
       Back
     </button>
   );

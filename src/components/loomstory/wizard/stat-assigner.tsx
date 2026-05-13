@@ -96,7 +96,7 @@ export function StatAssigner({
         <div className="flex items-center justify-center gap-2">
           <span
             className={cn(
-              "text-sm font-mono",
+              "text-[10px] font-mono",
               markedKeys.length === markCount ? "text-emerald-400" : "text-gold/70"
             )}
           >
@@ -108,7 +108,7 @@ export function StatAssigner({
       {groups.map((group) => (
         <div key={group.label ?? "ungrouped"}>
           {group.label && (
-            <div className="text-sm font-heading uppercase tracking-wider text-muted-foreground mb-2">
+            <div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground mb-2">
               {group.label}
             </div>
           )}
@@ -124,7 +124,7 @@ export function StatAssigner({
                   className="rounded-lg border border-rune/40 bg-black/20 p-3 space-y-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-heading text-foreground">
+                    <span className="text-sm font-heading text-foreground">
                       {slot.label}
                     </span>
                     {showMarks && (
@@ -137,7 +137,7 @@ export function StatAssigner({
                           onChange={() => handleMarkToggle(slot.key)}
                           className="size-3.5 rounded border-rune accent-gold"
                         />
-                        <span className="text-sm text-muted-foreground uppercase tracking-wider">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider">
                           Mark
                         </span>
                       </label>
@@ -147,7 +147,7 @@ export function StatAssigner({
                     role="combobox"
                     value={currentVal != null ? String(currentVal) : ""}
                     onChange={(e) => handleValueChange(slot.key, e.target.value)}
-                    className="w-full rounded-md border border-rune bg-muted px-2 py-1.5 text-lg font-mono text-foreground"
+                    className="w-full rounded-md border border-rune bg-muted px-2 py-1.5 text-sm font-mono text-foreground"
                   >
                     <option value="">—</option>
                     {currentVal != null && !available.includes(currentVal) && (

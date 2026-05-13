@@ -15,13 +15,13 @@ export function StepHeading({ title, subtitle, helpText }: StepHeadingProps) {
   return (
     <div className="text-center mb-8">
       <div className="flex items-center justify-center gap-2">
-        <h2 className="font-heading text-5xl text-gold">{title}</h2>
+        <h2 className="font-heading text-3xl text-gold">{title}</h2>
         {helpText && (
           <button
             onClick={() => setShowHelp((v) => !v)}
             aria-label={showHelp ? "Hide help" : "Show help"}
             className={cn(
-              "size-7 rounded-full border text-base flex items-center justify-center shrink-0 transition-colors",
+              "size-5 rounded-full border text-xs flex items-center justify-center shrink-0 transition-colors",
               showHelp
                 ? "border-gold/60 text-gold bg-gold/10"
                 : "border-muted-foreground/30 text-muted-foreground/50 hover:border-muted-foreground/60 hover:text-muted-foreground"
@@ -32,13 +32,13 @@ export function StepHeading({ title, subtitle, helpText }: StepHeadingProps) {
         )}
       </div>
       {subtitle && (
-        <p className="text-muted-foreground font-lore text-lg mt-2">
+        <p className="text-muted-foreground font-lore text-sm mt-2">
           {subtitle}
         </p>
       )}
       {showHelp && helpText && (
         <div className="mt-4 rounded-xl border border-rune bg-muted/30 p-4 text-left animate-fade-in">
-          <p className="text-base text-muted-foreground font-lore leading-relaxed">
+          <p className="text-xs text-muted-foreground font-lore leading-relaxed">
             {helpText}
           </p>
         </div>

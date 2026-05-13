@@ -28,7 +28,7 @@ export function TextFieldGroup({ fields, values, onChange }: TextFieldGroupProps
     <div className="space-y-4">
       {fields.map((field) => (
         <div key={field.key} className="space-y-1.5">
-          <Label className="text-base text-muted-foreground">{field.label}</Label>
+          <Label className="text-xs text-muted-foreground">{field.label}</Label>
           {field.multiline ? (
             <Textarea
               value={values[field.key] ?? ""}
@@ -44,7 +44,7 @@ export function TextFieldGroup({ fields, values, onChange }: TextFieldGroupProps
             />
           )}
           {field.helpText && (
-            <p className="text-sm text-muted-foreground font-lore">
+            <p className="text-[10px] text-muted-foreground font-lore">
               {field.helpText}
             </p>
           )}

@@ -20,7 +20,7 @@ export function WizardModal({ open, onClose, title, children }: WizardModalProps
       <DialogContent size="full" className="max-h-[95vh] overflow-hidden flex flex-col">
         {title && (
           <DialogHeader className="shrink-0">
-            <DialogTitle className="font-heading text-lg text-muted-foreground uppercase tracking-wider text-center">
+            <DialogTitle className="font-heading text-sm text-muted-foreground uppercase tracking-wider text-center">
               {title}
             </DialogTitle>
           </DialogHeader>
