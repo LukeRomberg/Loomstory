@@ -4,6 +4,13 @@ import userEvent from "@testing-library/user-event";
 import { CharacterWizard } from "./character-wizard";
 import { DAGGERHEART_WIZARD_CONFIG } from "@/lib/character/configs/daggerheart-wizard";
 
+// Suppress the HelpPopup in this suite — the popup has its own dedicated tests in
+// character-wizard-help.test.tsx. Mocking it here keeps the step-navigation tests
+// focused on wizard mechanics rather than walking through the popup on every step.
+vi.mock("./help-popup", () => ({
+  HelpPopup: () => null,
+}));
+
 // ─── Mocks ──────────────────────────────────────────────────
 
 const mockPush = vi.fn();

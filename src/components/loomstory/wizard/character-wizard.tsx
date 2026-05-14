@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { WizardModal } from "./wizard-modal";
 import { WizardProgress } from "./wizard-progress";
 import { StepHeading } from "./step-heading";
+import { HelpPopup } from "./help-popup";
 import { BackButton } from "./back-button";
 import { WizardFooter } from "./wizard-footer";
 import { CardPicker } from "./card-picker";
@@ -293,6 +294,10 @@ export function CharacterWizard({
   // State
   const [wizardState, setWizardState] = useState<WizardState>(createEmptyWizardState());
   const [creating, setCreating] = useState(false);
+  // Help popup: auto-opens on first entry to each step, dismissal is sticky for the
+  // life of the modal. Clicking the ? icon re-opens manually without resetting the set.
+  const [showHelp, setShowHelp] = useState(false);
+  const [dismissedHelpSteps, setDismissedHelpSteps] = useState<Set<string>>(() => new Set());
 
   // Visible steps (filtered by conditions)
   const visibleSteps = useMemo(
@@ -371,6 +376,17 @@ export function CharacterWizard({
   useEffect(() => {
     if (communityError) toast.error("Failed to load communities", { description: communityError });
   }, [communityError]);
+
+  // Auto-open the help popup the first time the user enters a step that has helpText.
+  // Going back to a step they've already dismissed does NOT re-fire — that's why this
+  // depends only on currentStepKey, not on dismissedHelpSteps.
+  useEffect(() => {
+    const step = wizardConfig.steps[currentStepKey];
+    if (step?.helpText && !dismissedHelpSteps.has(currentStepKey)) {
+      setShowHelp(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepKey]);
 
   const classes = classesRaw as unknown as CompendiumClass[];
   const subclasses = subclassesRaw as unknown as CompendiumClass[];
@@ -505,11 +521,28 @@ export function CharacterWizard({
     }
   }
 
-  // Reset when modal closes
+  // Reset when modal closes (including the help-popup state — popups should re-fire if the
+  // wizard is opened again).
   function handleClose() {
     setWizardState(createEmptyWizardState());
     setStepIndex(0);
+    setShowHelp(false);
+    setDismissedHelpSteps(new Set());
     onClose();
+  }
+
+  // Help popup handlers
+  function handleHelpClose() {
+    setShowHelp(false);
+    setDismissedHelpSteps((prev) => {
+      if (prev.has(currentStepKey)) return prev;
+      const next = new Set(prev);
+      next.add(currentStepKey);
+      return next;
+    });
+  }
+  function handleHelpOpen() {
+    setShowHelp(true);
   }
 
   // ─── Render ───────────────────────────────────────────────
@@ -532,6 +565,7 @@ export function CharacterWizard({
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
           />
           <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
             <TextFieldGroup
@@ -560,6 +594,7 @@ export function CharacterWizard({
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
           />
           <CardPicker
             cards={classes.map((c) => classToPickerCard(c, classFeatures, wizardConfig.classThemes))}
@@ -589,6 +624,7 @@ export function CharacterWizard({
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
           />
           <CardPicker
             cards={subclasses.map((c) =>
@@ -619,6 +655,7 @@ export function CharacterWizard({
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
           />
           <CardPicker
             cards={distinctDataValues(ancestryFeatures, "ancestry").map((name) =>
@@ -642,6 +679,7 @@ export function CharacterWizard({
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
           />
           <CardPicker
             cards={distinctDataValues(communityFeatures, "community").map((name) =>
@@ -671,6 +709,7 @@ export function CharacterWizard({
               title={currentStep.label}
               subtitle={currentStep.subtitle}
               helpText={currentStep.helpText}
+              onHelpClick={handleHelpOpen}
             />
             <div
               className={cn(
@@ -705,6 +744,8 @@ export function CharacterWizard({
           <StepHeading
             title={currentStep.label}
             subtitle={currentStep.subtitle}
+            helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
           />
           <ReviewSummary
             sections={buildReviewSections()}
@@ -712,6 +753,16 @@ export function CharacterWizard({
             creating={creating}
           />
         </div>
+      )}
+
+      {/* Help popup overlays whichever step is active (positioned via wizard-modal's relative wrapper) */}
+      {currentStep?.helpText && (
+        <HelpPopup
+          open={showHelp}
+          onClose={handleHelpClose}
+          title={currentStep.label}
+          helpText={currentStep.helpText}
+        />
       )}
     </WizardModal>
   );

@@ -25,7 +25,8 @@ export function WizardModal({ open, onClose, title, children }: WizardModalProps
             </DialogTitle>
           </DialogHeader>
         )}
-        <div className="flex-1 min-h-0 flex flex-col">
+        {/* `relative` so HelpPopup (absolute inset-0) overlays this region */}
+        <div className="flex-1 min-h-0 flex flex-col relative">
           {children}
         </div>
       </DialogContent>

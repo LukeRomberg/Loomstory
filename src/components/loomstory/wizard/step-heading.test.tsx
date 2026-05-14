@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { StepHeading } from "./step-heading";
 
 describe("StepHeading", () => {
@@ -20,19 +21,28 @@ describe("StepHeading", () => {
     expect(container.querySelectorAll("p")).toHaveLength(0);
   });
 
-  it("renders helpText whenever provided (no toggle)", () => {
-    render(<StepHeading title="Name" helpText="This is helpful" />);
-    expect(screen.getByText("This is helpful")).toBeInTheDocument();
+  it("does not render helpText inline (it lives in the popup now)", () => {
+    render(<StepHeading title="Name" helpText="Some helpful info" />);
+    expect(screen.queryByText("Some helpful info")).not.toBeInTheDocument();
   });
 
-  it("does not render any help toggle button", () => {
-    render(<StepHeading title="Name" helpText="This is helpful" />);
-    // The "?" toggle was removed — helpText is always visible
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  it("renders the ? button only when helpText and onHelpClick are both provided", () => {
+    const { rerender } = render(<StepHeading title="Name" helpText="Some info" />);
+    expect(screen.queryByRole("button", { name: /show help/i })).not.toBeInTheDocument();
+
+    rerender(<StepHeading title="Name" onHelpClick={vi.fn()} />);
+    expect(screen.queryByRole("button", { name: /show help/i })).not.toBeInTheDocument();
+
+    rerender(<StepHeading title="Name" helpText="Some info" onHelpClick={vi.fn()} />);
+    expect(screen.getByRole("button", { name: /show help/i })).toBeInTheDocument();
   });
 
-  it("does not render helpText when not provided", () => {
-    render(<StepHeading title="Name" subtitle="A subtitle" />);
-    expect(screen.queryByText(/help/i)).not.toBeInTheDocument();
+  it("calls onHelpClick when the ? button is clicked", async () => {
+    const user = userEvent.setup();
+    const onHelpClick = vi.fn();
+    render(<StepHeading title="Name" helpText="Some info" onHelpClick={onHelpClick} />);
+
+    await user.click(screen.getByRole("button", { name: /show help/i }));
+    expect(onHelpClick).toHaveBeenCalledOnce();
   });
 });

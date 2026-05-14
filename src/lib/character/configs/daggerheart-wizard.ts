@@ -102,6 +102,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
       enabled: true,
       label: "Name Your Hero",
       subtitle: "Every legend starts with a name.",
+      helpText: "Welcome to character creation. We'll walk you through every choice that shapes your hero — class, subclass, heritage, traits, and more. Don't worry about getting anything perfect right now: you can revisit and change any of these decisions, including the name, right up until you click Create on the final step.",
       component: "text_field_group",
       config: {
         fields: [
@@ -172,6 +173,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
       enabled: true,
       label: "Review & Create",
       subtitle: "One last look before the adventure begins.",
+      helpText: "Take a final pass on every choice you made. Use the Back button to step back through the wizard and revise anything before you commit. Once you click Create, your hero is born and the adventure begins.",
       component: "review_summary",
     },
   },
