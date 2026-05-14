@@ -93,14 +93,17 @@ export function StatAssigner({
   return (
     <div className="space-y-4">
       {showMarks && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex flex-col items-center gap-1">
           <span
             className={cn(
               "text-[10px] font-mono",
               markedKeys.length === markCount ? "text-emerald-400" : "text-gold/70"
             )}
           >
-            {markedKeys.length} / {markCount} marked
+            {markedKeys.length} / {markCount} advantage marks chosen
+          </span>
+          <span className="text-[10px] text-muted-foreground/70 font-lore italic">
+            Tick the box next to two traits to roll them with advantage.
           </span>
         </div>
       )}
@@ -138,7 +141,7 @@ export function StatAssigner({
                           className="size-3.5 rounded border-rune accent-gold"
                         />
                         <span className="text-[9px] text-muted-foreground uppercase tracking-wider">
-                          Mark
+                          Advantage
                         </span>
                       </label>
                     )}

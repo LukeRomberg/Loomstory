@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { StepHeading } from "./step-heading";
 
 describe("StepHeading", () => {
@@ -12,9 +11,7 @@ describe("StepHeading", () => {
   });
 
   it("renders subtitle when provided", () => {
-    render(
-      <StepHeading title="Name" subtitle="Give your hero a name." />
-    );
+    render(<StepHeading title="Name" subtitle="Give your hero a name." />);
     expect(screen.getByText("Give your hero a name.")).toBeInTheDocument();
   });
 
@@ -23,33 +20,19 @@ describe("StepHeading", () => {
     expect(container.querySelectorAll("p")).toHaveLength(0);
   });
 
-  it("renders help toggle button when helpText is provided", () => {
-    render(<StepHeading title="Name" helpText="Some helpful info" />);
-    expect(screen.getByRole("button", { name: /show help/i })).toBeInTheDocument();
+  it("renders helpText whenever provided (no toggle)", () => {
+    render(<StepHeading title="Name" helpText="This is helpful" />);
+    expect(screen.getByText("This is helpful")).toBeInTheDocument();
   });
 
-  it("does not render help toggle when helpText is not provided", () => {
-    render(<StepHeading title="Name" />);
+  it("does not render any help toggle button", () => {
+    render(<StepHeading title="Name" helpText="This is helpful" />);
+    // The "?" toggle was removed — helpText is always visible
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("shows help text when help button is clicked", async () => {
-    const user = userEvent.setup();
-    render(<StepHeading title="Name" helpText="This is helpful" />);
-
-    expect(screen.queryByText("This is helpful")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /show help/i }));
-    expect(screen.getByText("This is helpful")).toBeInTheDocument();
-  });
-
-  it("hides help text when help button is clicked again", async () => {
-    const user = userEvent.setup();
-    render(<StepHeading title="Name" helpText="This is helpful" />);
-
-    await user.click(screen.getByRole("button", { name: /show help/i }));
-    expect(screen.getByText("This is helpful")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /hide help/i }));
-    expect(screen.queryByText("This is helpful")).not.toBeInTheDocument();
+  it("does not render helpText when not provided", () => {
+    render(<StepHeading title="Name" subtitle="A subtitle" />);
+    expect(screen.queryByText(/help/i)).not.toBeInTheDocument();
   });
 });

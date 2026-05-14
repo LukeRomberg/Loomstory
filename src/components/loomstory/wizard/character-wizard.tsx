@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { WizardModal } from "./wizard-modal";
 import { WizardProgress } from "./wizard-progress";
@@ -198,7 +199,8 @@ function heritageToPickerCard(
   value: string,
   dataKey: string,
   groupLabel: string,
-  allFeatures: CompendiumAbility[]
+  allFeatures: CompendiumAbility[],
+  theme?: Theme
 ): PickerCard {
   const features = allFeatures.filter(
     (f) => (f.data as Record<string, unknown>)?.[dataKey] === value
@@ -220,6 +222,9 @@ function heritageToPickerCard(
             },
           ]
         : [],
+    gradient: theme?.gradient,
+    borderColor: theme?.borderColor,
+    textColor: theme?.textColor,
   };
 }
 
@@ -360,6 +365,11 @@ export function CharacterWizard({
 
   const selectedClass = classes.find((c) => c.id === wizardState.classId) ?? null;
   const selectedSubclass = subclasses.find((c) => c.id === wizardState.subclassId) ?? null;
+  // Theme of the chosen class — propagated to heritage cards and the trait container so the
+  // rest of the wizard reflects the player's class choice.
+  const classTheme: Theme | undefined = selectedClass
+    ? wizardConfig.classThemes?.[selectedClass.name]
+    : undefined;
 
   // Navigation
   const goBack = useCallback(() => {
@@ -596,7 +606,7 @@ export function CharacterWizard({
           />
           <CardPicker
             cards={distinctDataValues(ancestryFeatures, "ancestry").map((name) =>
-              heritageToPickerCard(name, "ancestry", "Ancestry Features", ancestryFeatures)
+              heritageToPickerCard(name, "ancestry", "Ancestry Features", ancestryFeatures, classTheme)
             )}
             loading={ancestryLoading}
             selectedId={wizardState.ancestryName ?? undefined}
@@ -619,7 +629,7 @@ export function CharacterWizard({
           />
           <CardPicker
             cards={distinctDataValues(communityFeatures, "community").map((name) =>
-              heritageToPickerCard(name, "community", "Community Feature", communityFeatures)
+              heritageToPickerCard(name, "community", "Community Feature", communityFeatures, classTheme)
             )}
             loading={communityLoading}
             selectedId={wizardState.communityName ?? undefined}
@@ -646,19 +656,27 @@ export function CharacterWizard({
               subtitle={currentStep.subtitle}
               helpText={currentStep.helpText}
             />
-            <StatAssigner
-              slots={cfg.slots}
-              standardArray={cfg.standardArray}
-              values={wizardState.statValues}
-              onChange={(vals) =>
-                setWizardState((prev) => ({ ...prev, statValues: vals }))
-              }
-              markCount={cfg.markCount}
-              markedKeys={wizardState.markedKeys}
-              onMarkedChange={(keys) =>
-                setWizardState((prev) => ({ ...prev, markedKeys: keys }))
-              }
-            />
+            <div
+              className={cn(
+                "rounded-xl border-2 p-5 bg-gradient-to-br",
+                classTheme?.gradient ?? "from-zinc-900 to-zinc-800",
+                classTheme?.borderColor ?? "border-rune/40"
+              )}
+            >
+              <StatAssigner
+                slots={cfg.slots}
+                standardArray={cfg.standardArray}
+                values={wizardState.statValues}
+                onChange={(vals) =>
+                  setWizardState((prev) => ({ ...prev, statValues: vals }))
+                }
+                markCount={cfg.markCount}
+                markedKeys={wizardState.markedKeys}
+                onMarkedChange={(keys) =>
+                  setWizardState((prev) => ({ ...prev, markedKeys: keys }))
+                }
+              />
+            </div>
             <WizardFooter onContinue={goForward} disabled={!canContinue()} />
           </div>
         );

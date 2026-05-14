@@ -113,7 +113,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
       enabled: true,
       label: "Choose Your Class",
       subtitle: "Your class defines how you meet the world — and how the world meets you.",
-      helpText: "Each class has two domains that determine the types of abilities available to you. Click a card to expand it and learn more before choosing.",
+      helpText: "Every class has two domains that grant access to a unique pool of abilities. Each card lists the class's domains, starting Evasion and HP slots, spellcast trait, Hope feature, and class feature. Tap a card to expand it and read the details before committing.",
       component: "card_picker",
       dataSource: {
         table: "compendium_classes",
@@ -123,7 +123,8 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
     subclass_pick: {
       enabled: true,
       label: "Choose Your Path",
-      subtitle: "Your subclass shapes how you grow.",
+      subtitle: "Your subclass shapes how your class grows.",
+      helpText: "Each subclass unlocks three feature tiers: Foundation (level 1), Specialization (level 5), and Mastery (level 8). Subclass cards inherit your class's stats. Tap a card to read every feature you'd gain at each tier.",
       component: "card_picker",
       dataSource: {
         table: "compendium_classes",
@@ -137,7 +138,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
       enabled: true,
       label: "Choose Your Ancestry",
       subtitle: "Your lineage shapes how you move through the world.",
-      helpText: "Each Daggerheart ancestry grants two ancestry features. Click a card to expand it and see what you'd gain.",
+      helpText: "Each Daggerheart ancestry grants two ancestry features — both are gained when you pick the ancestry. Tap a card to read its flavor and see both features in full.",
       component: "card_picker",
       dataSource: {
         table: "compendium_abilities",
@@ -148,7 +149,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
       enabled: true,
       label: "Choose Your Community",
       subtitle: "The culture or environment that raised you.",
-      helpText: "Each community grants a single community feature that reflects your upbringing.",
+      helpText: "Each community grants a single community feature reflecting your upbringing. Community cards also list six personality traits common to that group — useful inspiration for roleplay.",
       component: "card_picker",
       dataSource: {
         table: "compendium_abilities",
@@ -158,8 +159,8 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
     traits: {
       enabled: true,
       label: "Assign Traits",
-      subtitle: "Distribute your trait values and mark two.",
-      helpText: "Assign the standard array (+3, +2, +1, +1, 0, -1) to your six traits. Then mark two traits — these are the ones your character can roll with advantage.",
+      subtitle: "Distribute the standard array, then mark two for advantage.",
+      helpText: "Daggerheart characters have six traits — Agility, Strength, Finesse, Instinct, Presence, Knowledge. Assign one of each value from the standard array (+3, +2, +1, +1, 0, -1) to a different trait. Then tick the Advantage box on two of them: rolls using those traits gain a die of advantage.",
       component: "stat_assigner",
       config: {
         slots: DAGGERHEART_TRAIT_SLOTS,

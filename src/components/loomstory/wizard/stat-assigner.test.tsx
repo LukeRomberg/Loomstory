@@ -179,6 +179,6 @@ describe("StatAssigner", () => {
       />
     );
 
-    expect(screen.getByText("1 / 2 marked")).toBeInTheDocument();
+    expect(screen.getByText("1 / 2 advantage marks chosen")).toBeInTheDocument();
   });
 });

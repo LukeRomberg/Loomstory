@@ -468,6 +468,41 @@ describe("CharacterWizard", () => {
     expect(screen.getByText(/advantage on rolls to consort with nobles/)).toBeInTheDocument();
   });
 
+  it("ancestry cards inherit the selected class's gradient theme", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Walk to the ancestry step via Warrior (theme: from-red-950 via-rose-900)
+    await user.type(screen.getByRole("textbox"), "Kael");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+
+    // Ancestry cards should now be tinted with Warrior's theme
+    const faerieCard = screen.getByText("Faerie").closest("[data-card-id]");
+    expect(faerieCard?.className).toContain("from-red-950");
+  });
+
+  it("community cards inherit the selected class's gradient theme", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    await user.type(screen.getByRole("textbox"), "Kael");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+    // Pick ancestry to advance to community step
+    await user.click(screen.getByText("Faerie"));
+    await user.click(screen.getByRole("button", { name: /choose faerie/i }));
+
+    const highborneCard = screen.getByText("Highborne").closest("[data-card-id]");
+    expect(highborneCard?.className).toContain("from-red-950");
+  });
+
   it("selecting ancestry and community shows them in the review summary", async () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);
