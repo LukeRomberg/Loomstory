@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 interface HelpPopupProps {
@@ -30,6 +30,15 @@ export function HelpPopup({
   countdownSeconds = 3,
 }: HelpPopupProps) {
   const [countdown, setCountdown] = useState(countdownSeconds);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+
+  // Move focus to the dialog wrapper when it opens so screen readers announce it.
+  useEffect(() => {
+    if (open) {
+      dialogRef.current?.focus();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -53,15 +62,20 @@ export function HelpPopup({
 
   return (
     <div
+      ref={dialogRef}
       data-testid="help-popup"
-      className="absolute inset-0 z-50 flex items-center justify-center px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+      className="absolute inset-0 z-50 flex items-center justify-center px-4 outline-none"
     >
       {/* Backdrop — captures clicks so the content below is unreachable */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
       {/* Popup card */}
       <div className="relative z-10 w-full max-w-lg rounded-xl border-2 border-gold/60 bg-card p-6 shadow-2xl">
-        <h3 className="font-heading text-2xl text-gold mb-3">{title}</h3>
+        <h3 id={titleId} className="font-heading text-2xl text-gold mb-3">{title}</h3>
         <p className="text-base text-muted-foreground font-lore leading-relaxed mb-6 whitespace-pre-line">
           {helpText}
         </p>

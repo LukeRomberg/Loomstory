@@ -5,6 +5,8 @@ import type { LucideIcon } from "lucide-react";
 export interface WizardStepConfig {
   enabled: boolean;
   label: string;
+  /** Compact label for the progress bar (defaults to `label` if omitted). */
+  shortLabel?: string;
   subtitle?: string;
   helpText?: string;
   /** Registry key mapping to a component: "card_picker", "chip_selector", "stat_assigner", etc. */
@@ -79,8 +81,6 @@ export interface WizardState {
   communityName: string | null;
   /** Stat/trait assignments: stat_key → value */
   statValues: Record<string, number>;
-  /** Marked trait keys (Daggerheart) */
-  markedKeys: string[];
   /** Multi-select choices: step_key → selected ids */
   selections: Record<string, string[]>;
   /** Class-specific config data */
@@ -97,7 +97,6 @@ export function createEmptyWizardState(): WizardState {
     ancestryName: null,
     communityName: null,
     statValues: {},
-    markedKeys: [],
     selections: {},
     classConfig: {},
   };

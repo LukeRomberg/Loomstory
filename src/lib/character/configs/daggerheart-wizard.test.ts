@@ -4,7 +4,6 @@ import {
   DAGGERHEART_CLASS_THEMES,
   DAGGERHEART_TRAIT_SLOTS,
   DAGGERHEART_STANDARD_ARRAY,
-  DAGGERHEART_MARK_COUNT,
 } from "./daggerheart-wizard";
 
 describe("Daggerheart Wizard Config", () => {
@@ -28,13 +27,17 @@ describe("Daggerheart Wizard Config", () => {
     expect(groups.size).toBe(3);
   });
 
-  it("standard array has 6 values summing to 6", () => {
-    expect(DAGGERHEART_STANDARD_ARRAY).toHaveLength(6);
-    expect(DAGGERHEART_STANDARD_ARRAY.reduce((a, b) => a + b, 0)).toBe(6);
+  it("standard array matches the SRD (+2, +1, +1, +0, +0, -1)", () => {
+    // Daggerheart SRD 9-09-25 step 3 (page 4): "Assign the modifiers +2, +1, +1, +0, +0, -1
+    // to your character's traits in any order you wish."
+    expect([...DAGGERHEART_STANDARD_ARRAY].sort()).toEqual([-1, 0, 0, 1, 1, 2]);
+    expect(DAGGERHEART_STANDARD_ARRAY.reduce((a, b) => a + b, 0)).toBe(3);
   });
 
-  it("mark count is 2", () => {
-    expect(DAGGERHEART_MARK_COUNT).toBe(2);
+  it("trait step config does not declare a markCount (no marking mechanic in the SRD)", () => {
+    const traits = DAGGERHEART_WIZARD_CONFIG.steps.traits;
+    expect(traits.config).toBeDefined();
+    expect(traits.config).not.toHaveProperty("markCount");
   });
 
   it("has 5 phases", () => {

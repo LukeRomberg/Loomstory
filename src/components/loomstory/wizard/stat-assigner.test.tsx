@@ -13,7 +13,8 @@ const daggerheartSlots: StatSlot[] = [
   { key: "knowledge", label: "Knowledge", group: "Presence / Knowledge" },
 ];
 
-const standardArray = [3, 2, 1, 1, 0, -1];
+// Daggerheart SRD 9-09-25, page 4 step 3: +2, +1, +1, +0, +0, -1
+const standardArray = [2, 1, 1, 0, 0, -1];
 
 describe("StatAssigner", () => {
   it("renders all stat slot labels", () => {
@@ -43,8 +44,7 @@ describe("StatAssigner", () => {
     expect(screen.getByText("Finesse / Instinct")).toBeInTheDocument();
   });
 
-  it("shows available values in dropdown selectors", async () => {
-    const user = userEvent.setup();
+  it("shows available values in dropdown selectors", () => {
     render(
       <StatAssigner
         slots={daggerheartSlots}
@@ -54,7 +54,6 @@ describe("StatAssigner", () => {
       />
     );
 
-    // Each stat should have a select element
     const selects = screen.getAllByRole("combobox");
     expect(selects).toHaveLength(6);
   });
@@ -72,88 +71,29 @@ describe("StatAssigner", () => {
     );
 
     const selects = screen.getAllByRole("combobox");
-    await user.selectOptions(selects[0], "3");
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ agility: 3 }));
+    await user.selectOptions(selects[0], "2");
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ agility: 2 }));
   });
 
-  it("removes assigned value from available pool for other selects", async () => {
-    const user = userEvent.setup();
+  it("removes assigned value from available pool for other selects", () => {
     render(
       <StatAssigner
         slots={daggerheartSlots}
         standardArray={standardArray}
-        values={{ agility: 3 }}
+        values={{ agility: 2 }}
         onChange={vi.fn()}
       />
     );
 
-    // The second select should not have 3 as an option (only one 3 in the array)
+    // The second select should not have 2 as an option (only one +2 in the array)
     const selects = screen.getAllByRole("combobox");
     const options = Array.from(selects[1].querySelectorAll("option"));
     const values = options.map((o) => o.value).filter((v) => v !== "");
-    // 3 is taken by agility, so strength should not have it
-    expect(values).not.toContain("3");
+    // +2 is taken by agility, so strength should not have it
+    expect(values).not.toContain("2");
   });
 
-  it("renders mark checkboxes when markCount is provided", () => {
-    render(
-      <StatAssigner
-        slots={daggerheartSlots}
-        standardArray={standardArray}
-        values={{}}
-        onChange={vi.fn()}
-        markCount={2}
-        markedKeys={[]}
-        onMarkedChange={vi.fn()}
-      />
-    );
-
-    const checkboxes = screen.getAllByRole("checkbox");
-    expect(checkboxes).toHaveLength(6);
-  });
-
-  it("calls onMarkedChange when a mark checkbox is toggled", async () => {
-    const user = userEvent.setup();
-    const onMarkedChange = vi.fn();
-    render(
-      <StatAssigner
-        slots={daggerheartSlots}
-        standardArray={standardArray}
-        values={{}}
-        onChange={vi.fn()}
-        markCount={2}
-        markedKeys={[]}
-        onMarkedChange={onMarkedChange}
-      />
-    );
-
-    const checkboxes = screen.getAllByRole("checkbox");
-    await user.click(checkboxes[0]);
-    expect(onMarkedChange).toHaveBeenCalledWith(["agility"]);
-  });
-
-  it("disables unchecked mark checkboxes when markCount is reached", () => {
-    render(
-      <StatAssigner
-        slots={daggerheartSlots}
-        standardArray={standardArray}
-        values={{}}
-        onChange={vi.fn()}
-        markCount={2}
-        markedKeys={["agility", "finesse"]}
-        onMarkedChange={vi.fn()}
-      />
-    );
-
-    const checkboxes = screen.getAllByRole("checkbox");
-    // agility and finesse should be checked, the rest disabled
-    expect(checkboxes[0]).toBeChecked();
-    expect(checkboxes[2]).toBeChecked();
-    expect(checkboxes[1]).toBeDisabled(); // strength
-    expect(checkboxes[3]).toBeDisabled(); // instinct
-  });
-
-  it("does not render mark checkboxes when markCount is not provided", () => {
+  it("does not render mark checkboxes (the 'mark for advantage' mechanic is not in the SRD)", () => {
     render(
       <StatAssigner
         slots={daggerheartSlots}
@@ -162,23 +102,6 @@ describe("StatAssigner", () => {
         onChange={vi.fn()}
       />
     );
-
     expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
-  });
-
-  it("shows mark counter when markCount is provided", () => {
-    render(
-      <StatAssigner
-        slots={daggerheartSlots}
-        standardArray={standardArray}
-        values={{}}
-        onChange={vi.fn()}
-        markCount={2}
-        markedKeys={["agility"]}
-        onMarkedChange={vi.fn()}
-      />
-    );
-
-    expect(screen.getByText("1 / 2 advantage marks chosen")).toBeInTheDocument();
   });
 });

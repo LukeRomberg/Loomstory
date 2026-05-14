@@ -11,8 +11,7 @@ function createMockState(overrides: Partial<WizardState> = {}): WizardState {
     subclassName: "Call of the Slayer",
     ancestryName: "Katari",
     communityName: "Wanderborne",
-    statValues: { agility: 3, strength: 2, finesse: 1, instinct: 1, presence: 0, knowledge: -1 },
-    markedKeys: ["agility", "finesse"],
+    statValues: { agility: 2, strength: 1, finesse: 1, instinct: 0, presence: 0, knowledge: -1 },
     selections: {},
     classConfig: {},
     ...overrides,
@@ -125,6 +124,28 @@ describe("saveNewCharacter", () => {
     });
 
     expect(result.characterId).toBe("new-char-id");
+  });
+
+  it("does not write the deprecated `marked` field on character_stats rows", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+    });
+
+    const statsInserts = mockSupabase._insertCalls.character_stats ?? [];
+    // Inserts as a single batched array — flatten just in case
+    const rows = statsInserts.flatMap((payload) =>
+      Array.isArray(payload) ? payload : [payload]
+    ) as Array<{ data?: Record<string, unknown> }>;
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.data ?? {}).not.toHaveProperty("marked");
+    }
   });
 
   it("calls from() for characters, character_classes, character_stats, character_resources", async () => {

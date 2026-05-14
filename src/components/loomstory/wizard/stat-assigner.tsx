@@ -1,7 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-
 export interface StatSlot {
   key: string;
   label: string;
@@ -13,9 +11,6 @@ interface StatAssignerProps {
   standardArray: number[];
   values: Record<string, number>;
   onChange: (values: Record<string, number>) => void;
-  markCount?: number;
-  markedKeys?: string[];
-  onMarkedChange?: (keys: string[]) => void;
 }
 
 export function StatAssigner({
@@ -23,9 +18,6 @@ export function StatAssigner({
   standardArray,
   values,
   onChange,
-  markCount,
-  markedKeys = [],
-  onMarkedChange,
 }: StatAssignerProps) {
   // Track which array values are used (by index, since duplicates exist)
   function getAvailableValues(currentKey: string): number[] {
@@ -66,18 +58,6 @@ export function StatAssigner({
     }
   }
 
-  function handleMarkToggle(key: string) {
-    if (!onMarkedChange) return;
-    if (markedKeys.includes(key)) {
-      onMarkedChange(markedKeys.filter((k) => k !== key));
-    } else {
-      onMarkedChange([...markedKeys, key]);
-    }
-  }
-
-  const showMarks = markCount != null && onMarkedChange != null;
-  const atMarkMax = showMarks && markedKeys.length >= markCount;
-
   // Group slots by group label
   const groups: { label: string | null; slots: StatSlot[] }[] = [];
   const groupMap = new Map<string | null, StatSlot[]>();
@@ -92,22 +72,6 @@ export function StatAssigner({
 
   return (
     <div className="space-y-4">
-      {showMarks && (
-        <div className="flex flex-col items-center gap-1">
-          <span
-            className={cn(
-              "text-[10px] font-mono",
-              markedKeys.length === markCount ? "text-emerald-400" : "text-gold/70"
-            )}
-          >
-            {markedKeys.length} / {markCount} advantage marks chosen
-          </span>
-          <span className="text-[10px] text-muted-foreground/70 font-lore italic">
-            Tick the box next to two traits to roll them with advantage.
-          </span>
-        </div>
-      )}
-
       {groups.map((group) => (
         <div key={group.label ?? "ungrouped"}>
           {group.label && (
@@ -119,7 +83,6 @@ export function StatAssigner({
             {group.slots.map((slot) => {
               const available = getAvailableValues(slot.key);
               const currentVal = values[slot.key];
-              const isMarked = markedKeys.includes(slot.key);
 
               return (
                 <div
@@ -130,21 +93,6 @@ export function StatAssigner({
                     <span className="text-sm font-heading text-foreground">
                       {slot.label}
                     </span>
-                    {showMarks && (
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          role="checkbox"
-                          checked={isMarked}
-                          disabled={!isMarked && atMarkMax}
-                          onChange={() => handleMarkToggle(slot.key)}
-                          className="size-3.5 rounded border-rune accent-gold"
-                        />
-                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider">
-                          Advantage
-                        </span>
-                      </label>
-                    )}
                   </div>
                   <select
                     role="combobox"

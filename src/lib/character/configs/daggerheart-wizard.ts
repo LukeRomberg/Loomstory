@@ -83,8 +83,9 @@ export const DAGGERHEART_TRAIT_SLOTS = [
   { key: "knowledge", label: "Knowledge", group: "Presence / Knowledge" },
 ];
 
-export const DAGGERHEART_STANDARD_ARRAY = [3, 2, 1, 1, 0, -1];
-export const DAGGERHEART_MARK_COUNT = 2;
+// Daggerheart SRD 9-09-25 step 3 (page 4): "Assign the modifiers +2, +1, +1, +0, +0, -1
+// to your character's traits in any order you wish." No marking-for-advantage mechanic.
+export const DAGGERHEART_STANDARD_ARRAY = [2, 1, 1, 0, 0, -1];
 
 // ─── Wizard Config ──────────────────────────────────────────
 
@@ -101,6 +102,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
     name: {
       enabled: true,
       label: "Name Your Hero",
+      shortLabel: "Name",
       subtitle: "Every legend starts with a name.",
       helpText: "Welcome to character creation. We'll walk you through every choice that shapes your hero — class, subclass, heritage, traits, and more. Don't worry about getting anything perfect right now: you can revisit and change any of these decisions, including the name, right up until you click Create on the final step.",
       component: "text_field_group",
@@ -113,6 +115,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
     class_pick: {
       enabled: true,
       label: "Choose Your Class",
+      shortLabel: "Class",
       subtitle: "Your class defines how you meet the world — and how the world meets you.",
       helpText: "Every class has two domains that grant access to a unique pool of abilities. Each card lists the class's domains, starting Evasion and HP slots, spellcast trait, Hope feature, and class feature. Tap a card to expand it and read the details before committing.",
       component: "card_picker",
@@ -124,6 +127,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
     subclass_pick: {
       enabled: true,
       label: "Choose Your Path",
+      shortLabel: "Subclass",
       subtitle: "Your subclass shapes how your class grows.",
       helpText: "Each subclass unlocks three feature tiers: Foundation (level 1), Specialization (level 5), and Mastery (level 8). Subclass cards inherit your class's stats. Tap a card to read every feature you'd gain at each tier.",
       component: "card_picker",
@@ -138,6 +142,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
     ancestry_pick: {
       enabled: true,
       label: "Choose Your Ancestry",
+      shortLabel: "Ancestry",
       subtitle: "Your lineage shapes how you move through the world.",
       helpText: "Each Daggerheart ancestry grants two ancestry features — both are gained when you pick the ancestry. Tap a card to read its flavor and see both features in full.",
       component: "card_picker",
@@ -149,6 +154,7 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
     community_pick: {
       enabled: true,
       label: "Choose Your Community",
+      shortLabel: "Community",
       subtitle: "The culture or environment that raised you.",
       helpText: "Each community grants a single community feature reflecting your upbringing. Community cards also list six personality traits common to that group — useful inspiration for roleplay.",
       component: "card_picker",
@@ -160,18 +166,19 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
     traits: {
       enabled: true,
       label: "Assign Traits",
-      subtitle: "Distribute the standard array, then mark two for advantage.",
-      helpText: "Daggerheart characters have six traits — Agility, Strength, Finesse, Instinct, Presence, Knowledge. Assign one of each value from the standard array (+3, +2, +1, +1, 0, -1) to a different trait. Then tick the Advantage box on two of them: rolls using those traits gain a die of advantage.",
+      shortLabel: "Traits",
+      subtitle: "Distribute the standard array across your six traits.",
+      helpText: "Daggerheart characters have six traits — Agility, Strength, Finesse, Instinct, Presence, Knowledge. Assign one of each modifier from the standard array (+2, +1, +1, +0, +0, -1) to a different trait. When you 'roll with a trait', that trait's modifier is added to your roll's total.",
       component: "stat_assigner",
       config: {
         slots: DAGGERHEART_TRAIT_SLOTS,
         standardArray: DAGGERHEART_STANDARD_ARRAY,
-        markCount: DAGGERHEART_MARK_COUNT,
       },
     },
     review: {
       enabled: true,
       label: "Review & Create",
+      shortLabel: "Review",
       subtitle: "One last look before the adventure begins.",
       helpText: "Take a final pass on every choice you made. Use the Back button to step back through the wizard and revise anything before you commit. Once you click Create, your hero is born and the adventure begins.",
       component: "review_summary",

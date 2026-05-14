@@ -2,36 +2,39 @@
 
 import { cn } from "@/lib/utils";
 
-export interface WizardPhase {
+export interface WizardProgressStep {
+  key: string;
   label: string;
-  steps: string[];
 }
 
 interface WizardProgressProps {
-  phases: WizardPhase[];
+  steps: WizardProgressStep[];
   currentStep: string;
 }
 
-export function WizardProgress({ phases, currentStep }: WizardProgressProps) {
-  const currentPhase = phases.findIndex((p) => p.steps.includes(currentStep));
-  const total = phases.length;
+export function WizardProgress({ steps, currentStep }: WizardProgressProps) {
+  const currentIndex = Math.max(
+    0,
+    steps.findIndex((s) => s.key === currentStep)
+  );
+  const total = steps.length;
 
   return (
     <div className="mb-8">
       {/* Mobile: "Step x / y" */}
       <div className="flex sm:hidden items-center justify-center gap-1 mb-2">
         <span className="text-xs text-muted-foreground font-heading tracking-wider">
-          Step <span className="text-gold">{currentPhase + 1}</span> / {total}
+          Step <span className="text-gold">{currentIndex + 1}</span> / {total}
         </span>
       </div>
 
-      {/* Desktop: labeled phase dots */}
+      {/* Desktop: one labeled dot per step */}
       <div className="hidden sm:flex items-center gap-0">
-        {phases.map((phase, i) => {
-          const isDone = i < currentPhase;
-          const isCurrent = i === currentPhase;
+        {steps.map((step, i) => {
+          const isDone = i < currentIndex;
+          const isCurrent = i === currentIndex;
           return (
-            <div key={phase.label} className="flex items-center flex-1 last:flex-none">
+            <div key={step.key} className="flex items-center flex-1 last:flex-none">
               <div className="flex flex-col items-center gap-1 shrink-0">
                 <div
                   className={cn(
@@ -53,14 +56,14 @@ export function WizardProgress({ phases, currentStep }: WizardProgressProps) {
                         : "text-muted-foreground/30"
                   )}
                 >
-                  {phase.label}
+                  {step.label}
                 </span>
               </div>
-              {i < phases.length - 1 && (
+              {i < steps.length - 1 && (
                 <div
                   className={cn(
                     "flex-1 h-px mx-1 transition-colors duration-300",
-                    i < currentPhase ? "bg-gold/40" : "bg-rune/40"
+                    i < currentIndex ? "bg-gold/40" : "bg-rune/40"
                   )}
                 />
               )}
@@ -74,7 +77,7 @@ export function WizardProgress({ phases, currentStep }: WizardProgressProps) {
         <div
           data-testid="progress-fill"
           className="h-full bg-gold/60 rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${((currentPhase + 1) / total) * 100}%` }}
+          style={{ width: `${((currentIndex + 1) / total) * 100}%` }}
         />
       </div>
     </div>

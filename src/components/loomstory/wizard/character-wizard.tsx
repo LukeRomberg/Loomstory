@@ -311,15 +311,13 @@ export function CharacterWizard({
   const currentStepKey = visibleSteps[stepIndex] ?? visibleSteps[0];
   const currentStep = wizardConfig.steps[currentStepKey];
 
-  // Only compute phases that have at least one visible step
-  const visiblePhases = useMemo(() => {
-    return wizardConfig.phases
-      .map((p) => ({
-        ...p,
-        steps: p.steps.filter((s) => visibleSteps.includes(s)),
-      }))
-      .filter((p) => p.steps.length > 0);
-  }, [wizardConfig.phases, visibleSteps]);
+  // One labeled entry per visible step for the progress bar
+  const progressSteps = useMemo(() => {
+    return visibleSteps.map((key) => {
+      const step = wizardConfig.steps[key];
+      return { key, label: step?.shortLabel ?? step?.label ?? key };
+    });
+  }, [visibleSteps, wizardConfig.steps]);
 
   // Data fetching
   const classStepConfig = wizardConfig.steps.class_pick;
@@ -378,15 +376,15 @@ export function CharacterWizard({
   }, [communityError]);
 
   // Auto-open the help popup the first time the user enters a step that has helpText.
-  // Going back to a step they've already dismissed does NOT re-fire — that's why this
-  // depends only on currentStepKey, not on dismissedHelpSteps.
+  // Going back to a previously-dismissed step does NOT re-fire because the `if` guard
+  // short-circuits when the step is already in dismissedHelpSteps — so it's safe to
+  // include both deps for eslint compliance without changing observable behavior.
   useEffect(() => {
     const step = wizardConfig.steps[currentStepKey];
     if (step?.helpText && !dismissedHelpSteps.has(currentStepKey)) {
       setShowHelp(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepKey]);
+  }, [currentStepKey, wizardConfig.steps, dismissedHelpSteps]);
 
   const classes = classesRaw as unknown as CompendiumClass[];
   const subclasses = subclassesRaw as unknown as CompendiumClass[];
@@ -426,13 +424,9 @@ export function CharacterWizard({
       case "community_pick":
         return wizardState.communityName !== null;
       case "traits": {
-        const cfg = currentStep?.config as { slots?: { key: string }[]; markCount?: number } | undefined;
+        const cfg = currentStep?.config as { slots?: { key: string }[] } | undefined;
         const slotCount = cfg?.slots?.length ?? 6;
-        const markCount = cfg?.markCount ?? 0;
-        return (
-          Object.keys(wizardState.statValues).length === slotCount &&
-          wizardState.markedKeys.length === markCount
-        );
+        return Object.keys(wizardState.statValues).length === slotCount;
       }
       default:
         return true;
@@ -477,7 +471,7 @@ export function CharacterWizard({
           .filter((s) => wizardState.statValues[s.key] != null)
           .map((s) => ({
             label: s.label,
-            value: `${wizardState.statValues[s.key] >= 0 ? "+" : ""}${wizardState.statValues[s.key]}${wizardState.markedKeys.includes(s.key) ? " (marked)" : ""}`,
+            value: `${wizardState.statValues[s.key] >= 0 ? "+" : ""}${wizardState.statValues[s.key]}`,
           })),
       });
     }
@@ -549,7 +543,7 @@ export function CharacterWizard({
 
   return (
     <WizardModal open={open} onClose={handleClose} title="Create Character">
-      <WizardProgress phases={visiblePhases} currentStep={currentStepKey} />
+      <WizardProgress steps={progressSteps} currentStep={currentStepKey} />
 
       {/* ── Name step ── */}
       {currentStepKey === "name" && currentStep && (
@@ -700,7 +694,6 @@ export function CharacterWizard({
         const cfg = currentStep.config as {
           slots: { key: string; label: string; group?: string }[];
           standardArray: number[];
-          markCount: number;
         };
         return (
           <div key="traits" className="animate-fade-in space-y-6">
@@ -724,11 +717,6 @@ export function CharacterWizard({
                 values={wizardState.statValues}
                 onChange={(vals) =>
                   setWizardState((prev) => ({ ...prev, statValues: vals }))
-                }
-                markCount={cfg.markCount}
-                markedKeys={wizardState.markedKeys}
-                onMarkedChange={(keys) =>
-                  setWizardState((prev) => ({ ...prev, markedKeys: keys }))
                 }
               />
             </div>

@@ -88,7 +88,7 @@ export async function saveNewCharacter({
       character_id: characterId,
       stat_key: statKey,
       value,
-      data: { marked: wizardState.markedKeys.includes(statKey) },
+      data: {},
     }));
 
     if (statRows.length > 0) {

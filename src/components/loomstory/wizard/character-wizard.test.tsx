@@ -332,11 +332,11 @@ describe("CharacterWizard", () => {
     expect(screen.getByText("Druid")).toBeInTheDocument();
   });
 
-  it("shows progress bar with correct phase count", () => {
+  it("shows progress bar with one label per visible step", () => {
     render(<CharacterWizard {...defaultProps} />);
-    // Should show phase labels (desktop) — Name, Class, Heritage, Traits, Create
+    // Per-step labels (desktop): Name, Class, Subclass, Ancestry, Community, Traits, Review
     expect(screen.getByText("Name")).toBeInTheDocument();
-    expect(screen.getByText("Create")).toBeInTheDocument();
+    expect(screen.getByText("Review")).toBeInTheDocument();
   });
 
   it("shows back button on class pick step", async () => {
@@ -441,8 +441,8 @@ describe("CharacterWizard", () => {
     await user.click(screen.getByText("Call of the Brave"));
     await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
 
-    // Heritage step (ancestry first)
-    expect(screen.getByText(/Choose Your Ancestry|Your Heritage|Ancestry/)).toBeInTheDocument();
+    // Heritage step heading
+    expect(screen.getByText("Choose Your Ancestry")).toBeInTheDocument();
 
     // Faerie + Katari each show up once as cards (mock has 4 feature rows → 2 ancestries)
     const faerieMatches = screen.getAllByText("Faerie");
@@ -598,16 +598,12 @@ describe("CharacterWizard", () => {
     await user.click(screen.getByText("Wanderborne"));
     await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
 
-    // Pick the standard array for the 6 traits
+    // Pick the SRD standard array for the 6 traits (+2, +1, +1, +0, +0, -1)
     const selects = screen.getAllByRole("combobox");
-    const values = ["3", "2", "1", "1", "0", "-1"];
+    const values = ["2", "1", "1", "0", "0", "-1"];
     for (let i = 0; i < selects.length; i++) {
       await user.selectOptions(selects[i], values[i]);
     }
-    // Mark two traits (any two checkboxes)
-    const checkboxes = screen.getAllByRole("checkbox");
-    await user.click(checkboxes[0]);
-    await user.click(checkboxes[1]);
 
     await user.click(screen.getByRole("button", { name: "Continue" }));
 

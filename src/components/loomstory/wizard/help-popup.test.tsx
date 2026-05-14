@@ -36,6 +36,41 @@ describe("HelpPopup", () => {
     expect(screen.getByText("Welcome to character creation.")).toBeInTheDocument();
   });
 
+  it("renders with dialog a11y attributes (role, aria-modal, aria-labelledby)", () => {
+    render(
+      <HelpPopup
+        open
+        onClose={vi.fn()}
+        title="Name Your Hero"
+        helpText="Welcome."
+      />
+    );
+    const dialog = screen.getByTestId("help-popup");
+    expect(dialog).toHaveAttribute("role", "dialog");
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+
+    // aria-labelledby points at an element whose text is the title
+    const labelledBy = dialog.getAttribute("aria-labelledby");
+    expect(labelledBy).toBeTruthy();
+    const titleEl = document.getElementById(labelledBy!);
+    expect(titleEl).not.toBeNull();
+    expect(titleEl).toHaveTextContent("Name Your Hero");
+  });
+
+  it("moves focus to the dialog wrapper when opened", () => {
+    render(
+      <HelpPopup
+        open
+        onClose={vi.fn()}
+        title="Name Your Hero"
+        helpText="Welcome."
+      />
+    );
+    // Without focus management screen readers won't announce the popup. After
+    // mount the dialog wrapper should be the active element.
+    expect(document.activeElement).toBe(screen.getByTestId("help-popup"));
+  });
+
   it("Got it button starts disabled with a countdown label", () => {
     render(
       <HelpPopup
