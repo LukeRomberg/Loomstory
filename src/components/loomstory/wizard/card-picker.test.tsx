@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CardPicker } from "./card-picker";
 import type { PickerCard } from "./card-picker";
@@ -234,5 +234,188 @@ describe("CardPicker", () => {
     // The selected card should have a visual indicator
     const warriorCard = screen.getByText("Warrior").closest("[data-card-id]");
     expect(warriorCard).toHaveAttribute("data-selected", "true");
+  });
+});
+
+// ─── Multi-select mode ────────────────────────────────────────
+// Domain card pick step needs exactly-N selection. Same master-detail UI,
+// but the detail button toggles (Add / Remove) and `onMultiChange` returns
+// the full updated id array. Parent owns Continue — no auto-advance.
+
+const mockMultiCards: PickerCard[] = [
+  { id: "rune-ward", title: "Rune Ward", description: "Reduce incoming damage by 1d8." },
+  { id: "unleash-chaos", title: "Unleash Chaos", description: "Channel raw energy." },
+  { id: "wall-walk", title: "Wall Walk", description: "Climb walls and ceilings." },
+];
+
+describe("CardPicker (multi mode)", () => {
+  it("shows 'Add {title}' button in detail when card is not yet selected", async () => {
+    const user = userEvent.setup();
+    render(
+      <CardPicker
+        cards={mockMultiCards}
+        onSelect={vi.fn()}
+        multi={{ count: 2 }}
+        selectedIds={[]}
+        onMultiChange={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByText("Rune Ward"));
+    expect(screen.getByRole("button", { name: /add rune ward/i })).toBeInTheDocument();
+  });
+
+  it("calls onMultiChange with [id] when Add is clicked on the first card", async () => {
+    const user = userEvent.setup();
+    const onMultiChange = vi.fn();
+    render(
+      <CardPicker
+        cards={mockMultiCards}
+        onSelect={vi.fn()}
+        multi={{ count: 2 }}
+        selectedIds={[]}
+        onMultiChange={onMultiChange}
+      />
+    );
+
+    await user.click(screen.getByText("Rune Ward"));
+    await user.click(screen.getByRole("button", { name: /add rune ward/i }));
+
+    expect(onMultiChange).toHaveBeenCalledWith(["rune-ward"]);
+  });
+
+  it("appends to selectedIds when a second card is added", async () => {
+    const user = userEvent.setup();
+    const onMultiChange = vi.fn();
+    render(
+      <CardPicker
+        cards={mockMultiCards}
+        onSelect={vi.fn()}
+        multi={{ count: 2 }}
+        selectedIds={["rune-ward"]}
+        onMultiChange={onMultiChange}
+      />
+    );
+
+    await user.click(screen.getByText("Unleash Chaos"));
+    await user.click(screen.getByRole("button", { name: /add unleash chaos/i }));
+
+    expect(onMultiChange).toHaveBeenCalledWith(["rune-ward", "unleash-chaos"]);
+  });
+
+  it("shows 'Remove {title}' button for already-selected cards and toggles off when clicked", async () => {
+    const user = userEvent.setup();
+    const onMultiChange = vi.fn();
+    render(
+      <CardPicker
+        cards={mockMultiCards}
+        onSelect={vi.fn()}
+        multi={{ count: 2 }}
+        selectedIds={["rune-ward"]}
+        onMultiChange={onMultiChange}
+      />
+    );
+
+    await user.click(screen.getByText("Rune Ward"));
+    const removeBtn = screen.getByRole("button", { name: /remove rune ward/i });
+    expect(removeBtn).toBeInTheDocument();
+
+    await user.click(removeBtn);
+    expect(onMultiChange).toHaveBeenCalledWith([]);
+  });
+
+  it("disables Add for unselected cards when at cap", async () => {
+    const user = userEvent.setup();
+    render(
+      <CardPicker
+        cards={mockMultiCards}
+        onSelect={vi.fn()}
+        multi={{ count: 2 }}
+        selectedIds={["rune-ward", "unleash-chaos"]}
+        onMultiChange={vi.fn()}
+      />
+    );
+
+    // The unselected card (Wall Walk) has a disabled Add button
+    await user.click(screen.getByText("Wall Walk"));
+    expect(screen.getByRole("button", { name: /add wall walk/i })).toBeDisabled();
+  });
+
+  it("Remove stays enabled at cap so users can swap selections", async () => {
+    const user = userEvent.setup();
+    render(
+      <CardPicker
+        cards={mockMultiCards}
+        onSelect={vi.fn()}
+        multi={{ count: 2 }}
+        selectedIds={["rune-ward", "unleash-chaos"]}
+        onMultiChange={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByText("Rune Ward"));
+    expect(screen.getByRole("button", { name: /remove rune ward/i })).not.toBeDisabled();
+  });
+
+  it("never calls onSelect when in multi mode", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <CardPicker
+        cards={mockMultiCards}
+        onSelect={onSelect}
+        multi={{ count: 2 }}
+        selectedIds={[]}
+        onMultiChange={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByText("Rune Ward"));
+    await user.click(screen.getByRole("button", { name: /add rune ward/i }));
+
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("marks selected cards with data-selected in the compact list", async () => {
+    const user = userEvent.setup();
+    render(
+      <CardPicker
+        cards={mockMultiCards}
+        onSelect={vi.fn()}
+        multi={{ count: 2 }}
+        selectedIds={["rune-ward", "wall-walk"]}
+        onMultiChange={vi.fn()}
+      />
+    );
+
+    // Click a card to enter the master-detail layout
+    await user.click(screen.getByText("Unleash Chaos"));
+
+    const list = screen.getByTestId("card-picker-list");
+    const runeWard = within(list).getByText("Rune Ward").closest("[data-card-id]");
+    const wallWalk = within(list).getByText("Wall Walk").closest("[data-card-id]");
+    const unleash = within(list).getByText("Unleash Chaos").closest("[data-card-id]");
+
+    expect(runeWard).toHaveAttribute("data-selected", "true");
+    expect(wallWalk).toHaveAttribute("data-selected", "true");
+    expect(unleash).not.toHaveAttribute("data-selected");
+  });
+
+  it("marks selected cards with data-selected in the grid", () => {
+    render(
+      <CardPicker
+        cards={mockMultiCards}
+        onSelect={vi.fn()}
+        multi={{ count: 2 }}
+        selectedIds={["rune-ward"]}
+        onMultiChange={vi.fn()}
+      />
+    );
+
+    const runeWard = screen.getByText("Rune Ward").closest("[data-card-id]");
+    const unleash = screen.getByText("Unleash Chaos").closest("[data-card-id]");
+
+    expect(runeWard).toHaveAttribute("data-selected", "true");
+    expect(unleash).not.toHaveAttribute("data-selected");
   });
 });

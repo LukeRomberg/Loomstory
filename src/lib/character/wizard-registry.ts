@@ -19,6 +19,11 @@ export function getVisibleSteps(
     subclassName?: string | null;
     className?: string | null;
     classData?: Record<string, unknown>;
+    /**
+     * Extra wizard-state fields referenced by `showWhen.requiresState`. Keyed by
+     * the same string used in the step config (e.g. `primaryWeaponIsTwoHanded`).
+     */
+    [key: string]: unknown;
   }
 ): string[] {
   const allStepKeys: string[] = [];
@@ -31,7 +36,7 @@ export function getVisibleSteps(
     if (!step || !step.enabled) return false;
 
     if (step.showWhen) {
-      const { dependsOn, value, classData, equals } = step.showWhen;
+      const { dependsOn, value, classData, equals, requiresState } = step.showWhen;
 
       // Check value match (e.g., subclass name)
       if (value != null) {
@@ -48,6 +53,11 @@ export function getVisibleSteps(
       if (classData != null && equals != null) {
         const dataVal = wizardState.classData?.[classData];
         if (dataVal !== equals) return false;
+      }
+
+      // Check generic wizard-state predicate
+      if (requiresState) {
+        if (wizardState[requiresState.key] !== requiresState.equals) return false;
       }
     }
 

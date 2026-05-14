@@ -12,6 +12,13 @@ function createMockState(overrides: Partial<WizardState> = {}): WizardState {
     ancestryName: "Katari",
     communityName: "Wanderborne",
     statValues: { agility: 2, strength: 1, finesse: 1, instinct: 0, presence: 0, knowledge: -1 },
+    experiences: [{ name: "" }, { name: "" }],
+    primaryWeaponId: null,
+    primaryWeaponIsTwoHanded: false,
+    secondaryWeaponId: null,
+    armorId: null,
+    potionId: null,
+    classItemName: null,
     selections: {},
     classConfig: {},
     ...overrides,
@@ -69,6 +76,65 @@ const mockSlayer: CompendiumClass = {
   hp_die: null,
   data: {},
   source: "Daggerheart SRD",
+};
+
+// ─── Equipment mocks ──────────────────────────────────────────
+
+const mockGreatsword = {
+  id: "item-greatsword",
+  name: "Greatsword",
+  type: "weapon",
+  description: "Tier 1 two-handed.",
+  properties: { tier: 1, category: "Primary", type: "Two-Handed", damage: "d10+3 phy" },
+  source: "Daggerheart SRD",
+};
+
+const mockBroadsword = {
+  id: "item-broadsword",
+  name: "Broadsword",
+  type: "weapon",
+  description: "Tier 1 reliable.",
+  properties: { tier: 1, category: "Primary", type: "One-Handed", damage: "d8 phy" },
+  source: "Daggerheart SRD",
+};
+
+const mockShortsword = {
+  id: "item-shortsword",
+  name: "Shortsword",
+  type: "weapon",
+  description: "Tier 1 secondary.",
+  properties: { tier: 1, category: "Secondary", type: "One-Handed", damage: "d8 phy" },
+  source: "Daggerheart SRD",
+};
+
+const mockGambeson = {
+  id: "armor-gambeson",
+  name: "Gambeson Armor",
+  type: "armor",
+  description: "Tier 1.",
+  properties: { tier: 1, base_score: 3, thresholds: "5/11" },
+  source: "Daggerheart SRD",
+};
+
+const mockMinorHealth = {
+  id: "consumable-minor-health",
+  name: "Minor Health Potion",
+  type: "consumable",
+  description: "Clear 1d4 HP.",
+  properties: {},
+  source: "Daggerheart SRD",
+};
+
+/**
+ * Maps each basic supply name to a stable mock compendium id. The wizard component
+ * looks these up by name on save and passes the resolved id list to saveNewCharacter,
+ * which then inserts a character_items row per supply linked via compendium_item_ref_id.
+ */
+const mockBasicSupplyIds = {
+  Torch: "supply-torch",
+  "50 ft of Rope": "supply-rope",
+  "Basic Supplies": "supply-basics",
+  "Handful of Gold": "supply-gold",
 };
 
 describe("saveNewCharacter", () => {
@@ -304,5 +370,412 @@ describe("saveNewCharacter", () => {
 
     const abilityInserts = mockSupabase._insertCalls.character_abilities ?? [];
     expect(abilityInserts).toHaveLength(0);
+  });
+
+  // ─── Equipment (character_items) writes ────────────────────
+
+  type ItemRow = {
+    name: string;
+    item_type: string | null;
+    quantity: number | null;
+    equipped: boolean | null;
+    compendium_item_ref_id: string | null;
+    item_ref_id?: string | null;
+  };
+
+  function getItemRows(supabase: ReturnType<typeof createSupabaseMock>): ItemRow[] {
+    const inserts = supabase._insertCalls.character_items ?? [];
+    return inserts.flatMap((payload) =>
+      Array.isArray(payload) ? payload : [payload]
+    ) as ItemRow[];
+  }
+
+  it("inserts primary weapon with compendium_item_ref_id, equipped=true, item_type='weapon'", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      primaryWeapon: mockGreatsword,
+      secondaryWeapon: null,
+      armor: mockGambeson,
+      potion: mockMinorHealth,
+      classItemName: "A sharpening stone",
+      basicSupplyIds: mockBasicSupplyIds,
+    });
+
+    const rows = getItemRows(mockSupabase);
+    const primary = rows.find((r) => r.name === "Greatsword");
+    expect(primary).toBeDefined();
+    expect(primary?.item_type).toBe("weapon");
+    expect(primary?.quantity).toBe(1);
+    expect(primary?.equipped).toBe(true);
+    expect(primary?.compendium_item_ref_id).toBe("item-greatsword");
+  });
+
+  it("does not insert a secondary weapon row when secondaryWeapon is null (2H primary)", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      primaryWeapon: mockGreatsword,
+      secondaryWeapon: null,
+      armor: mockGambeson,
+      potion: mockMinorHealth,
+      classItemName: "A sharpening stone",
+      basicSupplyIds: mockBasicSupplyIds,
+    });
+
+    const rows = getItemRows(mockSupabase);
+    const weaponRows = rows.filter((r) => r.item_type === "weapon");
+    expect(weaponRows).toHaveLength(1);
+    expect(weaponRows[0].name).toBe("Greatsword");
+  });
+
+  it("inserts both primary and secondary weapon rows when secondaryWeapon is provided", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      primaryWeapon: mockBroadsword,
+      secondaryWeapon: mockShortsword,
+      armor: mockGambeson,
+      potion: mockMinorHealth,
+      classItemName: "A sharpening stone",
+      basicSupplyIds: mockBasicSupplyIds,
+    });
+
+    const rows = getItemRows(mockSupabase);
+    const weaponRows = rows.filter((r) => r.item_type === "weapon");
+    expect(weaponRows).toHaveLength(2);
+    expect(weaponRows.map((r) => r.name).sort()).toEqual(["Broadsword", "Shortsword"]);
+
+    const secondary = rows.find((r) => r.name === "Shortsword");
+    expect(secondary?.equipped).toBe(true);
+    expect(secondary?.compendium_item_ref_id).toBe("item-shortsword");
+  });
+
+  it("inserts armor with equipped=true and item_type='armor'", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      primaryWeapon: mockGreatsword,
+      secondaryWeapon: null,
+      armor: mockGambeson,
+      potion: mockMinorHealth,
+      classItemName: "A sharpening stone",
+      basicSupplyIds: mockBasicSupplyIds,
+    });
+
+    const rows = getItemRows(mockSupabase);
+    const armor = rows.find((r) => r.name === "Gambeson Armor");
+    expect(armor).toBeDefined();
+    expect(armor?.item_type).toBe("armor");
+    expect(armor?.equipped).toBe(true);
+    expect(armor?.compendium_item_ref_id).toBe("armor-gambeson");
+  });
+
+  it("inserts potion with equipped=false and item_type='consumable'", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      primaryWeapon: mockGreatsword,
+      secondaryWeapon: null,
+      armor: mockGambeson,
+      potion: mockMinorHealth,
+      classItemName: "A sharpening stone",
+      basicSupplyIds: mockBasicSupplyIds,
+    });
+
+    const rows = getItemRows(mockSupabase);
+    const potion = rows.find((r) => r.name === "Minor Health Potion");
+    expect(potion).toBeDefined();
+    expect(potion?.item_type).toBe("consumable");
+    expect(potion?.equipped).toBe(false);
+    expect(potion?.compendium_item_ref_id).toBe("consumable-minor-health");
+  });
+
+  it("inserts class item as a free-text row (no compendium ref, name = chosen option)", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      primaryWeapon: mockGreatsword,
+      secondaryWeapon: null,
+      armor: mockGambeson,
+      potion: mockMinorHealth,
+      classItemName: "The drawing of a lover",
+      basicSupplyIds: mockBasicSupplyIds,
+    });
+
+    const rows = getItemRows(mockSupabase);
+    const classItem = rows.find((r) => r.name === "The drawing of a lover");
+    expect(classItem).toBeDefined();
+    expect(classItem?.compendium_item_ref_id).toBeNull();
+    expect(classItem?.quantity).toBe(1);
+  });
+
+  it("inserts the 4 basic supplies with compendium_item_ref_id wired from basicSupplyIds", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      primaryWeapon: mockGreatsword,
+      secondaryWeapon: null,
+      armor: mockGambeson,
+      potion: mockMinorHealth,
+      classItemName: "A sharpening stone",
+      basicSupplyIds: mockBasicSupplyIds,
+    });
+
+    const rows = getItemRows(mockSupabase);
+    const supplyRows = rows.filter((r) =>
+      ["Torch", "50 ft of Rope", "Basic Supplies", "Handful of Gold"].includes(r.name)
+    );
+    expect(supplyRows).toHaveLength(4);
+
+    for (const row of supplyRows) {
+      expect(row.quantity).toBe(1);
+      expect(row.equipped).toBe(false);
+      expect(row.compendium_item_ref_id).toBe(
+        mockBasicSupplyIds[row.name as keyof typeof mockBasicSupplyIds]
+      );
+    }
+  });
+
+  it("batches the equipment + supplies into a single character_items insert call", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      primaryWeapon: mockBroadsword,
+      secondaryWeapon: mockShortsword,
+      armor: mockGambeson,
+      potion: mockMinorHealth,
+      classItemName: "A sharpening stone",
+      basicSupplyIds: mockBasicSupplyIds,
+    });
+
+    const inserts = mockSupabase._insertCalls.character_items ?? [];
+    // One .insert() call with all the rows batched together (mirrors how
+    // character_abilities is inserted in this codebase).
+    expect(inserts).toHaveLength(1);
+    const rows = inserts[0] as ItemRow[];
+    // 2 weapons + armor + potion + class item + 4 supplies = 9
+    expect(rows).toHaveLength(9);
+  });
+
+  it("does not insert character_items when no equipment is provided (backwards compat)", async () => {
+    // Older call sites (and the heritage-only test fixtures above) don't pass equipment.
+    // The save should still succeed and simply skip the character_items insert.
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+    });
+
+    const inserts = mockSupabase._insertCalls.character_items ?? [];
+    expect(inserts).toHaveLength(0);
+  });
+
+  // ─── Experiences (character_stats exp_ rows, SRD step 7) ────
+
+  /**
+   * Helper to flatten all character_stats insert payloads into an array of rows.
+   * The save batches stats in one or more `.insert([...])` calls, but tests only
+   * care about the resulting rows regardless of batching.
+   */
+  function getStatRows(
+    supabase: ReturnType<typeof createSupabaseMock>
+  ): Array<{ stat_key: string; value: number; data?: Record<string, unknown> }> {
+    const inserts = supabase._insertCalls.character_stats ?? [];
+    return inserts.flatMap((payload) =>
+      Array.isArray(payload) ? payload : [payload]
+    ) as Array<{ stat_key: string; value: number; data?: Record<string, unknown> }>;
+  }
+
+  it("inserts exp_<slug> character_stats rows with value=2 and label preserved", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState({
+        experiences: [
+          { name: "High Priestess" },
+          { name: "Catch Me If You Can" },
+        ],
+      }),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+    });
+
+    const rows = getStatRows(mockSupabase);
+    const expRows = rows.filter((r) => r.stat_key.startsWith("exp_"));
+    expect(expRows).toHaveLength(2);
+
+    const byKey = Object.fromEntries(expRows.map((r) => [r.stat_key, r]));
+    expect(byKey["exp_high_priestess"]).toBeDefined();
+    expect(byKey["exp_high_priestess"].value).toBe(2);
+    expect(byKey["exp_high_priestess"].data).toMatchObject({ label: "High Priestess" });
+
+    expect(byKey["exp_catch_me_if_you_can"]).toBeDefined();
+    expect(byKey["exp_catch_me_if_you_can"].value).toBe(2);
+    expect(byKey["exp_catch_me_if_you_can"].data).toMatchObject({
+      label: "Catch Me If You Can",
+    });
+  });
+
+  it("does not insert exp_ rows when both experience names are blank/whitespace", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState({
+        experiences: [{ name: "" }, { name: "   " }],
+      }),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+    });
+
+    const rows = getStatRows(mockSupabase);
+    expect(rows.filter((r) => r.stat_key.startsWith("exp_"))).toHaveLength(0);
+    // Trait rows still write — verify the regression boundary
+    expect(rows.filter((r) => !r.stat_key.startsWith("exp_")).length).toBeGreaterThan(0);
+  });
+
+  // ─── Domain card writes (SRD step 8) ───────────────────────
+
+  const mockDomainCards = [
+    {
+      id: "card-whirlwind",
+      name: "Whirlwind",
+      ability_type: "domain_card",
+      description: "Mark a Stress to attack all targets within Melee range.",
+      level: 1,
+      classes: ["Guardian", "Warrior"],
+      source: "Daggerheart SRD",
+      data: { domain: "Blade", card_type: "ability", recall_cost: 0 },
+    },
+    {
+      id: "card-i-am-your-shield",
+      name: "I Am Your Shield",
+      ability_type: "domain_card",
+      description: "When an ally within Close range takes damage, mark a Stress to take it for them.",
+      level: 1,
+      classes: ["Ranger", "Warrior"],
+      source: "Daggerheart SRD",
+      data: { domain: "Bone", card_type: "ability", recall_cost: 0 },
+    },
+  ];
+
+  it("inserts a character_abilities row per chosen domain card with ability_ref_id", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      domainCards: mockDomainCards,
+    });
+
+    const abilityInserts = mockSupabase._insertCalls.character_abilities ?? [];
+    expect(abilityInserts).toHaveLength(1);
+    const rows = abilityInserts[0] as Array<{
+      ability_type: string;
+      ability_ref_id: string;
+      name: string;
+      level_acquired: number;
+      effect_text: string;
+    }>;
+    const cardRows = rows.filter((r) => r.ability_type === "domain_card");
+    expect(cardRows).toHaveLength(2);
+    expect(cardRows.map((r) => r.ability_ref_id).sort()).toEqual(
+      ["card-i-am-your-shield", "card-whirlwind"].sort()
+    );
+    for (const row of cardRows) {
+      expect(row.level_acquired).toBe(1);
+      expect(row.effect_text).toBeTruthy();
+    }
+  });
+
+  it("batches domain card rows alongside ancestry/community rows in a single insert call", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      ancestryFeatures: mockKatariFeatures,
+      communityFeatures: mockWanderborneFeatures,
+      domainCards: mockDomainCards,
+    });
+
+    const abilityInserts = mockSupabase._insertCalls.character_abilities ?? [];
+    expect(abilityInserts).toHaveLength(1);
+    const rows = abilityInserts[0] as Array<{ ability_type: string }>;
+    expect(rows).toHaveLength(5); // 2 ancestry + 1 community + 2 domain cards
+    expect(rows.filter((r) => r.ability_type === "domain_card")).toHaveLength(2);
+  });
+
+  it("does not insert domain-card rows when domainCards param is empty/omitted", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      // ancestry/community supplied so character_abilities gets called, but no domain cards
+      ancestryFeatures: mockKatariFeatures,
+      communityFeatures: mockWanderborneFeatures,
+    });
+
+    const abilityInserts = mockSupabase._insertCalls.character_abilities ?? [];
+    const rows = (abilityInserts[0] ?? []) as Array<{ ability_type: string }>;
+    expect(rows.filter((r) => r.ability_type === "domain_card")).toHaveLength(0);
   });
 });

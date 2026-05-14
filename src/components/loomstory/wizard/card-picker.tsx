@@ -28,6 +28,12 @@ interface CardPickerProps {
   loading?: boolean;
   columns?: 2 | 3 | 4;
   selectLabel?: string;
+  /** When set, the picker becomes multi-select with this exact-N cap. */
+  multi?: { count: number };
+  /** Multi-mode: the currently-selected card ids. */
+  selectedIds?: string[];
+  /** Multi-mode: called with the full updated id array on add/remove. */
+  onMultiChange?: (ids: string[]) => void;
 }
 
 export function CardPicker({
@@ -37,6 +43,9 @@ export function CardPicker({
   loading,
   columns = 4,
   selectLabel = "Choose",
+  multi,
+  selectedIds,
+  onMultiChange,
 }: CardPickerProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -48,7 +57,20 @@ export function CardPicker({
     );
   }
 
+  const isMulti = !!multi;
+  const picks = selectedIds ?? [];
+  const atCap = isMulti && picks.length >= multi.count;
+  const isPicked = (id: string) => picks.includes(id);
   const expandedCard = cards.find((c) => c.id === expandedId) ?? null;
+
+  function toggleMulti(id: string) {
+    if (!onMultiChange) return;
+    if (isPicked(id)) {
+      onMultiChange(picks.filter((p) => p !== id));
+    } else if (!atCap) {
+      onMultiChange([...picks, id]);
+    }
+  }
 
   // ─── Master-Detail Layout (when a card is expanded) ──────────
   if (expandedCard) {
@@ -66,7 +88,7 @@ export function CardPicker({
             <CompactCard
               key={card.id}
               card={card}
-              isSelected={selectedId === card.id}
+              isSelected={isMulti ? isPicked(card.id) : selectedId === card.id}
               isExpanded={card.id === expandedId}
               onClick={() =>
                 setExpandedId(card.id === expandedId ? null : card.id)
@@ -84,6 +106,15 @@ export function CardPicker({
             card={expandedCard}
             selectLabel={selectLabel}
             onSelect={() => onSelect(expandedCard.id)}
+            multi={
+              isMulti
+                ? {
+                    picked: isPicked(expandedCard.id),
+                    disabled: atCap && !isPicked(expandedCard.id),
+                    onToggle: () => toggleMulti(expandedCard.id),
+                  }
+                : undefined
+            }
           />
         </div>
       </div>
@@ -110,7 +141,7 @@ export function CardPicker({
         <GridCard
           key={card.id}
           card={card}
-          isSelected={selectedId === card.id}
+          isSelected={isMulti ? isPicked(card.id) : selectedId === card.id}
           onClick={() => setExpandedId(card.id)}
         />
       ))}
@@ -241,10 +272,12 @@ function ExpandedCardContent({
   card,
   selectLabel,
   onSelect,
+  multi,
 }: {
   card: PickerCard;
   selectLabel: string;
   onSelect: () => void;
+  multi?: { picked: boolean; disabled: boolean; onToggle: () => void };
 }) {
   return (
     <div
@@ -350,18 +383,36 @@ function ExpandedCardContent({
         </div>
       ))}
 
-      {/* Choose button */}
-      <button
-        onClick={onSelect}
-        className={cn(
-          "w-full rounded-lg py-3 text-lg font-heading tracking-wider",
-          "border transition-all duration-150 hover:brightness-110",
-          "bg-black/40 border-current",
-          card.textColor ?? "text-gold"
-        )}
-      >
-        {selectLabel} {card.title}
-      </button>
+      {/* Choose / Add / Remove button — multi mode toggles, single mode selects */}
+      {multi ? (
+        <button
+          onClick={multi.onToggle}
+          disabled={multi.disabled}
+          className={cn(
+            "w-full rounded-lg py-3 text-lg font-heading tracking-wider",
+            "border transition-all duration-150",
+            "bg-black/40 border-current",
+            card.textColor ?? "text-gold",
+            multi.disabled
+              ? "opacity-40 cursor-not-allowed"
+              : "hover:brightness-110"
+          )}
+        >
+          {multi.picked ? "Remove" : "Add"} {card.title}
+        </button>
+      ) : (
+        <button
+          onClick={onSelect}
+          className={cn(
+            "w-full rounded-lg py-3 text-lg font-heading tracking-wider",
+            "border transition-all duration-150 hover:brightness-110",
+            "bg-black/40 border-current",
+            card.textColor ?? "text-gold"
+          )}
+        >
+          {selectLabel} {card.title}
+        </button>
+      )}
     </div>
   );
 }

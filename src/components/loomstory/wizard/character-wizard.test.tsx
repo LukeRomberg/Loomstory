@@ -177,6 +177,194 @@ const mockCommunityFeatures = [
   },
 ];
 
+// ─── Equipment mocks (compendium_items rows) ──────────────────
+
+const mockPrimaryWeapons = [
+  // 2H — Greatsword
+  {
+    id: "item-greatsword",
+    name: "Greatsword",
+    type: "weapon",
+    description: "Tier 1 two-handed greatsword.",
+    properties: {
+      tier: 1,
+      category: "Primary",
+      type: "Two-Handed",
+      primary_trait: "Strength",
+      damage: "d10+3 phy",
+      range: "Melee",
+    },
+    source: "Daggerheart SRD",
+  },
+  // 1H — Broadsword (will trigger secondary step)
+  {
+    id: "item-broadsword",
+    name: "Broadsword",
+    type: "weapon",
+    description: "Tier 1 reliable one-handed sword.",
+    properties: {
+      tier: 1,
+      category: "Primary",
+      type: "One-Handed",
+      primary_trait: "Agility",
+      damage: "d8 phy",
+      range: "Melee",
+      feature: "Reliable: +1 to attack rolls",
+    },
+    source: "Daggerheart SRD",
+  },
+  // A tier-2 row to verify component-level tier filtering
+  {
+    id: "item-improved-broadsword",
+    name: "Improved Broadsword",
+    type: "weapon",
+    description: "Tier 2 primary.",
+    properties: { tier: 2, category: "Primary", type: "One-Handed", damage: "d8+3 phy" },
+    source: "Daggerheart SRD",
+  },
+];
+
+const mockSecondaryWeapons = [
+  {
+    id: "item-shortsword",
+    name: "Shortsword",
+    type: "weapon",
+    description: "Tier 1 secondary one-handed sword.",
+    properties: {
+      tier: 1,
+      category: "Secondary",
+      type: "One-Handed",
+      primary_trait: "Agility",
+      damage: "d8 phy",
+      range: "Melee",
+      feature: "Paired: +2 to primary weapon damage",
+    },
+    source: "Daggerheart SRD",
+  },
+  {
+    id: "item-round-shield",
+    name: "Round Shield",
+    type: "weapon",
+    description: "Tier 1 secondary shield.",
+    properties: {
+      tier: 1,
+      category: "Secondary",
+      type: "One-Handed",
+      primary_trait: "Strength",
+      damage: "d4 phy",
+      range: "Melee",
+      feature: "Protective: +1 to Armor Score",
+    },
+    source: "Daggerheart SRD",
+  },
+];
+
+const mockArmors = [
+  {
+    id: "armor-gambeson",
+    name: "Gambeson Armor",
+    type: "armor",
+    description: "Tier 1 armor. Flexible: +1 to Evasion",
+    properties: { tier: 1, base_score: 3, thresholds: "5/11", feature: "Flexible: +1 to Evasion" },
+    source: "Daggerheart SRD",
+  },
+  {
+    id: "armor-leather",
+    name: "Leather Armor",
+    type: "armor",
+    description: "A tier 1 armor.",
+    properties: { tier: 1, base_score: 3, thresholds: "6/13", feature: null },
+    source: "Daggerheart SRD",
+  },
+];
+
+const mockConsumables = [
+  {
+    id: "consumable-minor-health",
+    name: "Minor Health Potion",
+    type: "consumable",
+    description: "Clear 1d4 HP.",
+    properties: { description: "Clear 1d4 HP." },
+    source: "Daggerheart SRD",
+  },
+  {
+    id: "consumable-minor-stamina",
+    name: "Minor Stamina Potion",
+    type: "consumable",
+    description: "Clear 1d4 Stress.",
+    properties: { description: "Clear 1d4 Stress." },
+    source: "Daggerheart SRD",
+  },
+  // Unrelated consumable that must NOT appear on the potion pick step
+  {
+    id: "consumable-stride",
+    name: "Stride Potion",
+    type: "consumable",
+    description: "+1 to next Agility Roll.",
+    properties: {},
+    source: "Daggerheart SRD",
+  },
+];
+
+// Level-1 domain cards used to drive the Cards step. Warrior's domains are Blade + Bone,
+// so the three Warrior-eligible cards below should appear when the player picks Warrior.
+// A Sage card (Druid + Ranger only) is included to verify the class filter excludes it.
+// A level-2 Bone card is included to verify the level filter excludes it.
+const mockDomainCards = [
+  {
+    id: "card-whirlwind",
+    name: "Whirlwind",
+    ability_type: "domain_card",
+    description: "Mark a Stress to attack all targets within Melee range.",
+    level: 1,
+    classes: ["Guardian", "Warrior"],
+    source: "Daggerheart SRD",
+    data: { domain: "Blade", card_type: "ability", recall_cost: 0 },
+  },
+  {
+    id: "card-get-back-up",
+    name: "Get Back Up",
+    ability_type: "domain_card",
+    description: "When you take Severe damage, mark a Stress to clear 1 HP instead.",
+    level: 1,
+    classes: ["Guardian", "Warrior"],
+    source: "Daggerheart SRD",
+    data: { domain: "Blade", card_type: "ability", recall_cost: 1 },
+  },
+  {
+    id: "card-i-am-your-shield",
+    name: "I Am Your Shield",
+    ability_type: "domain_card",
+    description: "When an ally within Close range takes damage, mark a Stress to take it for them.",
+    level: 1,
+    classes: ["Ranger", "Warrior"],
+    source: "Daggerheart SRD",
+    data: { domain: "Bone", card_type: "ability", recall_cost: 0 },
+  },
+  // Level-2 Bone card — must not appear on the level-1 picker
+  {
+    id: "card-strategic-approach",
+    name: "Strategic Approach",
+    ability_type: "domain_card",
+    description: "Higher-tier Bone card.",
+    level: 2,
+    classes: ["Ranger", "Warrior"],
+    source: "Daggerheart SRD",
+    data: { domain: "Bone", card_type: "ability", recall_cost: 1 },
+  },
+  // Sage card (Druid + Ranger) — must not appear when class is Warrior
+  {
+    id: "card-soothing-breeze",
+    name: "Soothing Breeze",
+    ability_type: "domain_card",
+    description: "Druid/Ranger only.",
+    level: 1,
+    classes: ["Druid", "Ranger"],
+    source: "Daggerheart SRD",
+    data: { domain: "Sage", card_type: "ability", recall_cost: 0 },
+  },
+];
+
 const mockSubclassFeatures = [
   {
     id: "feat-brave-foundation",
@@ -257,12 +445,63 @@ vi.mock("@/lib/character/use-step-data", () => ({
       return { data: mockCommunityFeatures, loading: false, error: null };
     }
 
+    // compendium_abilities — domain cards filtered by chosen class name (`classes contains`)
+    // and by level=1 in the static filter.
+    if (table === "compendium_abilities" && filter?.ability_type === "domain_card") {
+      if (!dependValue) return { data: [], loading: false, error: null };
+      const lvl = filter?.level;
+      return {
+        data: mockDomainCards.filter(
+          (c) =>
+            c.classes.includes(dependValue as string) &&
+            (lvl == null || c.level === lvl)
+        ),
+        loading: false,
+        error: null,
+      };
+    }
+
+    // compendium_items — return everything of the requested type. The component is
+    // responsible for narrowing (e.g. to Tier 1 + category Primary) since `properties`
+    // is a JSONB column that useStepData can't filter on directly.
+    if (table === "compendium_items" && filter?.type === "weapon") {
+      return {
+        data: [...mockPrimaryWeapons, ...mockSecondaryWeapons],
+        loading: false,
+        error: null,
+      };
+    }
+    if (table === "compendium_items" && filter?.type === "armor") {
+      return { data: mockArmors, loading: false, error: null };
+    }
+    if (table === "compendium_items" && filter?.type === "consumable") {
+      return { data: mockConsumables, loading: false, error: null };
+    }
+
     return { data: [], loading: false, error: null };
   },
 }));
 
 vi.mock("@/lib/character/save-new-character", () => ({
   saveNewCharacter: vi.fn().mockResolvedValue({ characterId: "new-char-id" }),
+}));
+
+// handleCreate calls createClient() to look up the four basic-supply compendium ids
+// before invoking saveNewCharacter. Return an empty supply list — the wizard's
+// supply-resolution loop simply produces an empty basicSupplyIds map, which save
+// then handles fine.
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          eq: () => ({
+            in: () => Promise.resolve({ data: [], error: null }),
+          }),
+        }),
+      }),
+    }),
+  }),
 }));
 
 vi.mock("sonner", () => ({
@@ -287,77 +526,45 @@ describe("CharacterWizard", () => {
     useStepDataCallCount = 0;
   });
 
-  it("renders the name step first", () => {
+  it("renders the class pick step first (the standalone name step was moved to the review screen)", () => {
     render(<CharacterWizard {...defaultProps} />);
-    expect(screen.getByText("Name Your Hero")).toBeInTheDocument();
-    expect(screen.getByText("Character Name")).toBeInTheDocument();
+    expect(screen.getByText("Choose Your Class")).toBeInTheDocument();
   });
 
   it("does not render when closed", () => {
     render(<CharacterWizard {...defaultProps} open={false} />);
-    expect(screen.queryByText("Name Your Hero")).not.toBeInTheDocument();
+    expect(screen.queryByText("Choose Your Class")).not.toBeInTheDocument();
   });
 
-  it("disables continue when name is empty", () => {
+  it("shows class cards on the first step", () => {
     render(<CharacterWizard {...defaultProps} />);
-    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
-  });
-
-  it("enables continue when name is entered", async () => {
-    const user = userEvent.setup();
-    render(<CharacterWizard {...defaultProps} />);
-
-    await user.type(screen.getByRole("textbox"), "Kael");
-    expect(screen.getByRole("button", { name: "Continue" })).not.toBeDisabled();
-  });
-
-  it("navigates to class pick after entering name and clicking continue", async () => {
-    const user = userEvent.setup();
-    render(<CharacterWizard {...defaultProps} />);
-
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-
-    expect(screen.getByText("Choose Your Class")).toBeInTheDocument();
-  });
-
-  it("shows class cards on class pick step", async () => {
-    const user = userEvent.setup();
-    render(<CharacterWizard {...defaultProps} />);
-
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-
     expect(screen.getByText("Warrior")).toBeInTheDocument();
     expect(screen.getByText("Druid")).toBeInTheDocument();
   });
 
-  it("shows progress bar with one label per visible step", () => {
+  it("shows progress bar with the new step labels (Behold replaces Name, no Review label)", () => {
     render(<CharacterWizard {...defaultProps} />);
-    // Per-step labels (desktop): Name, Class, Subclass, Ancestry, Community, Traits, Review
-    expect(screen.getByText("Name")).toBeInTheDocument();
-    expect(screen.getByText("Review")).toBeInTheDocument();
+    // Per-step labels (desktop) start at Class and end at Behold.
+    expect(screen.getByText("Class")).toBeInTheDocument();
+    expect(screen.getByText("Behold")).toBeInTheDocument();
+    expect(screen.queryByText("Name")).not.toBeInTheDocument();
   });
 
-  it("shows back button on class pick step", async () => {
+  it("shows back button on subclass step (class pick is now the first step and has none)", async () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);
-
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     expect(screen.getByText("Back")).toBeInTheDocument();
   });
 
-  it("navigates back to name step when back is clicked", async () => {
+  it("navigates back to class pick when back is clicked from subclass step", async () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);
-
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     await user.click(screen.getByText("Back"));
-    expect(screen.getByText("Name Your Hero")).toBeInTheDocument();
+    expect(screen.getByText("Choose Your Class")).toBeInTheDocument();
   });
 
   it("calls onClose when close button is clicked", async () => {
@@ -374,8 +581,6 @@ describe("CharacterWizard", () => {
     render(<CharacterWizard {...defaultProps} />);
 
     // Step 1: enter name and advance to class pick
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     // Expand the Warrior card
     await user.click(screen.getByText("Warrior"));
@@ -398,8 +603,6 @@ describe("CharacterWizard", () => {
     render(<CharacterWizard {...defaultProps} />);
 
     // Step 1: enter name
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     // Step 2: pick Warrior
     await user.click(screen.getByText("Warrior"));
@@ -434,8 +637,6 @@ describe("CharacterWizard", () => {
     render(<CharacterWizard {...defaultProps} />);
 
     // Walk: name → class → subclass → ancestry
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByText("Warrior"));
     await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     await user.click(screen.getByText("Call of the Brave"));
@@ -455,8 +656,6 @@ describe("CharacterWizard", () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);
 
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByText("Warrior"));
     await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     await user.click(screen.getByText("Call of the Brave"));
@@ -476,8 +675,6 @@ describe("CharacterWizard", () => {
     render(<CharacterWizard {...defaultProps} />);
 
     // Walk through to community step
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByText("Warrior"));
     await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     await user.click(screen.getByText("Call of the Brave"));
@@ -501,8 +698,6 @@ describe("CharacterWizard", () => {
     render(<CharacterWizard {...defaultProps} />);
 
     // Walk to the ancestry step via Warrior (theme: from-red-950 via-rose-900)
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByText("Warrior"));
     await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     await user.click(screen.getByText("Call of the Brave"));
@@ -517,8 +712,6 @@ describe("CharacterWizard", () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);
 
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByText("Warrior"));
     await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     await user.click(screen.getByText("Call of the Brave"));
@@ -536,8 +729,6 @@ describe("CharacterWizard", () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);
 
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByText("Warrior"));
     await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     await user.click(screen.getByText("Call of the Brave"));
@@ -568,8 +759,6 @@ describe("CharacterWizard", () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);
 
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByText("Warrior"));
     await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     await user.click(screen.getByText("Call of the Brave"));
@@ -587,8 +776,6 @@ describe("CharacterWizard", () => {
     render(<CharacterWizard {...defaultProps} />);
 
     // Full happy path — fastest viable inputs at each step
-    await user.type(screen.getByRole("textbox"), "Kael");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByText("Warrior"));
     await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     await user.click(screen.getByText("Call of the Brave"));
@@ -597,6 +784,15 @@ describe("CharacterWizard", () => {
     await user.click(screen.getByRole("button", { name: /choose katari/i }));
     await user.click(screen.getByText("Wanderborne"));
     await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
+    // Equipment phase — 2H weapon (skips secondary) → armor → potion → class item
+    await user.click(screen.getByText("Greatsword"));
+    await user.click(screen.getByRole("button", { name: /choose greatsword/i }));
+    await user.click(screen.getByText("Gambeson Armor"));
+    await user.click(screen.getByRole("button", { name: /choose gambeson armor/i }));
+    await user.click(screen.getByText("Minor Health Potion"));
+    await user.click(screen.getByRole("button", { name: /choose minor health potion/i }));
+    await user.click(screen.getByText("The drawing of a lover"));
+    await user.click(screen.getByRole("button", { name: /choose the drawing of a lover/i }));
 
     // Pick the SRD standard array for the 6 traits (+2, +1, +1, +0, +0, -1)
     const selects = screen.getAllByRole("combobox");
@@ -607,8 +803,422 @@ describe("CharacterWizard", () => {
 
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
-    // Review summary should list ancestry + community
-    expect(screen.getByText("Katari")).toBeInTheDocument();
-    expect(screen.getByText("Wanderborne")).toBeInTheDocument();
+    // Experiences step — enter two names then continue
+    const expInputs = screen.getAllByRole("textbox");
+    await user.type(expInputs[0], "High Priestess");
+    await user.type(expInputs[1], "Sticky Fingers");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Cards step — pick two domain cards then continue to review
+    await user.click(screen.getByText("Whirlwind"));
+    await user.click(screen.getByRole("button", { name: /add whirlwind/i }));
+    await user.click(screen.getByText("I Am Your Shield"));
+    await user.click(screen.getByRole("button", { name: /add i am your shield/i }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Preview banner tagline includes both ancestry + community (e.g. "a Katari Warrior of the Wanderborne")
+    expect(screen.getByText(/Katari Warrior of the Wanderborne/i)).toBeInTheDocument();
+  });
+
+  // ─── Equipment phase (weapons + armor + potion + class item) ──
+
+  /**
+   * Walks the wizard up to (and including) selecting community, leaving the wizard
+   * on the first equipment step (weapon_primary_pick). Keeps the equipment-flow
+   * tests below readable instead of repeating the same 9-click preamble.
+   */
+  async function walkToEquipmentStart(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+    await user.click(screen.getByText("Katari"));
+    await user.click(screen.getByRole("button", { name: /choose katari/i }));
+    await user.click(screen.getByText("Wanderborne"));
+    await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
+  }
+
+  it("weapon_primary_pick step renders Tier 1 primary weapons only", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToEquipmentStart(user);
+
+    // Step heading
+    expect(screen.getByText(/Choose Your Primary Weapon|Pick Your Primary Weapon/i)).toBeInTheDocument();
+
+    // Both Tier 1 primaries appear
+    expect(screen.getByText("Greatsword")).toBeInTheDocument();
+    expect(screen.getByText("Broadsword")).toBeInTheDocument();
+
+    // Tier 2 primary must be filtered out
+    expect(screen.queryByText("Improved Broadsword")).not.toBeInTheDocument();
+    // Secondary weapons must not appear on the primary step
+    expect(screen.queryByText("Shortsword")).not.toBeInTheDocument();
+    expect(screen.queryByText("Round Shield")).not.toBeInTheDocument();
+  });
+
+  it("picking a Two-Handed primary skips the secondary step and lands on armor", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToEquipmentStart(user);
+
+    // Pick the 2H Greatsword
+    await user.click(screen.getByText("Greatsword"));
+    await user.click(screen.getByRole("button", { name: /choose greatsword/i }));
+
+    // Should land on armor_pick, not secondary
+    expect(screen.queryByText("Shortsword")).not.toBeInTheDocument();
+    expect(screen.queryByText("Round Shield")).not.toBeInTheDocument();
+    expect(screen.getByText("Gambeson Armor")).toBeInTheDocument();
+    expect(screen.getByText("Leather Armor")).toBeInTheDocument();
+  });
+
+  it("picking a One-Handed primary shows the secondary weapon step", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToEquipmentStart(user);
+
+    await user.click(screen.getByText("Broadsword"));
+    await user.click(screen.getByRole("button", { name: /choose broadsword/i }));
+
+    // Secondary picker appears with both secondaries
+    expect(screen.getByText("Shortsword")).toBeInTheDocument();
+    expect(screen.getByText("Round Shield")).toBeInTheDocument();
+  });
+
+  it("after picking a secondary, advances to armor_pick", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToEquipmentStart(user);
+
+    await user.click(screen.getByText("Broadsword"));
+    await user.click(screen.getByRole("button", { name: /choose broadsword/i }));
+    await user.click(screen.getByText("Shortsword"));
+    await user.click(screen.getByRole("button", { name: /choose shortsword/i }));
+
+    expect(screen.getByText("Gambeson Armor")).toBeInTheDocument();
+    expect(screen.getByText("Leather Armor")).toBeInTheDocument();
+  });
+
+  it("armor_pick renders Tier 1 armor only and advances to potion_pick", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToEquipmentStart(user);
+
+    // 2H primary → skip secondary → armor
+    await user.click(screen.getByText("Greatsword"));
+    await user.click(screen.getByRole("button", { name: /choose greatsword/i }));
+
+    expect(screen.getByText("Gambeson Armor")).toBeInTheDocument();
+    expect(screen.getByText("Leather Armor")).toBeInTheDocument();
+
+    await user.click(screen.getByText("Gambeson Armor"));
+    await user.click(screen.getByRole("button", { name: /choose gambeson armor/i }));
+
+    // Should land on potion pick — only Minor Health + Minor Stamina
+    expect(screen.getByText("Minor Health Potion")).toBeInTheDocument();
+    expect(screen.getByText("Minor Stamina Potion")).toBeInTheDocument();
+    // The unrelated consumable must be filtered out in-component
+    expect(screen.queryByText("Stride Potion")).not.toBeInTheDocument();
+  });
+
+  it("potion_pick advances to class_item_pick showing the 2 SRD options for the chosen class", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToEquipmentStart(user);
+
+    await user.click(screen.getByText("Greatsword"));
+    await user.click(screen.getByRole("button", { name: /choose greatsword/i }));
+    await user.click(screen.getByText("Gambeson Armor"));
+    await user.click(screen.getByRole("button", { name: /choose gambeson armor/i }));
+    await user.click(screen.getByText("Minor Health Potion"));
+    await user.click(screen.getByRole("button", { name: /choose minor health potion/i }));
+
+    // Warrior was picked at class step → class_item_pick shows the 2 Warrior class items
+    expect(screen.getByText("The drawing of a lover")).toBeInTheDocument();
+    expect(screen.getByText("A sharpening stone")).toBeInTheDocument();
+  });
+
+  it("class_item_pick advances to the traits step after a selection", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToEquipmentStart(user);
+
+    await user.click(screen.getByText("Greatsword"));
+    await user.click(screen.getByRole("button", { name: /choose greatsword/i }));
+    await user.click(screen.getByText("Gambeson Armor"));
+    await user.click(screen.getByRole("button", { name: /choose gambeson armor/i }));
+    await user.click(screen.getByText("Minor Health Potion"));
+    await user.click(screen.getByRole("button", { name: /choose minor health potion/i }));
+    await user.click(screen.getByText("The drawing of a lover"));
+    await user.click(screen.getByRole("button", { name: /choose the drawing of a lover/i }));
+
+    // Traits step has a heading containing "Assign" or "Trait"
+    expect(screen.getByText(/Assign Traits/i)).toBeInTheDocument();
+  });
+
+  it("equipment selections appear in the review summary", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToEquipmentStart(user);
+
+    // Pick 1H primary + secondary to verify both render in review
+    await user.click(screen.getByText("Broadsword"));
+    await user.click(screen.getByRole("button", { name: /choose broadsword/i }));
+    await user.click(screen.getByText("Round Shield"));
+    await user.click(screen.getByRole("button", { name: /choose round shield/i }));
+    await user.click(screen.getByText("Gambeson Armor"));
+    await user.click(screen.getByRole("button", { name: /choose gambeson armor/i }));
+    await user.click(screen.getByText("Minor Stamina Potion"));
+    await user.click(screen.getByRole("button", { name: /choose minor stamina potion/i }));
+    await user.click(screen.getByText("A sharpening stone"));
+    await user.click(screen.getByRole("button", { name: /choose a sharpening stone/i }));
+
+    // Assign standard array
+    const selects = screen.getAllByRole("combobox");
+    const values = ["2", "1", "1", "0", "0", "-1"];
+    for (let i = 0; i < selects.length; i++) {
+      await user.selectOptions(selects[i], values[i]);
+    }
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Walk through the Experiences step before reaching review
+    const expInputs = screen.getAllByRole("textbox");
+    await user.type(expInputs[0], "Soldier");
+    await user.type(expInputs[1], "Hold the Line");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Cards step — pick two domain cards then continue
+    await user.click(screen.getByText("Whirlwind"));
+    await user.click(screen.getByRole("button", { name: /add whirlwind/i }));
+    await user.click(screen.getByText("I Am Your Shield"));
+    await user.click(screen.getByRole("button", { name: /add i am your shield/i }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Preview sheet should mention each equipment selection (weapons + armor + inventory).
+    expect(screen.getByText("Broadsword")).toBeInTheDocument();
+    expect(screen.getByText("Round Shield")).toBeInTheDocument();
+    expect(screen.getByText("Gambeson Armor")).toBeInTheDocument();
+    expect(screen.getByText(/Minor Stamina Potion/)).toBeInTheDocument();
+    expect(screen.getByText(/A sharpening stone/)).toBeInTheDocument();
+  });
+
+  it("equipment cards inherit the selected class's gradient theme", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToEquipmentStart(user);
+
+    // Warrior's theme starts with "from-red-950"
+    const greatswordCard = screen.getByText("Greatsword").closest("[data-card-id]");
+    expect(greatswordCard?.className).toContain("from-red-950");
+  });
+
+  // ─── Experiences step (SRD step 7) ─────────────────────────
+
+  /**
+   * Walks the wizard from the start through to the Experiences step.
+   * Leaves the wizard with traits assigned and the Continue button click
+   * having landed on `experiences_pick`.
+   */
+  async function walkToExperiences(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+    await user.click(screen.getByText("Katari"));
+    await user.click(screen.getByRole("button", { name: /choose katari/i }));
+    await user.click(screen.getByText("Wanderborne"));
+    await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
+    // Equipment phase — 2H weapon skips secondary
+    await user.click(screen.getByText("Greatsword"));
+    await user.click(screen.getByRole("button", { name: /choose greatsword/i }));
+    await user.click(screen.getByText("Gambeson Armor"));
+    await user.click(screen.getByRole("button", { name: /choose gambeson armor/i }));
+    await user.click(screen.getByText("Minor Health Potion"));
+    await user.click(screen.getByRole("button", { name: /choose minor health potion/i }));
+    await user.click(screen.getByText("The drawing of a lover"));
+    await user.click(screen.getByRole("button", { name: /choose the drawing of a lover/i }));
+
+    // Assign the standard array to get past the traits step
+    const selects = screen.getAllByRole("combobox");
+    const values = ["2", "1", "1", "0", "0", "-1"];
+    for (let i = 0; i < selects.length; i++) {
+      await user.selectOptions(selects[i], values[i]);
+    }
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+  }
+
+  it("Experiences step appears after Traits with two empty text inputs", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToExperiences(user);
+
+    // Step heading
+    expect(screen.getByText(/Create Your Experiences/i)).toBeInTheDocument();
+
+    // Two empty text inputs for the two experience names
+    const inputs = screen.getAllByRole("textbox");
+    expect(inputs).toHaveLength(2);
+    expect((inputs[0] as HTMLInputElement).value).toBe("");
+    expect((inputs[1] as HTMLInputElement).value).toBe("");
+  });
+
+  it("Continue on the Experiences step is disabled until both names are filled", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToExperiences(user);
+
+    const continueBtn = screen.getByRole("button", { name: "Continue" });
+    expect(continueBtn).toBeDisabled();
+
+    const inputs = screen.getAllByRole("textbox");
+    await user.type(inputs[0], "Assassin");
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+
+    await user.type(inputs[1], "Bookworm");
+    expect(screen.getByRole("button", { name: "Continue" })).not.toBeDisabled();
+  });
+
+  it("Experience names entered show up in the review summary with +2", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToExperiences(user);
+
+    const inputs = screen.getAllByRole("textbox");
+    await user.type(inputs[0], "High Priestess");
+    await user.type(inputs[1], "Sticky Fingers");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Cards step — pick two domain cards then continue to review
+    await user.click(screen.getByText("Whirlwind"));
+    await user.click(screen.getByRole("button", { name: /add whirlwind/i }));
+    await user.click(screen.getByText("I Am Your Shield"));
+    await user.click(screen.getByRole("button", { name: /add i am your shield/i }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Both experience names appear in the review
+    expect(screen.getByText("High Priestess")).toBeInTheDocument();
+    expect(screen.getByText("Sticky Fingers")).toBeInTheDocument();
+
+    // "+2" modifier appears for each experience in the review (one per experience).
+    // Note: an "Experiences" label also appears in the progress bar, so we don't
+    // assert getByText for it — the names + +2 already imply the section rendered.
+    expect(screen.getAllByText("+2").length).toBeGreaterThanOrEqual(2);
+  });
+
+  // ─── Domain Cards step (SRD step 8) ────────────────────────
+
+  /**
+   * Walks the wizard from the start through to the Cards step, picking Warrior
+   * + Greatsword + Gambeson + Minor Health + "The drawing of a lover" along
+   * the way. Leaves the wizard sitting on the freshly-entered Cards step with
+   * no domain cards picked yet.
+   */
+  async function walkToCards(user: ReturnType<typeof userEvent.setup>) {
+    await walkToExperiences(user);
+    const expInputs = screen.getAllByRole("textbox");
+    await user.type(expInputs[0], "Soldier");
+    await user.type(expInputs[1], "Hold the Line");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+  }
+
+  it("Cards step appears after Experiences", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToCards(user);
+
+    expect(screen.getByText(/Choose Your Domain Cards|Domain Cards/i)).toBeInTheDocument();
+  });
+
+  it("Cards step shows only level-1 domain cards for the chosen class's domains", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToCards(user);
+
+    // Warrior gets Blade (Whirlwind, Get Back Up) + Bone (I Am Your Shield)
+    expect(screen.getByText("Whirlwind")).toBeInTheDocument();
+    expect(screen.getByText("Get Back Up")).toBeInTheDocument();
+    expect(screen.getByText("I Am Your Shield")).toBeInTheDocument();
+
+    // Level-2 Bone card must be filtered out
+    expect(screen.queryByText("Strategic Approach")).not.toBeInTheDocument();
+    // Sage-only card (Druid/Ranger) must not appear for Warrior
+    expect(screen.queryByText("Soothing Breeze")).not.toBeInTheDocument();
+  });
+
+  it("Continue is disabled on the Cards step until 2 cards are picked", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToCards(user);
+
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+
+    // Pick 1 — still disabled
+    await user.click(screen.getByText("Whirlwind"));
+    await user.click(screen.getByRole("button", { name: /add whirlwind/i }));
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+
+    // Pick a 2nd — enabled
+    await user.click(screen.getByText("I Am Your Shield"));
+    await user.click(screen.getByRole("button", { name: /add i am your shield/i }));
+    expect(screen.getByRole("button", { name: "Continue" })).not.toBeDisabled();
+  });
+
+  it("disables the Add button on the 3rd unselected card once 2 are picked", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToCards(user);
+
+    await user.click(screen.getByText("Whirlwind"));
+    await user.click(screen.getByRole("button", { name: /add whirlwind/i }));
+    await user.click(screen.getByText("I Am Your Shield"));
+    await user.click(screen.getByRole("button", { name: /add i am your shield/i }));
+
+    // Expand the third (unselected) card — its Add button should be disabled
+    await user.click(screen.getByText("Get Back Up"));
+    expect(screen.getByRole("button", { name: /add get back up/i })).toBeDisabled();
+  });
+
+  it("picked domain cards appear on the preview sheet in the Domain Cards section", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToCards(user);
+
+    await user.click(screen.getByText("Whirlwind"));
+    await user.click(screen.getByRole("button", { name: /add whirlwind/i }));
+    await user.click(screen.getByText("I Am Your Shield"));
+    await user.click(screen.getByRole("button", { name: /add i am your shield/i }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(screen.getByText("Whirlwind")).toBeInTheDocument();
+    expect(screen.getByText("I Am Your Shield")).toBeInTheDocument();
+  });
+
+  it("picked domain cards are passed to saveNewCharacter on Create", async () => {
+    const { saveNewCharacter } = await import("@/lib/character/save-new-character");
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await walkToCards(user);
+
+    await user.click(screen.getByText("Whirlwind"));
+    await user.click(screen.getByRole("button", { name: /add whirlwind/i }));
+    await user.click(screen.getByText("I Am Your Shield"));
+    await user.click(screen.getByRole("button", { name: /add i am your shield/i }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Preview screen now hosts the name input — Create CTA is disabled until name is non-empty.
+    await user.type(screen.getByPlaceholderText(/name your hero/i), "Kael");
+    await user.click(screen.getByRole("button", { name: /start your adventure/i }));
+
+    await waitFor(() => {
+      expect(saveNewCharacter).toHaveBeenCalled();
+    });
+    const call = (saveNewCharacter as unknown as { mock: { calls: unknown[][] } }).mock.calls[0][0] as {
+      domainCards?: Array<{ id: string }>;
+    };
+    expect(call.domainCards).toBeDefined();
+    expect(call.domainCards?.map((c) => c.id).sort()).toEqual(
+      ["card-i-am-your-shield", "card-whirlwind"].sort()
+    );
   });
 });

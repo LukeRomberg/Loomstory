@@ -87,31 +87,172 @@ export const DAGGERHEART_TRAIT_SLOTS = [
 // to your character's traits in any order you wish." No marking-for-advantage mechanic.
 export const DAGGERHEART_STANDARD_ARRAY = [2, 1, 1, 0, 0, -1];
 
+// ─── Class-Specific Starting Items (SRD step 5) ────────────
+// Each class's character guide lists two choices the player picks between. The
+// items are flavor inventory entries with no mechanical effect, so they're
+// hardcoded here rather than seeded into compendium_items.
+
+export const DAGGERHEART_CLASS_ITEMS: Record<string, [string, string]> = {
+  Bard: ["A romance novel", "A letter never opened"],
+  Druid: ["A small bag of rocks and bones", "A strange pendant found in the dirt"],
+  Guardian: ["A totem from your mentor", "A secret key"],
+  Ranger: ["A trophy from your first kill", "A seemingly broken compass"],
+  Rogue: ["A set of forgery tools", "A grappling hook"],
+  Seraph: ["A bundle of offerings", "A sigil of your god"],
+  Sorcerer: ["A whispering orb", "A family heirloom"],
+  Warrior: ["The drawing of a lover", "A sharpening stone"],
+  Wizard: ["A book you're trying to translate", "A tiny, harmless elemental pet"],
+};
+
+// ─── Basic Starting Supplies (SRD step 5) ──────────────────
+// These four items are auto-added to every Daggerheart character on save. They
+// are seeded into compendium_items by migration 20260514000003 so character_items
+// rows can link back via compendium_item_ref_id.
+export const DAGGERHEART_BASIC_SUPPLY_NAMES = [
+  "Torch",
+  "50 ft of Rope",
+  "Basic Supplies",
+  "Handful of Gold",
+] as const;
+
+// ─── Experience Suggestions ──────────────────────────────────
+
+// Daggerheart SRD 9-09-25 step 7 (page 5) "EXAMPLE EXPERIENCES". These are flavor
+// inspiration only — players can write any phrase. The wizard renders these as
+// clickable chips so the player can drop a category example into an input.
+export const DAGGERHEART_EXPERIENCE_SUGGESTIONS: ReadonlyArray<{
+  label: string;
+  items: readonly string[];
+}> = [
+  {
+    label: "Backgrounds",
+    items: [
+      "Assassin",
+      "Blacksmith",
+      "Bodyguard",
+      "Bounty Hunter",
+      "Chef to the Royal Family",
+      "Circus Performer",
+      "Con Artist",
+      "Fallen Monarch",
+      "Field Medic",
+      "High Priestess",
+      "Merchant",
+      "Noble",
+      "Pirate",
+      "Politician",
+      "Runaway",
+      "Scholar",
+      "Sellsword",
+      "Soldier",
+      "Storyteller",
+      "Thief",
+      "World Traveler",
+    ],
+  },
+  {
+    label: "Characteristics",
+    items: [
+      "Affable",
+      "Battle-Hardened",
+      "Bookworm",
+      "Charming",
+      "Cowardly",
+      "Friend to All",
+      "Helpful",
+      "Intimidating Presence",
+      "Leader",
+      "Lone Wolf",
+      "Loyal",
+      "Observant",
+      "Prankster",
+      "Silver Tongue",
+      "Sticky Fingers",
+      "Stubborn to a Fault",
+      "Survivor",
+      "Young and Naive",
+    ],
+  },
+  {
+    label: "Specialties",
+    items: [
+      "Acrobat",
+      "Gambler",
+      "Healer",
+      "Inventor",
+      "Magical Historian",
+      "Mapmaker",
+      "Master of Disguise",
+      "Navigator",
+      "Sharpshooter",
+      "Survivalist",
+      "Swashbuckler",
+      "Tactician",
+    ],
+  },
+  {
+    label: "Skills",
+    items: [
+      "Animal Whisperer",
+      "Barter",
+      "Deadly Aim",
+      "Fast Learner",
+      "Incredible Strength",
+      "Liar",
+      "Light Feet",
+      "Negotiator",
+      "Photographic Memory",
+      "Quick Hands",
+      "Repair",
+      "Scavenger",
+      "Tracker",
+    ],
+  },
+  {
+    label: "Phrases",
+    items: [
+      "Catch Me If You Can",
+      "Fake It Till You Make It",
+      "First Time's the Charm",
+      "Hold the Line",
+      "I Won't Let You Down",
+      "I'll Catch You",
+      "I've Got Your Back",
+      "Knowledge Is Power",
+      "Nature's Friend",
+      "Never Again",
+      "No One Left Behind",
+      "Pick on Someone Your Own Size",
+      "The Show Must Go On",
+      "This Is Not a Negotiation",
+      "Wolf in Sheep's Clothing",
+    ],
+  },
+];
+
 // ─── Wizard Config ──────────────────────────────────────────
 
 export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
   classThemes: DAGGERHEART_CLASS_THEMES,
   phases: [
-    { label: "Name", steps: ["name"] },
     { label: "Class", steps: ["class_pick", "subclass_pick"] },
     { label: "Heritage", steps: ["ancestry_pick", "community_pick"] },
+    {
+      label: "Equipment",
+      steps: [
+        "weapon_primary_pick",
+        "weapon_secondary_pick",
+        "armor_pick",
+        "potion_pick",
+        "class_item_pick",
+      ],
+    },
     { label: "Traits", steps: ["traits"] },
+    { label: "Experiences", steps: ["experiences_pick"] },
+    { label: "Cards", steps: ["domain_cards_pick"] },
     { label: "Create", steps: ["review"] },
   ],
   steps: {
-    name: {
-      enabled: true,
-      label: "Name Your Hero",
-      shortLabel: "Name",
-      subtitle: "Every legend starts with a name.",
-      helpText: "Welcome to character creation. We'll walk you through every choice that shapes your hero — class, subclass, heritage, traits, and more. Don't worry about getting anything perfect right now: you can revisit and change any of these decisions, including the name, right up until you click Create on the final step.",
-      component: "text_field_group",
-      config: {
-        fields: [
-          { key: "name", label: "Character Name", placeholder: "Enter a name...", required: true },
-        ],
-      },
-    },
     class_pick: {
       enabled: true,
       label: "Choose Your Class",
@@ -163,6 +304,68 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
         filter: { ability_type: "community_feature" },
       },
     },
+    weapon_primary_pick: {
+      enabled: true,
+      label: "Choose Your Primary Weapon",
+      shortLabel: "Weapon",
+      subtitle: "Either a two-handed weapon, or a one-handed weapon paired with a secondary.",
+      helpText: "Pick a Tier 1 primary weapon. If you pick a one-handed primary, you'll choose a secondary weapon next. Two-handed weapons are used alone. Cards show damage dice, range, and the trait you roll with.",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_items",
+        filter: { type: "weapon" },
+      },
+    },
+    weapon_secondary_pick: {
+      enabled: true,
+      label: "Choose Your Secondary Weapon",
+      shortLabel: "Secondary",
+      subtitle: "Pair it with your primary one-handed weapon.",
+      helpText: "Secondary weapons add a feature on top of your primary — shields raise your Armor Score, paired blades boost damage, grapplers pull foes in, and so on.",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_items",
+        filter: { type: "weapon" },
+      },
+      // Only shown when the chosen primary weapon is One-Handed. The wizard
+      // mirrors that bit to `wizardState.primaryWeaponIsTwoHanded` on selection.
+      showWhen: {
+        requiresState: { key: "primaryWeaponIsTwoHanded", equals: false },
+      },
+    },
+    armor_pick: {
+      enabled: true,
+      label: "Choose Your Armor",
+      shortLabel: "Armor",
+      subtitle: "Set your damage thresholds and Armor Score.",
+      helpText: "Tier 1 armor sets your base Armor Score and the Major/Severe damage thresholds. Heavier armor offers more protection at a cost to Evasion or Agility.",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_items",
+        filter: { type: "armor" },
+      },
+    },
+    potion_pick: {
+      enabled: true,
+      label: "Choose a Starting Potion",
+      shortLabel: "Potion",
+      subtitle: "Bring a Minor Health Potion or a Minor Stamina Potion.",
+      helpText: "Each character starts with one minor potion. Minor Health clears 1d4 HP. Minor Stamina clears 1d4 Stress. Pick whichever you expect you'll lean on first.",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_items",
+        filter: { type: "consumable" },
+      },
+    },
+    class_item_pick: {
+      enabled: true,
+      label: "Choose Your Class Item",
+      shortLabel: "Class Item",
+      subtitle: "A meaningful object from your past.",
+      helpText: "Your class's character guide lists two flavor items. Pick the one that resonates more with your hero's story — it's narrative inventory only, no mechanical effect.",
+      // No dataSource — options come from DAGGERHEART_CLASS_ITEMS keyed on the chosen class.
+      component: "card_picker",
+    },
     traits: {
       enabled: true,
       label: "Assign Traits",
@@ -175,12 +378,42 @@ export const DAGGERHEART_WIZARD_CONFIG: WizardConfig = {
         standardArray: DAGGERHEART_STANDARD_ARRAY,
       },
     },
+    experiences_pick: {
+      enabled: true,
+      label: "Create Your Experiences",
+      shortLabel: "Experiences",
+      subtitle: "Two short phrases that capture who your hero has been.",
+      helpText: "An Experience is a word or short phrase that captures a set of skills, traits, or aptitudes your hero has gathered across their life. You'll write two — each grants a +2 modifier you can spend a Hope to add to a relevant roll. Stay specific (not 'Lucky' or 'Highly Skilled') and avoid built-in special abilities. Tap a chip below to drop an SRD example into whichever input you most recently clicked.",
+      component: "experience_input",
+      config: {
+        count: 2,
+        modifier: 2,
+        suggestions: DAGGERHEART_EXPERIENCE_SUGGESTIONS,
+      },
+    },
+    domain_cards_pick: {
+      enabled: true,
+      label: "Choose Your Domain Cards",
+      shortLabel: "Cards",
+      subtitle: "Pick two starting cards from your class's domains.",
+      helpText: "At level 1, every Daggerheart hero picks two domain cards from the two domains their class has access to. Each card lists its domain, recall cost, and rules text. Tap a card to expand it, then Add or Remove to build your two-card loadout. You can swap selections any time before Continue.",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_abilities",
+        filter: { ability_type: "domain_card", level: 1 },
+        dependsOn: "class_pick",
+        dependColumn: "classes",
+        dependType: "contains",
+        dependValueFrom: "name",
+      },
+      config: { selectCount: 2 },
+    },
     review: {
       enabled: true,
-      label: "Review & Create",
-      shortLabel: "Review",
-      subtitle: "One last look before the adventure begins.",
-      helpText: "Take a final pass on every choice you made. Use the Back button to step back through the wizard and revise anything before you commit. Once you click Create, your hero is born and the adventure begins.",
+      label: "Behold Your Hero",
+      shortLabel: "Behold",
+      subtitle: "Name your character — then let the adventure begin.",
+      helpText: "This is your hero, brought to life from every choice you've made. Name them, look over their sheet, and use Back to revise anything before you commit. Once you click Start Your Adventure, your hero is born.",
       component: "review_summary",
     },
   },

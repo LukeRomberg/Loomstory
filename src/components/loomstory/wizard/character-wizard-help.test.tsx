@@ -73,10 +73,11 @@ describe("CharacterWizard help popup integration", () => {
     vi.useRealTimers();
   });
 
-  it("auto-opens the help popup on initial mount for the name step", () => {
+  it("auto-opens the help popup on initial mount for the class pick step", () => {
     render(<CharacterWizard {...defaultProps} />);
     expect(screen.getByTestId("help-popup")).toBeInTheDocument();
-    expect(screen.getByText(/Welcome to character creation/)).toBeInTheDocument();
+    // The first-step helpText is the class_pick help copy now that name was moved to review.
+    expect(screen.getByText(/Every class has two domains/)).toBeInTheDocument();
   });
 
   it("Got it button starts with a 3s countdown and is disabled", () => {
@@ -106,20 +107,20 @@ describe("CharacterWizard help popup integration", () => {
   it("does not auto-open when navigating back to a previously dismissed step", () => {
     render(<CharacterWizard {...defaultProps} />);
 
-    // Dismiss on name step
+    // Dismiss on class_pick step (the first step now)
     dismissHelpPopup();
     expect(screen.queryByTestId("help-popup")).not.toBeInTheDocument();
 
-    // Type a name and advance to class_pick — popup auto-opens for the new step
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Kael" } });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    // Pick a class to advance to subclass_pick — popup auto-opens for the new step
+    fireEvent.click(screen.getByText("Warrior"));
+    fireEvent.click(screen.getByRole("button", { name: /choose warrior/i }));
     expect(screen.getByTestId("help-popup")).toBeInTheDocument();
 
-    // Dismiss on class_pick too
+    // Dismiss on subclass_pick too
     dismissHelpPopup();
     expect(screen.queryByTestId("help-popup")).not.toBeInTheDocument();
 
-    // Back to name — popup must NOT reopen (sticky dismissal per modal-open)
+    // Back to class_pick — popup must NOT reopen (sticky dismissal per modal-open)
     fireEvent.click(screen.getByText("Back"));
     expect(screen.queryByTestId("help-popup")).not.toBeInTheDocument();
   });

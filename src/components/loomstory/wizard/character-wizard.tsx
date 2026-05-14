@@ -13,10 +13,10 @@ import { BackButton } from "./back-button";
 import { WizardFooter } from "./wizard-footer";
 import { CardPicker } from "./card-picker";
 import type { PickerCard } from "./card-picker";
-import { TextFieldGroup } from "./text-field-group";
 import { StatAssigner } from "./stat-assigner";
-import { ReviewSummary } from "./review-summary";
-import type { ReviewSection } from "./review-summary";
+import { ExperienceInput } from "./experience-input";
+import type { ExperienceSuggestionGroup } from "./experience-input";
+import { CharacterSheetPreview } from "./character-sheet-preview";
 import { useStepData } from "@/lib/character/use-step-data";
 import { getVisibleSteps } from "@/lib/character/wizard-registry";
 import { saveNewCharacter } from "@/lib/character/save-new-character";
@@ -24,10 +24,16 @@ import type {
   WizardConfig,
   WizardState,
   WizardStepConfig,
+  ClassTheme,
   CompendiumClass,
   CompendiumAbility,
+  CompendiumItem,
 } from "@/lib/character/wizard-types";
 import { createEmptyWizardState } from "@/lib/character/wizard-types";
+import {
+  DAGGERHEART_CLASS_ITEMS,
+  DAGGERHEART_BASIC_SUPPLY_NAMES,
+} from "@/lib/character/configs/daggerheart-wizard";
 
 // ─── Props ──────────────────────────────────────────────────
 
@@ -43,12 +49,10 @@ interface CharacterWizardProps {
 
 // ─── Helpers ────────────────────────────────────────────────
 
-type Theme = { gradient: string; borderColor: string; textColor: string; domains?: string[] };
-
 function classToPickerCard(
   cls: CompendiumClass,
   classFeatures: CompendiumAbility[],
-  themes?: Record<string, Theme>
+  themes?: Record<string, ClassTheme>
 ): PickerCard {
   const theme = themes?.[cls.name];
   const data = cls.data as Record<string, unknown>;
@@ -122,7 +126,7 @@ function subclassToPickerCard(
   sub: CompendiumClass,
   parentClass: CompendiumClass | null,
   features: CompendiumAbility[],
-  themes?: Record<string, Theme>
+  themes?: Record<string, ClassTheme>
 ): PickerCard {
   // Inherit theme from parent class so subclass cards match the class palette
   const theme = parentClass ? themes?.[parentClass.name] : undefined;
@@ -201,7 +205,7 @@ function heritageToPickerCard(
   dataKey: string,
   groupLabel: string,
   allFeatures: CompendiumAbility[],
-  theme?: Theme
+  theme?: ClassTheme
 ): PickerCard {
   const features = allFeatures.filter(
     (f) => (f.data as Record<string, unknown>)?.[dataKey] === value
@@ -239,6 +243,112 @@ function heritageToPickerCard(
             },
           ]
         : [],
+    gradient: theme?.gradient,
+    borderColor: theme?.borderColor,
+    textColor: theme?.textColor,
+  };
+}
+
+/**
+ * Build a picker card for a compendium_items weapon row. Surfaces the SRD stats
+ * the player needs to decide: damage dice, range, trait, and the special feature
+ * text (Reliable, Paired, Protective, etc.).
+ */
+function weaponToPickerCard(item: CompendiumItem, theme?: ClassTheme): PickerCard {
+  const props = (item.properties ?? {}) as Record<string, unknown>;
+  const stats: { label: string; value: string }[] = [];
+  if (props.damage) stats.push({ label: "Damage", value: String(props.damage) });
+  if (props.range) stats.push({ label: "Range", value: String(props.range) });
+  if (props.primary_trait) stats.push({ label: "Trait", value: String(props.primary_trait) });
+  if (props.type) stats.push({ label: "Hands", value: String(props.type) });
+
+  const featureText = (props.feature as string | null | undefined) ?? null;
+  const featureGroups: PickerCard["featureGroups"] = featureText
+    ? [{ label: "Feature", features: [{ name: stripPrefix(featureText, ""), description: "" }] }]
+    : undefined;
+
+  return {
+    id: item.id,
+    title: item.name,
+    description: item.description ?? "",
+    stats,
+    featureGroups,
+    gradient: theme?.gradient,
+    borderColor: theme?.borderColor,
+    textColor: theme?.textColor,
+  };
+}
+
+/**
+ * Build a picker card for a compendium_items armor row. Surfaces Base Score and
+ * damage Thresholds — the two numbers that drive Daggerheart's damage math.
+ */
+function armorToPickerCard(item: CompendiumItem, theme?: ClassTheme): PickerCard {
+  const props = (item.properties ?? {}) as Record<string, unknown>;
+  const stats: { label: string; value: string }[] = [];
+  if (props.base_score != null) stats.push({ label: "Base Score", value: String(props.base_score) });
+  if (props.thresholds) stats.push({ label: "Thresholds", value: String(props.thresholds) });
+
+  const featureText = (props.feature as string | null | undefined) ?? null;
+  const featureGroups: PickerCard["featureGroups"] = featureText
+    ? [{ label: "Feature", features: [{ name: featureText, description: "" }] }]
+    : undefined;
+
+  return {
+    id: item.id,
+    title: item.name,
+    description: item.description ?? "",
+    stats,
+    featureGroups,
+    gradient: theme?.gradient,
+    borderColor: theme?.borderColor,
+    textColor: theme?.textColor,
+  };
+}
+
+/** Build a picker card for a potion (consumable). Description carries the effect text. */
+function potionToPickerCard(item: CompendiumItem, theme?: ClassTheme): PickerCard {
+  return {
+    id: item.id,
+    title: item.name,
+    description: item.description ?? "",
+    gradient: theme?.gradient,
+    borderColor: theme?.borderColor,
+    textColor: theme?.textColor,
+  };
+}
+
+/**
+ * Build a picker card for a free-text class item option. There's no compendium
+ * row behind these, so the option string itself is both the id and the title.
+ */
+function classItemToPickerCard(option: string, theme?: ClassTheme): PickerCard {
+  return {
+    id: option,
+    title: option,
+    description: "",
+    gradient: theme?.gradient,
+    borderColor: theme?.borderColor,
+    textColor: theme?.textColor,
+  };
+}
+
+/**
+ * Build a picker card for a level-1 domain card. Title = card name, badges show
+ * the domain and recall cost, description is the rules text from the compendium.
+ */
+function domainCardToPickerCard(card: CompendiumAbility, theme?: ClassTheme): PickerCard {
+  const data = (card.data ?? {}) as Record<string, unknown>;
+  const badges: PickerCard["badges"] = [];
+  if (data.domain) badges.push({ label: String(data.domain) });
+  if (data.recall_cost != null) badges.push({ label: `Recall ${data.recall_cost}` });
+  if (data.card_type) badges.push({ label: String(data.card_type) });
+
+  return {
+    id: card.id,
+    title: card.name,
+    description: card.description ?? "",
+    badges,
     gradient: theme?.gradient,
     borderColor: theme?.borderColor,
     textColor: theme?.textColor,
@@ -299,13 +409,21 @@ export function CharacterWizard({
   const [showHelp, setShowHelp] = useState(false);
   const [dismissedHelpSteps, setDismissedHelpSteps] = useState<Set<string>>(() => new Set());
 
-  // Visible steps (filtered by conditions)
+  // Visible steps (filtered by conditions). Equipment's secondary-weapon step uses
+  // `showWhen.requiresState` keyed on `primaryWeaponIsTwoHanded`, so that bit feeds
+  // directly into the visibility computation.
   const visibleSteps = useMemo(
     () => getVisibleSteps(wizardConfig, {
       className: wizardState.className,
       subclassName: wizardState.subclassName,
+      primaryWeaponIsTwoHanded: wizardState.primaryWeaponIsTwoHanded,
     }),
-    [wizardConfig, wizardState.className, wizardState.subclassName]
+    [
+      wizardConfig,
+      wizardState.className,
+      wizardState.subclassName,
+      wizardState.primaryWeaponIsTwoHanded,
+    ]
   );
   const [stepIndex, setStepIndex] = useState(0);
   const currentStepKey = visibleSteps[stepIndex] ?? visibleSteps[0];
@@ -324,6 +442,14 @@ export function CharacterWizard({
   const subclassStepConfig = wizardConfig.steps.subclass_pick;
   const ancestryStepConfig = wizardConfig.steps.ancestry_pick;
   const communityStepConfig = wizardConfig.steps.community_pick;
+  // Equipment step configs — each fetches all rows of the listed type and the
+  // component narrows by tier/category client-side (useStepData can't filter
+  // on JSONB `properties`).
+  const weaponPrimaryStepConfig = wizardConfig.steps.weapon_primary_pick;
+  const weaponSecondaryStepConfig = wizardConfig.steps.weapon_secondary_pick;
+  const armorStepConfig = wizardConfig.steps.armor_pick;
+  const potionStepConfig = wizardConfig.steps.potion_pick;
+  const domainCardsStepConfig = wizardConfig.steps.domain_cards_pick;
 
   const { data: classesRaw, loading: classesLoading, error: classesError } = useStepData(
     classStepConfig,
@@ -350,6 +476,23 @@ export function CharacterWizard({
     useStepData(ancestryStepConfig, systemId);
   const { data: communityFeaturesRaw, loading: communityLoading, error: communityError } =
     useStepData(communityStepConfig, systemId);
+  // Equipment fetches — same compendium_items table, scoped by `type` in the step
+  // config. Each picker re-narrows by Tier 1 + category in-component.
+  const { data: weaponsPrimaryRaw, loading: weaponsLoading, error: weaponsError } =
+    useStepData(weaponPrimaryStepConfig, systemId);
+  // The secondary step uses the same `type=weapon` filter, so we can reuse the
+  // primary fetch and just narrow by category. Still call useStepData to keep the
+  // contract (and to surface independent loading state if the API ever splits).
+  const { data: weaponsSecondaryRaw } = useStepData(weaponSecondaryStepConfig, systemId);
+  const { data: armorRaw, loading: armorLoading, error: armorError } =
+    useStepData(armorStepConfig, systemId);
+  const { data: potionsRaw, loading: potionsLoading, error: potionsError } =
+    useStepData(potionStepConfig, systemId);
+  // Domain cards — filtered to level 1 in the step config, scoped to the chosen
+  // class via `classes contains <className>`. Fetch keys off className so swapping
+  // class re-runs the query with the new domains.
+  const { data: domainCardsRaw, loading: domainCardsLoading, error: domainCardsError } =
+    useStepData(domainCardsStepConfig, systemId, wizardState.className);
 
   // Surface data fetch errors
   useEffect(() => {
@@ -374,6 +517,18 @@ export function CharacterWizard({
   useEffect(() => {
     if (communityError) toast.error("Failed to load communities", { description: communityError });
   }, [communityError]);
+  useEffect(() => {
+    if (weaponsError) toast.error("Failed to load weapons", { description: weaponsError });
+  }, [weaponsError]);
+  useEffect(() => {
+    if (armorError) toast.error("Failed to load armor", { description: armorError });
+  }, [armorError]);
+  useEffect(() => {
+    if (potionsError) toast.error("Failed to load potions", { description: potionsError });
+  }, [potionsError]);
+  useEffect(() => {
+    if (domainCardsError) toast.error("Failed to load domain cards", { description: domainCardsError });
+  }, [domainCardsError]);
 
   // Auto-open the help popup the first time the user enters a step that has helpText.
   // Going back to a previously-dismissed step does NOT re-fire because the `if` guard
@@ -393,11 +548,63 @@ export function CharacterWizard({
   const ancestryFeatures = ancestryFeaturesRaw as unknown as CompendiumAbility[];
   const communityFeatures = communityFeaturesRaw as unknown as CompendiumAbility[];
 
+  const weaponsPrimaryAll = weaponsPrimaryRaw as unknown as CompendiumItem[];
+  const weaponsSecondaryAll = weaponsSecondaryRaw as unknown as CompendiumItem[];
+  const armorsAll = armorRaw as unknown as CompendiumItem[];
+  const potionsAll = potionsRaw as unknown as CompendiumItem[];
+  const domainCards = domainCardsRaw as unknown as CompendiumAbility[];
+  const pickedDomainCardIds = wizardState.selections.domain_cards_pick ?? [];
+  const selectedDomainCards = domainCards.filter((c) => pickedDomainCardIds.includes(c.id));
+
+  // Narrow weapons + armor to Tier 1 by category. The compendium has tiers 1–4
+  // for both, but step 5 of the SRD only allows Tier 1 selections at level 1.
+  const primaryWeapons = weaponsPrimaryAll.filter((w) => {
+    const p = (w.properties ?? {}) as Record<string, unknown>;
+    return p.tier === 1 && p.category === "Primary";
+  });
+  const secondaryWeapons = weaponsSecondaryAll.filter((w) => {
+    const p = (w.properties ?? {}) as Record<string, unknown>;
+    return p.tier === 1 && p.category === "Secondary";
+  });
+  const tier1Armor = armorsAll.filter(
+    (a) => ((a.properties ?? {}) as Record<string, unknown>).tier === 1
+  );
+  // Only the two SRD-step-5 starting potions, not the wider consumable list.
+  const startingPotions = potionsAll.filter((p) =>
+    ["Minor Health Potion", "Minor Stamina Potion"].includes(p.name)
+  );
+
+  const selectedPrimaryWeapon = primaryWeapons.find((w) => w.id === wizardState.primaryWeaponId) ?? null;
+  const selectedSecondaryWeapon = secondaryWeapons.find((w) => w.id === wizardState.secondaryWeaponId) ?? null;
+  const selectedArmor = tier1Armor.find((a) => a.id === wizardState.armorId) ?? null;
+  const selectedPotion = startingPotions.find((p) => p.id === wizardState.potionId) ?? null;
+
   const selectedClass = classes.find((c) => c.id === wizardState.classId) ?? null;
   const selectedSubclass = subclasses.find((c) => c.id === wizardState.subclassId) ?? null;
+
+  // Feature lists narrowed to what the preview screen needs to render — pre-computed
+  // here so the JSX stays declarative and the same filtered slice is reused on save.
+  const selectedAncestryFeatures = ancestryFeatures.filter(
+    (f) => (f.data as Record<string, unknown>)?.ancestry === wizardState.ancestryName
+  );
+  const selectedCommunityFeatures = communityFeatures.filter(
+    (f) => (f.data as Record<string, unknown>)?.community === wizardState.communityName
+  );
+  const selectedClassFeatures = classFeatures.filter(
+    (f) => f.classes?.includes(wizardState.className ?? "")
+  );
+  // Subclass foundation features only — preview shows the level-1 feature; spec/mastery
+  // appear later via level-up.
+  const selectedSubclassFoundationFeatures = subclassFeatures.filter((f) => {
+    const data = f.data as Record<string, unknown>;
+    return (
+      data?.subclass === wizardState.subclassName &&
+      data?.feature_category === "foundation_feature"
+    );
+  });
   // Theme of the chosen class — propagated to heritage cards and the trait container so the
   // rest of the wizard reflects the player's class choice.
-  const classTheme: Theme | undefined = selectedClass
+  const classTheme: ClassTheme | undefined = selectedClass
     ? wizardConfig.classThemes?.[selectedClass.name]
     : undefined;
 
@@ -413,8 +620,6 @@ export function CharacterWizard({
   // Can continue validation
   function canContinue(): boolean {
     switch (currentStepKey) {
-      case "name":
-        return wizardState.name.trim().length > 0;
       case "class_pick":
         return wizardState.classId !== null;
       case "subclass_pick":
@@ -423,60 +628,37 @@ export function CharacterWizard({
         return wizardState.ancestryName !== null;
       case "community_pick":
         return wizardState.communityName !== null;
+      case "weapon_primary_pick":
+        return wizardState.primaryWeaponId !== null;
+      case "weapon_secondary_pick":
+        return wizardState.secondaryWeaponId !== null;
+      case "armor_pick":
+        return wizardState.armorId !== null;
+      case "potion_pick":
+        return wizardState.potionId !== null;
+      case "class_item_pick":
+        return wizardState.classItemName !== null;
       case "traits": {
         const cfg = currentStep?.config as { slots?: { key: string }[] } | undefined;
         const slotCount = cfg?.slots?.length ?? 6;
         return Object.keys(wizardState.statValues).length === slotCount;
       }
+      case "experiences_pick": {
+        const cfg = currentStep?.config as { count?: number } | undefined;
+        const required = cfg?.count ?? 2;
+        const filled = wizardState.experiences.filter(
+          (e) => e.name.trim().length > 0
+        ).length;
+        return filled >= required;
+      }
+      case "domain_cards_pick": {
+        const cfg = currentStep?.config as { selectCount?: number } | undefined;
+        const required = cfg?.selectCount ?? 2;
+        return pickedDomainCardIds.length === required;
+      }
       default:
         return true;
     }
-  }
-
-  // Build review sections
-  function buildReviewSections(): ReviewSection[] {
-    const sections: ReviewSection[] = [];
-
-    sections.push({
-      label: "Identity",
-      items: [
-        { label: "Name", value: wizardState.name },
-        ...(wizardState.ancestryName
-          ? [{ label: "Ancestry", value: wizardState.ancestryName }]
-          : []),
-        ...(wizardState.communityName
-          ? [{ label: "Community", value: wizardState.communityName }]
-          : []),
-      ],
-    });
-
-    if (wizardState.className) {
-      sections.push({
-        label: "Path",
-        items: [
-          { label: "Class", value: wizardState.className },
-          ...(wizardState.subclassName
-            ? [{ label: "Subclass", value: wizardState.subclassName }]
-            : []),
-        ],
-      });
-    }
-
-    if (Object.keys(wizardState.statValues).length > 0) {
-      const cfg = wizardConfig.steps.traits?.config as { slots?: { key: string; label: string }[] } | undefined;
-      const slots = cfg?.slots ?? [];
-      sections.push({
-        label: "Traits",
-        items: slots
-          .filter((s) => wizardState.statValues[s.key] != null)
-          .map((s) => ({
-            label: s.label,
-            value: `${wizardState.statValues[s.key] >= 0 ? "+" : ""}${wizardState.statValues[s.key]}`,
-          })),
-      });
-    }
-
-    return sections;
   }
 
   // Save handler
@@ -484,13 +666,25 @@ export function CharacterWizard({
     setCreating(true);
     try {
       const supabase = createClient();
-      // Filter the loaded feature lists down to just the chosen ancestry's + community's features
-      const selectedAncestryFeatures = ancestryFeatures.filter(
-        (f) => (f.data as Record<string, unknown>)?.ancestry === wizardState.ancestryName
-      );
-      const selectedCommunityFeatures = communityFeatures.filter(
-        (f) => (f.data as Record<string, unknown>)?.community === wizardState.communityName
-      );
+
+      // Resolve the four basic-supply compendium ids by name. These rows are seeded
+      // by migration 20260514000003 and are referenced via compendium_item_ref_id on
+      // the character_items inserts.
+      const basicSupplyIds: Record<string, string> = {};
+      const supplyNames = [...DAGGERHEART_BASIC_SUPPLY_NAMES];
+      const { data: supplyRows, error: supplyError } = await supabase
+        .from("compendium_items")
+        .select("id,name")
+        .eq("system_id", systemId)
+        .eq("source", "Daggerheart SRD")
+        .in("name", supplyNames);
+      if (supplyError) {
+        throw new Error(`Failed to look up starting supplies: ${supplyError.message}`);
+      }
+      for (const row of supplyRows ?? []) {
+        basicSupplyIds[(row as { name: string }).name] = (row as { id: string }).id;
+      }
+
       const { characterId } = await saveNewCharacter({
         supabase,
         campaignId,
@@ -501,6 +695,13 @@ export function CharacterWizard({
         selectedSubclass,
         ancestryFeatures: selectedAncestryFeatures,
         communityFeatures: selectedCommunityFeatures,
+        primaryWeapon: selectedPrimaryWeapon,
+        secondaryWeapon: selectedSecondaryWeapon,
+        armor: selectedArmor,
+        potion: selectedPotion,
+        classItemName: wizardState.classItemName,
+        basicSupplyIds,
+        domainCards: selectedDomainCards,
       });
 
       toast.success("Character created");
@@ -544,41 +745,6 @@ export function CharacterWizard({
   return (
     <WizardModal open={open} onClose={handleClose} title="Create Character">
       <WizardProgress steps={progressSteps} currentStep={currentStepKey} />
-
-      {/* ── Name step ── */}
-      {currentStepKey === "name" && currentStep && (
-        <form
-          key="name"
-          className="animate-fade-in space-y-6"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (canContinue()) goForward();
-          }}
-        >
-          <StepHeading
-            title={currentStep.label}
-            subtitle={currentStep.subtitle}
-            helpText={currentStep.helpText}
-            onHelpClick={handleHelpOpen}
-          />
-          <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
-            <TextFieldGroup
-              fields={[
-                {
-                  key: "name",
-                  label: "Character Name",
-                  placeholder: "Enter a name...",
-                },
-              ]}
-              values={{ name: wizardState.name }}
-              onChange={(vals) =>
-                setWizardState((prev) => ({ ...prev, name: vals.name ?? "" }))
-              }
-            />
-            <WizardFooter onContinue={goForward} disabled={!canContinue()} />
-          </div>
-        </form>
-      )}
 
       {/* ── Class pick step ── */}
       {currentStepKey === "class_pick" && currentStep && (
@@ -689,6 +855,129 @@ export function CharacterWizard({
         </div>
       )}
 
+      {/* ── Equipment: primary weapon ── */}
+      {currentStepKey === "weapon_primary_pick" && currentStep && (
+        <div key="weapon_primary_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
+          <BackButton onClick={goBack} />
+          <StepHeading
+            title={currentStep.label}
+            subtitle={currentStep.subtitle}
+            helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
+          />
+          <CardPicker
+            cards={primaryWeapons.map((w) => weaponToPickerCard(w, classTheme))}
+            loading={weaponsLoading}
+            selectedId={wizardState.primaryWeaponId ?? undefined}
+            onSelect={(id) => {
+              const w = primaryWeapons.find((x) => x.id === id);
+              const isTwoHanded =
+                ((w?.properties ?? {}) as Record<string, unknown>).type === "Two-Handed";
+              setWizardState((prev) => ({
+                ...prev,
+                primaryWeaponId: id,
+                primaryWeaponIsTwoHanded: isTwoHanded,
+                // When switching to 2H, clear any prior secondary selection so it
+                // doesn't linger in review or get persisted on save.
+                secondaryWeaponId: isTwoHanded ? null : prev.secondaryWeaponId,
+              }));
+              goForward();
+            }}
+          />
+        </div>
+      )}
+
+      {/* ── Equipment: secondary weapon (only when primary is One-Handed) ── */}
+      {currentStepKey === "weapon_secondary_pick" && currentStep && (
+        <div key="weapon_secondary_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
+          <BackButton onClick={goBack} />
+          <StepHeading
+            title={currentStep.label}
+            subtitle={currentStep.subtitle}
+            helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
+          />
+          <CardPicker
+            cards={secondaryWeapons.map((w) => weaponToPickerCard(w, classTheme))}
+            loading={weaponsLoading}
+            selectedId={wizardState.secondaryWeaponId ?? undefined}
+            onSelect={(id) => {
+              setWizardState((prev) => ({ ...prev, secondaryWeaponId: id }));
+              goForward();
+            }}
+          />
+        </div>
+      )}
+
+      {/* ── Equipment: armor ── */}
+      {currentStepKey === "armor_pick" && currentStep && (
+        <div key="armor_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
+          <BackButton onClick={goBack} />
+          <StepHeading
+            title={currentStep.label}
+            subtitle={currentStep.subtitle}
+            helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
+          />
+          <CardPicker
+            cards={tier1Armor.map((a) => armorToPickerCard(a, classTheme))}
+            loading={armorLoading}
+            selectedId={wizardState.armorId ?? undefined}
+            onSelect={(id) => {
+              setWizardState((prev) => ({ ...prev, armorId: id }));
+              goForward();
+            }}
+          />
+        </div>
+      )}
+
+      {/* ── Equipment: starting potion ── */}
+      {currentStepKey === "potion_pick" && currentStep && (
+        <div key="potion_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
+          <BackButton onClick={goBack} />
+          <StepHeading
+            title={currentStep.label}
+            subtitle={currentStep.subtitle}
+            helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
+          />
+          <CardPicker
+            cards={startingPotions.map((p) => potionToPickerCard(p, classTheme))}
+            loading={potionsLoading}
+            columns={2}
+            selectedId={wizardState.potionId ?? undefined}
+            onSelect={(id) => {
+              setWizardState((prev) => ({ ...prev, potionId: id }));
+              goForward();
+            }}
+          />
+        </div>
+      )}
+
+      {/* ── Equipment: class-specific item (free-text, hardcoded options) ── */}
+      {currentStepKey === "class_item_pick" && currentStep && (
+        <div key="class_item_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
+          <BackButton onClick={goBack} />
+          <StepHeading
+            title={currentStep.label}
+            subtitle={currentStep.subtitle}
+            helpText={currentStep.helpText}
+            onHelpClick={handleHelpOpen}
+          />
+          <CardPicker
+            cards={(DAGGERHEART_CLASS_ITEMS[wizardState.className ?? ""] ?? []).map((opt) =>
+              classItemToPickerCard(opt, classTheme)
+            )}
+            columns={2}
+            selectedId={wizardState.classItemName ?? undefined}
+            onSelect={(id) => {
+              setWizardState((prev) => ({ ...prev, classItemName: id }));
+              goForward();
+            }}
+          />
+        </div>
+      )}
+
       {/* ── Traits step ── */}
       {currentStepKey === "traits" && currentStep && (() => {
         const cfg = currentStep.config as {
@@ -725,18 +1014,98 @@ export function CharacterWizard({
         );
       })()}
 
-      {/* ── Review step ── */}
+      {/* ── Experiences step ── */}
+      {currentStepKey === "experiences_pick" && currentStep && (() => {
+        const cfg = currentStep.config as {
+          count: number;
+          modifier?: number;
+          suggestions: ReadonlyArray<ExperienceSuggestionGroup>;
+        };
+        return (
+          <div key="experiences_pick" className="animate-fade-in space-y-6">
+            <BackButton onClick={goBack} />
+            <StepHeading
+              title={currentStep.label}
+              subtitle={currentStep.subtitle}
+              helpText={currentStep.helpText}
+              onHelpClick={handleHelpOpen}
+            />
+            <div
+              className={cn(
+                "rounded-xl border-2 p-5 bg-gradient-to-br",
+                classTheme?.gradient ?? "from-zinc-900 to-zinc-800",
+                classTheme?.borderColor ?? "border-rune/40"
+              )}
+            >
+              <ExperienceInput
+                count={cfg.count}
+                modifier={cfg.modifier}
+                experiences={wizardState.experiences}
+                suggestions={cfg.suggestions}
+                onChange={(exps) =>
+                  setWizardState((prev) => ({ ...prev, experiences: exps }))
+                }
+              />
+            </div>
+            <WizardFooter onContinue={goForward} disabled={!canContinue()} />
+          </div>
+        );
+      })()}
+
+      {/* ── Domain cards step (SRD step 8) ── */}
+      {currentStepKey === "domain_cards_pick" && currentStep && (() => {
+        const cfg = currentStep.config as { selectCount?: number } | undefined;
+        const cap = cfg?.selectCount ?? 2;
+        return (
+          <div key="domain_cards_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
+            <BackButton onClick={goBack} />
+            <StepHeading
+              title={currentStep.label}
+              subtitle={`${currentStep.subtitle ?? ""} (${pickedDomainCardIds.length}/${cap} chosen)`}
+              helpText={currentStep.helpText}
+              onHelpClick={handleHelpOpen}
+            />
+            <CardPicker
+              cards={domainCards.map((c) => domainCardToPickerCard(c, classTheme))}
+              loading={domainCardsLoading}
+              onSelect={() => {
+                /* unused in multi mode */
+              }}
+              multi={{ count: cap }}
+              selectedIds={pickedDomainCardIds}
+              onMultiChange={(ids) =>
+                setWizardState((prev) => ({
+                  ...prev,
+                  selections: { ...prev.selections, domain_cards_pick: ids },
+                }))
+              }
+            />
+            <WizardFooter onContinue={goForward} disabled={!canContinue()} />
+          </div>
+        );
+      })()}
+
+      {/* ── Review step — cinematic preview + name input + Create CTA ── */}
       {currentStepKey === "review" && currentStep && (
-        <div key="review" className="animate-fade-in space-y-6">
+        <div key="review" className="animate-fade-in space-y-4 flex-1 min-h-0 overflow-y-auto">
           <BackButton onClick={goBack} />
-          <StepHeading
-            title={currentStep.label}
-            subtitle={currentStep.subtitle}
-            helpText={currentStep.helpText}
-            onHelpClick={handleHelpOpen}
-          />
-          <ReviewSummary
-            sections={buildReviewSections()}
+          <CharacterSheetPreview
+            wizardState={wizardState}
+            selectedClass={selectedClass}
+            selectedSubclass={selectedSubclass}
+            ancestryFeatures={selectedAncestryFeatures}
+            communityFeatures={selectedCommunityFeatures}
+            classFeatures={selectedClassFeatures}
+            subclassFeatures={selectedSubclassFoundationFeatures}
+            domainCards={selectedDomainCards}
+            primaryWeapon={selectedPrimaryWeapon}
+            secondaryWeapon={selectedSecondaryWeapon}
+            armor={selectedArmor}
+            potion={selectedPotion}
+            classTheme={classTheme}
+            onNameChange={(name) =>
+              setWizardState((prev) => ({ ...prev, name }))
+            }
             onCreate={handleCreate}
             creating={creating}
           />

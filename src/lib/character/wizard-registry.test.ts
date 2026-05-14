@@ -17,13 +17,22 @@ describe("getVisibleSteps", () => {
   it("returns all enabled steps for daggerheart", () => {
     const config = getWizardConfig("daggerheart")!;
     const steps = getVisibleSteps(config, {});
+    // weapon_secondary_pick is hidden by default (requiresState.primaryWeaponIsTwoHanded === false);
+    // an empty wizardState has the field as undefined, so the predicate fails and the step
+    // is filtered out. Picking a 1H primary at runtime sets the flag to false and the step
+    // becomes visible.
     expect(steps).toEqual([
-      "name",
       "class_pick",
       "subclass_pick",
       "ancestry_pick",
       "community_pick",
+      "weapon_primary_pick",
+      "armor_pick",
+      "potion_pick",
+      "class_item_pick",
       "traits",
+      "experiences_pick",
+      "domain_cards_pick",
       "review",
     ]);
   });
