@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CharacterWizard } from "./character-wizard";
 import { DAGGERHEART_WIZARD_CONFIG } from "@/lib/character/configs/daggerheart-wizard";
@@ -89,7 +89,7 @@ const mockClassFeatures = [
 ];
 
 const mockAncestryFeatures = [
-  // Faerie — 2 features
+  // Faerie — 2 features (flavor on both rows mirrors the production migration)
   {
     id: "feat-faerie-luckbender",
     name: "Faerie: Luckbender",
@@ -97,7 +97,11 @@ const mockAncestryFeatures = [
     description:
       "Once per session, after you or a willing ally within Close range makes an action roll, you can spend 3 Hope to reroll the Duality Dice.",
     classes: null,
-    data: { ancestry: "Faerie", position: "top" },
+    data: {
+      ancestry: "Faerie",
+      position: "top",
+      flavor: "Faeries are winged humanoid creatures with insectile features.",
+    },
   },
   {
     id: "feat-faerie-wings",
@@ -106,7 +110,11 @@ const mockAncestryFeatures = [
     description:
       "You can fly. While flying, you can mark a Stress after an adversary makes an attack against you to gain a +2 bonus to your Evasion against that attack.",
     classes: null,
-    data: { ancestry: "Faerie", position: "bottom" },
+    data: {
+      ancestry: "Faerie",
+      position: "bottom",
+      flavor: "Faeries are winged humanoid creatures with insectile features.",
+    },
   },
   // Katari — 2 features
   {
@@ -115,7 +123,11 @@ const mockAncestryFeatures = [
     ability_type: "ancestry_feature",
     description: "When you make an Agility Roll, you can spend 2 Hope to reroll your Hope Die.",
     classes: null,
-    data: { ancestry: "Katari", position: "top" },
+    data: {
+      ancestry: "Katari",
+      position: "top",
+      flavor: "Katari are feline humanoids with retractable claws.",
+    },
   },
   {
     id: "feat-katari-claws",
@@ -136,7 +148,12 @@ const mockCommunityFeatures = [
     description:
       "You have advantage on rolls to consort with nobles, negotiate prices, or leverage your reputation to get what you want.",
     classes: null,
-    data: { community: "Highborne" },
+    data: {
+      community: "Highborne",
+      flavor:
+        "Being part of a highborne community means you're accustomed to a life of elegance, opulence, and prestige.",
+      adjectives: ["amiable", "candid", "conniving", "enterprising", "ostentatious", "unflappable"],
+    },
   },
   {
     id: "feat-wanderborne",
@@ -145,7 +162,11 @@ const mockCommunityFeatures = [
     description:
       "Add a Nomadic Pack to your inventory. Once per session, you can spend a Hope to reach into this pack and pull out a mundane item.",
     classes: null,
-    data: { community: "Wanderborne" },
+    data: {
+      community: "Wanderborne",
+      flavor: "Being part of a wanderborne community means you've lived as a nomad.",
+      adjectives: ["inscrutable", "magnanimous", "mirthful", "reliable", "savvy", "unorthodox"],
+    },
   },
 ];
 
@@ -483,6 +504,57 @@ describe("CharacterWizard", () => {
     // Ancestry cards should now be tinted with Warrior's theme
     const faerieCard = screen.getByText("Faerie").closest("[data-card-id]");
     expect(faerieCard?.className).toContain("from-red-950");
+  });
+
+  it("ancestry card expanded shows the SRD flavor description", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    await user.type(screen.getByRole("textbox"), "Kael");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+
+    // Expand Faerie — the flavor paragraph should be visible in the detail panel
+    await user.click(screen.getByText("Faerie"));
+    const detail = within(screen.getByTestId("card-picker-detail"));
+    expect(
+      detail.getByText(/Faeries are winged humanoid creatures with insectile features/)
+    ).toBeInTheDocument();
+  });
+
+  it("community card expanded shows both flavor and the personality adjectives", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    await user.type(screen.getByRole("textbox"), "Kael");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+    await user.click(screen.getByText("Faerie"));
+    await user.click(screen.getByRole("button", { name: /choose faerie/i }));
+
+    // Expand Highborne
+    await user.click(screen.getByText("Highborne"));
+    const detail = within(screen.getByTestId("card-picker-detail"));
+
+    // Flavor paragraph appears in the detail panel
+    expect(
+      detail.getByText(/Being part of a highborne community means you're accustomed to/)
+    ).toBeInTheDocument();
+
+    // All 6 personality adjectives render as chips in the detail panel
+    expect(detail.getByText("Personality")).toBeInTheDocument();
+    expect(detail.getByText("amiable")).toBeInTheDocument();
+    expect(detail.getByText("candid")).toBeInTheDocument();
+    expect(detail.getByText("conniving")).toBeInTheDocument();
+    expect(detail.getByText("enterprising")).toBeInTheDocument();
+    expect(detail.getByText("ostentatious")).toBeInTheDocument();
+    expect(detail.getByText("unflappable")).toBeInTheDocument();
   });
 
   it("community cards inherit the selected class's gradient theme", async () => {

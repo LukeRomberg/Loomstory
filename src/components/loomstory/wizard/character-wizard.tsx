@@ -206,10 +206,26 @@ function heritageToPickerCard(
     (f) => (f.data as Record<string, unknown>)?.[dataKey] === value
   );
 
+  // Flavor paragraph from any feature row that carries it (the seed stores the same
+  // flavor on every row for an ancestry, but reading any non-empty value is robust).
+  const flavor = features
+    .map((f) => (f.data as Record<string, unknown>)?.flavor as string | undefined)
+    .find((v) => typeof v === "string" && v.length > 0) ?? "";
+
+  // Personality adjectives (community cards only; ancestry rows don't carry this).
+  const adjectives = features
+    .map((f) => (f.data as Record<string, unknown>)?.adjectives as unknown)
+    .find((v): v is string[] => Array.isArray(v) && v.length > 0);
+
+  const details: PickerCard["details"] = adjectives
+    ? [{ label: "Personality", items: adjectives }]
+    : undefined;
+
   return {
     id: value,
     title: value,
-    description: "",
+    description: flavor,
+    details,
     featureGroups:
       features.length > 0
         ? [

@@ -255,8 +255,8 @@ function ExpandedCardContent({
         card.borderColor ?? "border-gold/60"
       )}
     >
-      {/* Description */}
-      <p className="text-muted-foreground leading-snug font-lore text-lg">
+      {/* Description (preserves \n\n paragraph breaks from heritage flavor text) */}
+      <p className="text-muted-foreground leading-snug font-lore text-lg whitespace-pre-line">
         {card.description}
       </p>
 
