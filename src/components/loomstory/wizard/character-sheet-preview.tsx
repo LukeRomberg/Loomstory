@@ -474,7 +474,7 @@ function SectionCard({
     >
       <div
         className={cn(
-          "text-[10px] font-heading uppercase tracking-[0.25em] mb-3",
+          "text-xs font-heading uppercase tracking-[0.25em] mb-3",
           theme?.textColor ?? "text-gold"
         )}
       >
@@ -595,13 +595,13 @@ function FeatureBlock({
     <div className="rounded-md bg-black/20 px-3 py-2">
       <div
         className={cn(
-          "font-heading text-sm mb-0.5",
+          "font-heading text-base mb-1",
           theme?.textColor ?? "text-gold"
         )}
       >
         {name}
       </div>
-      <p className="text-xs leading-snug font-lore text-muted-foreground whitespace-pre-line">
+      <p className="text-sm leading-snug font-lore text-muted-foreground whitespace-pre-line">
         {description}
       </p>
     </div>
@@ -639,7 +639,7 @@ function DomainCardDisplay({
           </span>
         )}
       </div>
-      <p className="text-xs leading-snug font-lore text-muted-foreground">
+      <p className="text-sm leading-snug font-lore text-muted-foreground">
         {card.description}
       </p>
     </div>
