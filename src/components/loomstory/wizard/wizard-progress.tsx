@@ -11,19 +11,25 @@ interface WizardProgressProps {
   steps: WizardProgressStep[];
   currentStep: string;
   /**
-   * Optional handler invoked when a *completed* step label is clicked.
-   * Current and future step labels stay non-interactive — jumping forward
-   * could land on a step whose upstream state isn't satisfied. Omit to
-   * disable click-to-jump entirely.
+   * Highest step index the player has ever reached, monotonically increasing.
+   * Steps at or before this index are considered "visited" and stay clickable
+   * even when the player has back-navigated. Omit and the component falls
+   * back to currentIndex (backwards-only jumps).
+   */
+  maxReachedIndex?: number;
+  /**
+   * Optional handler invoked when a visited step label is clicked. The
+   * current step and never-visited future steps stay non-interactive.
    */
   onStepClick?: (key: string) => void;
 }
 
-export function WizardProgress({ steps, currentStep, onStepClick }: WizardProgressProps) {
+export function WizardProgress({ steps, currentStep, maxReachedIndex, onStepClick }: WizardProgressProps) {
   const currentIndex = Math.max(
     0,
     steps.findIndex((s) => s.key === currentStep)
   );
+  const reachedIndex = Math.max(currentIndex, maxReachedIndex ?? currentIndex);
   const total = steps.length;
 
   return (
@@ -40,7 +46,10 @@ export function WizardProgress({ steps, currentStep, onStepClick }: WizardProgre
         {steps.map((step, i) => {
           const isDone = i < currentIndex;
           const isCurrent = i === currentIndex;
-          const isClickable = isDone && onStepClick != null;
+          // Visited = anywhere from start up to the high-water mark, *except*
+          // the current step itself (clicking your own step is a no-op).
+          const isVisited = i <= reachedIndex && !isCurrent;
+          const isClickable = isVisited && onStepClick != null;
           const labelClass = cn(
             "text-[9px] font-heading uppercase tracking-wider whitespace-nowrap transition-colors",
             isCurrent

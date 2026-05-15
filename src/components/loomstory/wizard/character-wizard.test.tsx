@@ -613,6 +613,38 @@ describe("CharacterWizard", () => {
     expect(screen.getByText("Choose Your Class")).toBeInTheDocument();
   });
 
+  it("allows forward jumps to previously-visited steps after back-navigation", async () => {
+    // Player walks to weapon_primary_pick, goes back to subclass to revise.
+    // After picking a new subclass (same class — so high-water mark isn't
+    // reset), the progress bar's "Primary Weapon" label remains clickable
+    // and jumps the player straight back to that step.
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Walk through to weapon_primary_pick.
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+    await user.click(screen.getByText("Katari"));
+    await user.click(screen.getByRole("button", { name: /choose katari/i }));
+    await user.click(screen.getByText("Wanderborne"));
+    await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
+    expect(screen.getByText(/Primary Weapon/i)).toBeInTheDocument();
+
+    // Jump back to Subclass via the progress-bar label.
+    await user.click(screen.getByText("Subclass"));
+    expect(screen.getByText("Choose Your Path")).toBeInTheDocument();
+
+    // Re-pick the same Warrior subclass to stay in-class (no state reset).
+    await user.click(screen.getByText("Call of the Slayer"));
+    await user.click(screen.getByRole("button", { name: /choose call of the slayer/i }));
+    // The forward step now is ancestry_pick, but the "Weapon" progress-bar
+    // label is still a visited step in maxStepReached — clicking it jumps there.
+    await user.click(screen.getByText("Weapon"));
+    expect(screen.getByText(/Choose Your Primary Weapon/i)).toBeInTheDocument();
+  });
+
   it("clicking the current or a future progress-bar label is a no-op", async () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);

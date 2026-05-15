@@ -103,4 +103,89 @@ describe("WizardProgress", () => {
     render(<WizardProgress steps={steps} currentStep="ancestry_pick" />);
     await user.click(screen.getByText("Class"));
   });
+
+  // ─── Forward jumps to previously-visited steps ───────────────
+  //
+  // When the player has been further into the wizard than they currently
+  // are (e.g. walked to Traits, went back to Subclass to revise), every
+  // step they've visited stays clickable — including the ones that are
+  // currently "ahead" of where they sit. maxReachedIndex tracks the high-
+  // water mark separately from currentStep.
+
+  it("makes previously-visited future steps clickable when maxReachedIndex is set", async () => {
+    const onStepClick = vi.fn();
+    const user = userEvent.setup();
+    // Player walked to Traits (idx 4), then back to Subclass (idx 1).
+    // currentStep is Subclass, max reached is Traits — so Ancestry/
+    // Community/Traits should all stay clickable.
+    render(
+      <WizardProgress
+        steps={steps}
+        currentStep="subclass_pick"
+        maxReachedIndex={4}
+        onStepClick={onStepClick}
+      />
+    );
+
+    await user.click(screen.getByText("Class"));
+    expect(onStepClick).toHaveBeenLastCalledWith("class_pick");
+
+    await user.click(screen.getByText("Ancestry"));
+    expect(onStepClick).toHaveBeenLastCalledWith("ancestry_pick");
+
+    await user.click(screen.getByText("Community"));
+    expect(onStepClick).toHaveBeenLastCalledWith("community_pick");
+
+    await user.click(screen.getByText("Traits"));
+    expect(onStepClick).toHaveBeenLastCalledWith("traits");
+  });
+
+  it("does NOT make never-visited future steps clickable", async () => {
+    const onStepClick = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <WizardProgress
+        steps={steps}
+        currentStep="subclass_pick"
+        maxReachedIndex={4} // up to Traits
+        onStepClick={onStepClick}
+      />
+    );
+
+    // Review is beyond max reached.
+    await user.click(screen.getByText("Review"));
+    expect(onStepClick).not.toHaveBeenCalledWith("review");
+  });
+
+  it("clicking the current step is still a no-op even when within maxReachedIndex", async () => {
+    const onStepClick = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <WizardProgress
+        steps={steps}
+        currentStep="subclass_pick"
+        maxReachedIndex={4}
+        onStepClick={onStepClick}
+      />
+    );
+
+    await user.click(screen.getByText("Subclass"));
+    expect(onStepClick).not.toHaveBeenCalled();
+  });
+
+  it("falls back to currentIndex as the max when maxReachedIndex is omitted", async () => {
+    // Backwards-compat: behaves like the original "backwards-only" mode.
+    const onStepClick = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <WizardProgress
+        steps={steps}
+        currentStep="subclass_pick"
+        onStepClick={onStepClick}
+      />
+    );
+
+    await user.click(screen.getByText("Ancestry")); // future, not clickable
+    expect(onStepClick).not.toHaveBeenCalled();
+  });
 });

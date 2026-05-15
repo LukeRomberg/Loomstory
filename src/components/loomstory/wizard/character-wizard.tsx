@@ -452,6 +452,10 @@ export function CharacterWizard({
   // Player-toggleable: when false, auto-open on step entry is suppressed. The `?`
   // button still works either way. Defaults to true for new-player onboarding.
   const [tipsEnabled, setTipsEnabled] = useState(true);
+  // High-water mark for forward navigation: any step at this index or below is
+  // considered "visited" and stays clickable in the progress bar even after
+  // back-navigation. Monotonically increases as the player goes forward.
+  const [maxStepReached, setMaxStepReached] = useState(0);
 
   // Visible steps (filtered by conditions). Equipment's secondary-weapon step uses
   // `showWhen.requiresState` keyed on `primaryWeaponIsTwoHanded`, so that bit feeds
@@ -671,7 +675,10 @@ export function CharacterWizard({
   }, [stepIndex]);
 
   const goForward = useCallback(() => {
-    if (stepIndex < visibleSteps.length - 1) setStepIndex((i) => i + 1);
+    if (stepIndex < visibleSteps.length - 1) {
+      setStepIndex((i) => i + 1);
+      setMaxStepReached((m) => Math.max(m, stepIndex + 1));
+    }
   }, [stepIndex, visibleSteps.length]);
 
   // Can continue validation
@@ -780,6 +787,7 @@ export function CharacterWizard({
   function handleClose() {
     setWizardState(createEmptyWizardState());
     setStepIndex(0);
+    setMaxStepReached(0);
     setShowHelp(false);
     setDismissedHelpSteps(new Set());
     setTipsEnabled(true);
@@ -804,9 +812,10 @@ export function CharacterWizard({
 
   return (
     <WizardModal open={open} onClose={handleClose} title="Create Character">
-      {/* Show-tips toggle: top-right of the header. Defaults to on; unchecking
-          suppresses the auto-opening help popup but leaves the `?` button working. */}
-      <label className="absolute top-3 right-12 flex items-center gap-2 cursor-pointer select-none text-xs text-muted-foreground hover:text-foreground transition-colors z-10">
+      {/* Show-tips toggle: right-aligned just above the progress bar so it
+          doesn't overlap the last step labels. Unchecking suppresses the
+          auto-opening help popup but leaves the `?` button working. */}
+      <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-muted-foreground hover:text-foreground transition-colors self-end mb-2">
         <Checkbox
           checked={tipsEnabled}
           onCheckedChange={(v) => setTipsEnabled(v === true)}
@@ -818,9 +827,14 @@ export function CharacterWizard({
       <WizardProgress
         steps={progressSteps}
         currentStep={currentStepKey}
+        maxReachedIndex={maxStepReached}
         onStepClick={(key) => {
           const idx = visibleSteps.indexOf(key);
-          if (idx >= 0 && idx < stepIndex) setStepIndex(idx);
+          // Any visited step is fair game (forward or backward), but not the
+          // current step itself and not steps the player has never reached.
+          if (idx >= 0 && idx !== stepIndex && idx <= maxStepReached) {
+            setStepIndex(idx);
+          }
         }}
       />
 
@@ -840,12 +854,13 @@ export function CharacterWizard({
             selectedId={wizardState.classId ?? undefined}
             onSelect={(id) => {
               const cls = classes.find((c) => c.id === id);
+              const isChange =
+                wizardState.classId !== null && wizardState.classId !== id;
               setWizardState((prev) => {
                 // Same-class re-pick preserves all downstream selections;
                 // a class CHANGE clears everything class-scoped (subclass,
                 // class-specific item, domain cards) to avoid silently
                 // saving stale ids from the previous class's pickers.
-                const isChange = prev.classId !== null && prev.classId !== id;
                 return {
                   ...prev,
                   classId: id,
@@ -858,6 +873,9 @@ export function CharacterWizard({
                   }),
                 };
               });
+              // On a class change, collapse the forward-jump high-water mark
+              // so the player has to walk subclass again before fast-jumping.
+              if (isChange) setMaxStepReached(stepIndex);
               goForward();
             }}
           />
