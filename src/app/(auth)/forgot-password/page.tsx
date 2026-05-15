@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
           Enter your email and we&apos;ll send you a reset link.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleReset}>
+      <form onSubmit={handleReset} className="flex flex-col gap-4">
         <CardContent className="space-y-4">
           {error && (
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
