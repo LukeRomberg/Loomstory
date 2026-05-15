@@ -34,7 +34,7 @@ export function WizardFooter({
       {onSkip && skipLabel && (
         <button
           onClick={onSkip}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
           {skipLabel}
         </button>

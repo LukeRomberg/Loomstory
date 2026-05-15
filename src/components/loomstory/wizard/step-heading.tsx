@@ -23,7 +23,7 @@ export function StepHeading({ title, subtitle, helpText, onHelpClick }: StepHead
             onClick={onHelpClick}
             aria-label="Show help"
             className={cn(
-              "size-5 rounded-full border text-xs flex items-center justify-center shrink-0 transition-colors",
+              "size-5 rounded-full border text-xs flex items-center justify-center shrink-0 transition-colors cursor-pointer",
               "border-muted-foreground/30 text-muted-foreground/50 hover:border-gold/60 hover:text-gold"
             )}
           >

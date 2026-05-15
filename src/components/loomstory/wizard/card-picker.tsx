@@ -395,7 +395,7 @@ function ExpandedCardContent({
             card.textColor ?? "text-gold",
             multi.disabled
               ? "opacity-40 cursor-not-allowed"
-              : "hover:brightness-110"
+              : "cursor-pointer hover:brightness-110"
           )}
         >
           {multi.picked ? "Remove" : "Add"} {card.title}
@@ -405,7 +405,7 @@ function ExpandedCardContent({
           onClick={onSelect}
           className={cn(
             "w-full rounded-lg py-3 text-lg font-heading tracking-wider",
-            "border transition-all duration-150 hover:brightness-110",
+            "border transition-all duration-150 cursor-pointer hover:brightness-110",
             "bg-black/40 border-current",
             card.textColor ?? "text-gold"
           )}
