@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit, Lora, JetBrains_Mono } from "next/font/google";
+import { Inter, Cinzel, Lora, JetBrains_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -10,7 +10,7 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const outfit = Outfit({
+const cinzel = Cinzel({
   variable: "--font-heading",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -40,6 +40,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Loomstory",
   description: "Weave sessions into story.",
+  icons: {
+    icon: "/brand/loomstory-monogram.png",
+    apple: "/brand/loomstory-monogram.png",
+  },
 };
 
 export default function RootLayout({
@@ -52,7 +56,7 @@ export default function RootLayout({
       <body
         className={cn(
           inter.variable,
-          outfit.variable,
+          cinzel.variable,
           lora.variable,
           jetbrainsMono.variable,
           "antialiased overflow-x-hidden"
