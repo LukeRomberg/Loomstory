@@ -53,3 +53,25 @@ export const DAGGERHEART_ANCESTRY_ICONS: Record<string, LucideIcon> = {
   Ribbet: Droplet,
   Simiah: Hand,
 };
+
+/**
+ * Public-URL paths to ancestry headshot artwork. Each entry corresponds to a
+ * file under `app/public/ancestries/`. The preview component prefers a
+ * headshot when present and falls back to DAGGERHEART_ANCESTRY_ICONS when not,
+ * so this map can grow in batches without breaking anything.
+ *
+ * As of 2026-05-15 only a subset of the 18 SRD ancestries have art;
+ * the missing ones are intentionally omitted from this map.
+ */
+export const DAGGERHEART_ANCESTRY_IMAGES: Record<string, string> = {
+  Clank: "/ancestries/Clank.png",
+  Drakona: "/ancestries/Drakona.png",
+  Dwarf: "/ancestries/Dwarf.png",
+  Fungril: "/ancestries/Fungril.png",
+  Galapa: "/ancestries/Galapa.png",
+  Giant: "/ancestries/Giant.png",
+  Goblin: "/ancestries/Goblin.png",
+  Halfling: "/ancestries/Halfling.png",
+  Ribbet: "/ancestries/Ribbet.png",
+  Simiah: "/ancestries/Simiah.png",
+};

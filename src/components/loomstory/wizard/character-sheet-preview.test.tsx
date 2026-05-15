@@ -238,6 +238,35 @@ describe("CharacterSheetPreview — Banner", () => {
     expect(within(banner).getByTestId("preview-ancestry-icon")).toBeInTheDocument();
   });
 
+  it("renders a headshot <img> for ancestries that have artwork (e.g. Clank)", () => {
+    // Clank is one of the 10 SRD ancestries with a PNG under /public/ancestries.
+    render(
+      <CharacterSheetPreview
+        {...defaultProps()}
+        wizardState={{ ...mockState, ancestryName: "Clank" }}
+      />
+    );
+    const banner = screen.getByTestId("preview-banner");
+    const icon = within(banner).getByTestId("preview-ancestry-icon");
+    // The img/next-image renders an underlying <img> tag with the PNG path.
+    expect(icon.tagName.toLowerCase()).toBe("img");
+    expect(icon.getAttribute("src") ?? "").toMatch(/Clank\.png/);
+  });
+
+  it("falls back to the Lucide icon for ancestries without artwork (e.g. Faerie)", () => {
+    // Faerie has no PNG yet — fallback path must still render the icon slot.
+    render(
+      <CharacterSheetPreview
+        {...defaultProps()}
+        wizardState={{ ...mockState, ancestryName: "Faerie" }}
+      />
+    );
+    const banner = screen.getByTestId("preview-banner");
+    const icon = within(banner).getByTestId("preview-ancestry-icon");
+    // The fallback renders an SVG element (Lucide), not an <img>.
+    expect(icon.tagName.toLowerCase()).not.toBe("img");
+  });
+
   it("renders the name input pre-filled from wizard state", () => {
     render(<CharacterSheetPreview {...defaultProps()} />);
     const input = screen.getByPlaceholderText(/name your hero/i);

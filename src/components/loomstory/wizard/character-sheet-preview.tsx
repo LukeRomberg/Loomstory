@@ -3,7 +3,11 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
-import { DAGGERHEART_ANCESTRY_ICONS } from "@/lib/character/configs/daggerheart-ancestry-icons";
+import Image from "next/image";
+import {
+  DAGGERHEART_ANCESTRY_ICONS,
+  DAGGERHEART_ANCESTRY_IMAGES,
+} from "@/lib/character/configs/daggerheart-ancestry-icons";
 import type {
   WizardState,
   CompendiumClass,
@@ -140,8 +144,10 @@ export function CharacterSheetPreview({
   const armorThresholds = armorProps.thresholds as string | undefined;
 
   const ClassIcon = classTheme?.icon;
-  const AncestryIcon = wizardState.ancestryName
-    ? DAGGERHEART_ANCESTRY_ICONS[wizardState.ancestryName]
+  const ancestryName = wizardState.ancestryName;
+  const ancestryImage = ancestryName ? DAGGERHEART_ANCESTRY_IMAGES[ancestryName] : undefined;
+  const AncestryIcon = ancestryName
+    ? DAGGERHEART_ANCESTRY_ICONS[ancestryName]
     : undefined;
 
   const tagline = buildTagline(
@@ -200,7 +206,17 @@ export function CharacterSheetPreview({
               "w-full max-w-md placeholder:text-muted-foreground/50"
             )}
           />
-          {AncestryIcon ? (
+          {ancestryImage && ancestryName ? (
+            <Image
+              data-testid="preview-ancestry-icon"
+              src={ancestryImage}
+              alt={`${ancestryName} ancestry portrait`}
+              width={112}
+              height={112}
+              className="size-14 shrink-0 rounded-full object-cover ring-2 ring-current"
+              priority
+            />
+          ) : AncestryIcon ? (
             <AncestryIcon
               data-testid="preview-ancestry-icon"
               className={cn("size-14 shrink-0", classTheme?.textColor ?? "text-gold")}
