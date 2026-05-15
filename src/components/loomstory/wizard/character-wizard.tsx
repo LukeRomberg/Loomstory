@@ -796,7 +796,14 @@ export function CharacterWizard({
 
   return (
     <WizardModal open={open} onClose={handleClose} title="Create Character">
-      <WizardProgress steps={progressSteps} currentStep={currentStepKey} />
+      <WizardProgress
+        steps={progressSteps}
+        currentStep={currentStepKey}
+        onStepClick={(key) => {
+          const idx = visibleSteps.indexOf(key);
+          if (idx >= 0 && idx < stepIndex) setStepIndex(idx);
+        }}
+      />
 
       {/* ── Class pick step ── */}
       {currentStepKey === "class_pick" && currentStep && (

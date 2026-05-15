@@ -10,9 +10,16 @@ export interface WizardProgressStep {
 interface WizardProgressProps {
   steps: WizardProgressStep[];
   currentStep: string;
+  /**
+   * Optional handler invoked when a *completed* step label is clicked.
+   * Current and future step labels stay non-interactive — jumping forward
+   * could land on a step whose upstream state isn't satisfied. Omit to
+   * disable click-to-jump entirely.
+   */
+  onStepClick?: (key: string) => void;
 }
 
-export function WizardProgress({ steps, currentStep }: WizardProgressProps) {
+export function WizardProgress({ steps, currentStep, onStepClick }: WizardProgressProps) {
   const currentIndex = Math.max(
     0,
     steps.findIndex((s) => s.key === currentStep)
@@ -33,6 +40,16 @@ export function WizardProgress({ steps, currentStep }: WizardProgressProps) {
         {steps.map((step, i) => {
           const isDone = i < currentIndex;
           const isCurrent = i === currentIndex;
+          const isClickable = isDone && onStepClick != null;
+          const labelClass = cn(
+            "text-[9px] font-heading uppercase tracking-wider whitespace-nowrap transition-colors",
+            isCurrent
+              ? "text-gold"
+              : isDone
+                ? "text-muted-foreground/60"
+                : "text-muted-foreground/30",
+            isClickable && "cursor-pointer hover:text-gold"
+          );
           return (
             <div key={step.key} className="flex items-center flex-1 last:flex-none">
               <div className="flex flex-col items-center gap-1 shrink-0">
@@ -46,18 +63,17 @@ export function WizardProgress({ steps, currentStep }: WizardProgressProps) {
                         : "bg-rune"
                   )}
                 />
-                <span
-                  className={cn(
-                    "text-[9px] font-heading uppercase tracking-wider whitespace-nowrap transition-colors",
-                    isCurrent
-                      ? "text-gold"
-                      : isDone
-                        ? "text-muted-foreground/60"
-                        : "text-muted-foreground/30"
-                  )}
-                >
-                  {step.label}
-                </span>
+                {isClickable ? (
+                  <button
+                    type="button"
+                    onClick={() => onStepClick(step.key)}
+                    className={cn(labelClass, "bg-transparent border-0 p-0")}
+                  >
+                    {step.label}
+                  </button>
+                ) : (
+                  <span className={labelClass}>{step.label}</span>
+                )}
               </div>
               {i < steps.length - 1 && (
                 <div

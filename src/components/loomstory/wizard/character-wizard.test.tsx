@@ -595,6 +595,37 @@ describe("CharacterWizard", () => {
     expect(screen.getByText("Back")).toBeInTheDocument();
   });
 
+  it("clicking a completed progress-bar label jumps the wizard to that step", async () => {
+    // Without this shortcut, returning to Class from Ancestry takes 2 Back
+    // clicks; with it, one click on the "Class" label in the progress bar.
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Walk to ancestry_pick.
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+    expect(screen.getByText("Choose Your Ancestry")).toBeInTheDocument();
+
+    // Click the "Class" label in the progress bar — should land back on class_pick.
+    await user.click(screen.getByText("Class"));
+    expect(screen.getByText("Choose Your Class")).toBeInTheDocument();
+  });
+
+  it("clicking the current or a future progress-bar label is a no-op", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Currently on class_pick. Clicking "Class" (current) or "Subclass" (future)
+    // must not change the step.
+    await user.click(screen.getByText("Class"));
+    expect(screen.getByText("Choose Your Class")).toBeInTheDocument();
+
+    await user.click(screen.getByText("Subclass"));
+    expect(screen.getByText("Choose Your Class")).toBeInTheDocument();
+  });
+
   it("navigates back to class pick when back is clicked from subclass step", async () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);
