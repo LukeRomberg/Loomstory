@@ -38,7 +38,15 @@ const mockClasses = [
     parent_class_id: null,
     system_id: "sys-dh",
     hp_die: null,
-    data: { domains: ["Sage", "Arcana"], evasion: 10, hp_slots: 6, foundation_features: ["Beastform"] },
+    // Druid is a spellcaster (spellcast_trait set), so the magic-weapon filter
+    // lets them see both physical and magic weapons in the picker.
+    data: {
+      domains: ["Sage", "Arcana"],
+      evasion: 10,
+      hp_slots: 6,
+      spellcast_trait: "Instinct",
+      foundation_features: ["Beastform"],
+    },
     source: "Daggerheart SRD",
   },
 ];
@@ -231,6 +239,24 @@ const mockPrimaryWeapons = [
     type: "weapon",
     description: "Tier 2 primary.",
     properties: { tier: 2, category: "Primary", type: "One-Handed", damage: "d8+3 phy" },
+    source: "Daggerheart SRD",
+  },
+  // Tier-1 magic primary — must be filtered out for Warrior/Guardian (no
+  // spellcast_trait), visible for spellcaster classes.
+  {
+    id: "item-hand-runes",
+    name: "Hand Runes",
+    type: "weapon",
+    description: "Tier 1 magic one-handed weapon.",
+    properties: {
+      tier: 1,
+      category: "Primary",
+      type: "One-Handed",
+      primary_trait: "Instinct",
+      damage: "d10 mag",
+      damage_type: "magic",
+      range: "Very Close",
+    },
     source: "Daggerheart SRD",
   },
 ];
@@ -908,15 +934,15 @@ describe("CharacterWizard", () => {
     await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
   }
 
-  it("weapon_primary_pick step renders Tier 1 primary weapons only", async () => {
+  it("weapon_primary_pick step renders Tier 1 primary weapons only (and hides magic for non-spellcaster classes)", async () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);
-    await walkToEquipmentStart(user);
+    await walkToEquipmentStart(user); // picks Warrior → no spellcast_trait
 
     // Step heading
     expect(screen.getByText(/Choose Your Primary Weapon|Pick Your Primary Weapon/i)).toBeInTheDocument();
 
-    // Both Tier 1 primaries appear
+    // Both Tier 1 physical primaries appear
     expect(screen.getByText("Greatsword")).toBeInTheDocument();
     expect(screen.getByText("Broadsword")).toBeInTheDocument();
 
@@ -925,6 +951,56 @@ describe("CharacterWizard", () => {
     // Secondary weapons must not appear on the primary step
     expect(screen.queryByText("Shortsword")).not.toBeInTheDocument();
     expect(screen.queryByText("Round Shield")).not.toBeInTheDocument();
+    // Magic weapons must be filtered out for Warrior (no spellcast_trait)
+    expect(screen.queryByText("Hand Runes")).not.toBeInTheDocument();
+  });
+
+  it("weapon_primary_pick step shows magic weapons for spellcaster classes (Druid)", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Walk to weapon_primary_pick via Druid (spellcast_trait = "Instinct").
+    // Druid only has one mock subclass (Warden of the Elements), so pick it.
+    await user.click(screen.getByText("Druid"));
+    await user.click(screen.getByRole("button", { name: /choose druid/i }));
+    await user.click(screen.getByText("Warden of the Elements"));
+    await user.click(screen.getByRole("button", { name: /choose warden of the elements/i }));
+    await user.click(screen.getByText("Katari"));
+    await user.click(screen.getByRole("button", { name: /choose katari/i }));
+    await user.click(screen.getByText("Wanderborne"));
+    await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
+
+    // Both physical AND magic weapons appear for spellcasters
+    expect(screen.getByText("Greatsword")).toBeInTheDocument();
+    expect(screen.getByText("Broadsword")).toBeInTheDocument();
+    expect(screen.getByText("Hand Runes")).toBeInTheDocument();
+  });
+
+  it("magic weapons render with a violet gradient and a 'Magic' badge (visual distinction)", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Druid path to reach the picker with magic weapons visible.
+    await user.click(screen.getByText("Druid"));
+    await user.click(screen.getByRole("button", { name: /choose druid/i }));
+    await user.click(screen.getByText("Warden of the Elements"));
+    await user.click(screen.getByRole("button", { name: /choose warden of the elements/i }));
+    await user.click(screen.getByText("Katari"));
+    await user.click(screen.getByRole("button", { name: /choose katari/i }));
+    await user.click(screen.getByText("Wanderborne"));
+    await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
+
+    // Magic weapon card has a violet gradient (overrides class theme).
+    const runesCard = screen.getByText("Hand Runes").closest("[data-card-id]");
+    expect(runesCard?.className).toContain("from-violet-950");
+
+    // Physical weapon card keeps the class theme — Druid is from-green-950.
+    const greatswordCard = screen.getByText("Greatsword").closest("[data-card-id]");
+    expect(greatswordCard?.className).toContain("from-green-950");
+    expect(greatswordCard?.className).not.toContain("from-violet-950");
+
+    // Magic weapon shows a "Magic" badge inside its card (compact view).
+    expect(within(runesCard as HTMLElement).getByText("Magic")).toBeInTheDocument();
   });
 
   it("picking a Two-Handed primary skips the secondary step and lands on armor", async () => {

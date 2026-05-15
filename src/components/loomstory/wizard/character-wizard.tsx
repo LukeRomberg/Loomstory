@@ -254,8 +254,21 @@ function heritageToPickerCard(
  * the player needs to decide: damage dice, range, trait, and the special feature
  * text (Reliable, Paired, Protective, etc.).
  */
+/** Arcane violet palette used by magic-weapon picker cards. Overrides the
+ *  class theme so spellcasters can spot magic weapons at a glance. */
+const MAGIC_WEAPON_THEME: ClassTheme = {
+  gradient: "from-violet-950 via-purple-900 to-violet-950",
+  borderColor: "border-violet-500",
+  textColor: "text-violet-200",
+  icon: null as unknown as ClassTheme["icon"],
+  domains: [],
+};
+
 function weaponToPickerCard(item: CompendiumItem, theme?: ClassTheme): PickerCard {
   const props = (item.properties ?? {}) as Record<string, unknown>;
+  const isMagic = props.damage_type === "magic";
+  const cardTheme = isMagic ? MAGIC_WEAPON_THEME : theme;
+
   const stats: { label: string; value: string }[] = [];
   if (props.damage) stats.push({ label: "Damage", value: String(props.damage) });
   if (props.range) stats.push({ label: "Range", value: String(props.range) });
@@ -267,15 +280,20 @@ function weaponToPickerCard(item: CompendiumItem, theme?: ClassTheme): PickerCar
     ? [{ label: "Feature", features: [{ name: stripPrefix(featureText, ""), description: "" }] }]
     : undefined;
 
+  const badges: PickerCard["badges"] = isMagic
+    ? [{ label: "Magic", className: "bg-violet-900/60 text-violet-100 border border-violet-500/40" }]
+    : undefined;
+
   return {
     id: item.id,
     title: item.name,
     description: item.description ?? "",
+    badges,
     stats,
     featureGroups,
-    gradient: theme?.gradient,
-    borderColor: theme?.borderColor,
-    textColor: theme?.textColor,
+    gradient: cardTheme?.gradient,
+    borderColor: cardTheme?.borderColor,
+    textColor: cardTheme?.textColor,
   };
 }
 
@@ -558,13 +576,23 @@ export function CharacterWizard({
 
   // Narrow weapons + armor to Tier 1 by category. The compendium has tiers 1–4
   // for both, but step 5 of the SRD only allows Tier 1 selections at level 1.
+  // Magic weapons require a spellcast trait per the SRD, so we hide them
+  // entirely for classes without one (Warrior + Guardian).
+  const pickedClass = classes.find((c) => c.id === wizardState.classId);
+  const canUseMagic =
+    (pickedClass?.data as Record<string, unknown> | undefined)?.spellcast_trait != null;
+  const isPhysicalOrAllowedMagic = (w: CompendiumItem) => {
+    if (canUseMagic) return true;
+    const p = (w.properties ?? {}) as Record<string, unknown>;
+    return p.damage_type !== "magic";
+  };
   const primaryWeapons = weaponsPrimaryAll.filter((w) => {
     const p = (w.properties ?? {}) as Record<string, unknown>;
-    return p.tier === 1 && p.category === "Primary";
+    return p.tier === 1 && p.category === "Primary" && isPhysicalOrAllowedMagic(w);
   });
   const secondaryWeapons = weaponsSecondaryAll.filter((w) => {
     const p = (w.properties ?? {}) as Record<string, unknown>;
-    return p.tier === 1 && p.category === "Secondary";
+    return p.tier === 1 && p.category === "Secondary" && isPhysicalOrAllowedMagic(w);
   });
   const tier1Armor = armorsAll.filter(
     (a) => ((a.properties ?? {}) as Record<string, unknown>).tier === 1
