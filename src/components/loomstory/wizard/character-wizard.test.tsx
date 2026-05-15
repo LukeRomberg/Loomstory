@@ -64,6 +64,17 @@ const mockSubclasses = [
     data: {},
     source: "Daggerheart SRD",
   },
+  // Druid subclasses — used by the class-change stale-state regression test below.
+  {
+    id: "sub-elements",
+    name: "Warden of the Elements",
+    is_subclass: true,
+    parent_class_id: "cls-druid",
+    system_id: "sys-dh",
+    hp_die: null,
+    data: {},
+    source: "Daggerheart SRD",
+  },
 ];
 
 const mockClassFeatures = [
@@ -565,6 +576,65 @@ describe("CharacterWizard", () => {
     await user.click(screen.getByRole("button", { name: /choose warrior/i }));
     await user.click(screen.getByText("Back"));
     expect(screen.getByText("Choose Your Class")).toBeInTheDocument();
+  });
+
+  it("switching class clears the previous class's class_item selection", async () => {
+    // Regression guard: classItemName is class-scoped (Warrior's "drawing of a
+    // lover" vs Druid's "small bag of rocks and bones"). Picking a new class
+    // must clear the previous selection — otherwise a Druid sheet could be
+    // saved with a Warrior item attached. Without the fix, the Druid
+    // class_item step would show the previous Warrior pick as data-selected
+    // even though it doesn't appear in the Druid picker.
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Pick Warrior + a Warrior class item, then back-navigate to class_pick.
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+    await user.click(screen.getByText("Katari"));
+    await user.click(screen.getByRole("button", { name: /choose katari/i }));
+    await user.click(screen.getByText("Wanderborne"));
+    await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
+    await user.click(screen.getByText("Greatsword"));
+    await user.click(screen.getByRole("button", { name: /choose greatsword/i }));
+    await user.click(screen.getByText("Gambeson Armor"));
+    await user.click(screen.getByRole("button", { name: /choose gambeson armor/i }));
+    await user.click(screen.getByText("Minor Health Potion"));
+    await user.click(screen.getByRole("button", { name: /choose minor health potion/i }));
+    await user.click(screen.getByText("The drawing of a lover"));
+    await user.click(screen.getByRole("button", { name: /choose the drawing of a lover/i }));
+
+    // 8 backs: class_item (idx 8) → potion → armor → weapon_primary → community → ancestry → subclass → class
+    for (let i = 0; i < 8; i++) {
+      await user.click(screen.getByText("Back"));
+    }
+    expect(screen.getByText("Choose Your Class")).toBeInTheDocument();
+
+    // Switch to Druid.
+    await user.click(screen.getByText("Druid"));
+    await user.click(screen.getByRole("button", { name: /choose druid/i }));
+    await user.click(screen.getByText("Warden of the Elements"));
+    await user.click(screen.getByRole("button", { name: /choose warden of the elements/i }));
+
+    // Walk forward through the same generic steps to land back on class_item.
+    await user.click(screen.getByText("Katari"));
+    await user.click(screen.getByRole("button", { name: /choose katari/i }));
+    await user.click(screen.getByText("Wanderborne"));
+    await user.click(screen.getByRole("button", { name: /choose wanderborne/i }));
+    await user.click(screen.getByText("Greatsword"));
+    await user.click(screen.getByRole("button", { name: /choose greatsword/i }));
+    await user.click(screen.getByText("Gambeson Armor"));
+    await user.click(screen.getByRole("button", { name: /choose gambeson armor/i }));
+    await user.click(screen.getByText("Minor Health Potion"));
+    await user.click(screen.getByRole("button", { name: /choose minor health potion/i }));
+
+    // Druid's class_item options are visible — Warrior's are not, and no card is selected yet.
+    expect(screen.getByText("A small bag of rocks and bones")).toBeInTheDocument();
+    expect(screen.queryByText("The drawing of a lover")).not.toBeInTheDocument();
+    const selectedCards = document.querySelectorAll("[data-card-id][data-selected]");
+    expect(selectedCards).toHaveLength(0);
   });
 
   it("calls onClose when close button is clicked", async () => {

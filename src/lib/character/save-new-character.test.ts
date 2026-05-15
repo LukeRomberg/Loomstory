@@ -778,4 +778,165 @@ describe("saveNewCharacter", () => {
     const rows = (abilityInserts[0] ?? []) as Array<{ ability_type: string }>;
     expect(rows.filter((r) => r.ability_type === "domain_card")).toHaveLength(0);
   });
+
+  // ─── Class + subclass features persistence ─────────────────
+  //
+  // Regression guard: the wizard's review screen shows Hope Feature + Class
+  // Feature + Subclass Foundation Feature, but the original save call was only
+  // passing ancestry/community/domain rows — leaving the saved character
+  // missing 3 ability rows. These tests fail without the classFeatures /
+  // subclassFeatures param wiring.
+
+  it("inserts a character_abilities row per class feature with ability_ref_id and ability_type='class_feature'", async () => {
+    const classFeatures = [
+      {
+        id: "feat-warrior-no-mercy",
+        name: "Warrior: No Mercy",
+        ability_type: "class_feature",
+        description: "Spend 3 Hope to gain a +1 bonus to attack rolls.",
+        level: null,
+        classes: ["Warrior"],
+        data: { feature_category: "hope_feature" },
+      },
+      {
+        id: "feat-warrior-aoo",
+        name: "Warrior: Attack of Opportunity",
+        ability_type: "class_feature",
+        description: "When an adversary within Melee range tries to leave...",
+        level: null,
+        classes: ["Warrior"],
+        data: { feature_category: "class_feature" },
+      },
+    ];
+
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      classFeatures,
+    });
+
+    const abilityInserts = mockSupabase._insertCalls.character_abilities ?? [];
+    const rows = (abilityInserts[0] ?? []) as Array<{ ability_type: string; ability_ref_id: string }>;
+    const classRows = rows.filter((r) => r.ability_type === "class_feature");
+    expect(classRows).toHaveLength(2);
+    expect(classRows.map((r) => r.ability_ref_id).sort()).toEqual(
+      ["feat-warrior-aoo", "feat-warrior-no-mercy"].sort()
+    );
+  });
+
+  it("inserts a character_abilities row per subclass foundation feature", async () => {
+    const subclassFeatures = [
+      {
+        id: "feat-slayer-weapon-master",
+        name: "Call of the Slayer: Weapon Specialist",
+        ability_type: "subclass_feature",
+        description: "You gain a bonus to weapon attacks.",
+        level: null,
+        classes: ["Warrior"],
+        data: { subclass: "Call of the Slayer", feature_category: "foundation_feature" },
+      },
+    ];
+
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      subclassFeatures,
+    });
+
+    const abilityInserts = mockSupabase._insertCalls.character_abilities ?? [];
+    const rows = (abilityInserts[0] ?? []) as Array<{ ability_type: string; ability_ref_id: string }>;
+    const subRows = rows.filter((r) => r.ability_type === "subclass_feature");
+    expect(subRows).toHaveLength(1);
+    expect(subRows[0].ability_ref_id).toBe("feat-slayer-weapon-master");
+  });
+
+  it("batches class + subclass features into the same character_abilities insert as heritage + domain", async () => {
+    const classFeatures = [
+      {
+        id: "feat-warrior-hope",
+        name: "Warrior: No Mercy",
+        ability_type: "class_feature",
+        description: "...",
+        level: null,
+        classes: ["Warrior"],
+        data: { feature_category: "hope_feature" },
+      },
+    ];
+    const subclassFeatures = [
+      {
+        id: "feat-slayer-foundation",
+        name: "Call of the Slayer: Weapon Specialist",
+        ability_type: "subclass_feature",
+        description: "...",
+        level: null,
+        classes: ["Warrior"],
+        data: { subclass: "Call of the Slayer", feature_category: "foundation_feature" },
+      },
+    ];
+
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      wizardState: createMockState(),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+      ancestryFeatures: mockKatariFeatures,
+      communityFeatures: mockWanderborneFeatures,
+      classFeatures,
+      subclassFeatures,
+    });
+
+    // Single batched insert containing all four feature buckets
+    const abilityInserts = mockSupabase._insertCalls.character_abilities ?? [];
+    expect(abilityInserts).toHaveLength(1);
+    const rows = abilityInserts[0] as Array<{ ability_type: string }>;
+    // 2 ancestry + 1 community + 1 class + 1 subclass = 5
+    expect(rows).toHaveLength(5);
+  });
+
+  // ─── Experience slug collision guard ───────────────────────
+  //
+  // character_stats has UNIQUE(character_id, stat_key). Two experience names
+  // that slugify to the same value would crash the batch with a constraint
+  // violation. This guards against the regression.
+
+  it("disambiguates experiences whose names slugify to the same stat_key", async () => {
+    await saveNewCharacter({
+      supabase: mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient,
+      campaignId: "campaign-1",
+      systemId: "system-dh",
+      userId: "user-1",
+      // Both slugify to `exp_world_traveler` without disambiguation.
+      wizardState: createMockState({
+        experiences: [{ name: "World-Traveler" }, { name: "World Traveler" }],
+      }),
+      selectedClass: mockWarrior,
+      selectedSubclass: mockSlayer,
+    });
+
+    const statRows = (mockSupabase._insertCalls.character_stats?.[0] ?? []) as Array<{
+      stat_key: string;
+      data: { label: string };
+    }>;
+    const expRows = statRows.filter((r) => r.stat_key.startsWith("exp_"));
+    expect(expRows).toHaveLength(2);
+    const keys = expRows.map((r) => r.stat_key).sort();
+    // Both keys distinct, labels preserved verbatim.
+    expect(new Set(keys).size).toBe(2);
+    expect(expRows.map((r) => r.data.label).sort()).toEqual(
+      ["World Traveler", "World-Traveler"].sort()
+    );
+  });
 });

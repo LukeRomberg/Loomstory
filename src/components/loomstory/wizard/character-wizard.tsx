@@ -695,6 +695,8 @@ export function CharacterWizard({
         selectedSubclass,
         ancestryFeatures: selectedAncestryFeatures,
         communityFeatures: selectedCommunityFeatures,
+        classFeatures: selectedClassFeatures,
+        subclassFeatures: selectedSubclassFoundationFeatures,
         primaryWeapon: selectedPrimaryWeapon,
         secondaryWeapon: selectedSecondaryWeapon,
         armor: selectedArmor,
@@ -762,14 +764,24 @@ export function CharacterWizard({
             selectedId={wizardState.classId ?? undefined}
             onSelect={(id) => {
               const cls = classes.find((c) => c.id === id);
-              setWizardState((prev) => ({
-                ...prev,
-                classId: id,
-                className: cls?.name ?? null,
-                // Reset subclass when class changes
-                subclassId: null,
-                subclassName: null,
-              }));
+              setWizardState((prev) => {
+                // Same-class re-pick preserves all downstream selections;
+                // a class CHANGE clears everything class-scoped (subclass,
+                // class-specific item, domain cards) to avoid silently
+                // saving stale ids from the previous class's pickers.
+                const isChange = prev.classId !== null && prev.classId !== id;
+                return {
+                  ...prev,
+                  classId: id,
+                  className: cls?.name ?? null,
+                  ...(isChange && {
+                    subclassId: null,
+                    subclassName: null,
+                    classItemName: null,
+                    selections: { ...prev.selections, domain_cards_pick: [] },
+                  }),
+                };
+              });
               goForward();
             }}
           />

@@ -18,6 +18,10 @@ interface SaveParams {
   ancestryFeatures?: CompendiumAbility[];
   /** Community feature row(s) for the chosen community (usually 1). */
   communityFeatures?: CompendiumAbility[];
+  /** Class features for the chosen class (Hope Feature + Class Feature — usually 2). */
+  classFeatures?: CompendiumAbility[];
+  /** Level-1 foundation feature(s) for the chosen subclass (usually 1). */
+  subclassFeatures?: CompendiumAbility[];
   /** Level-1 domain cards picked at the Cards step (SRD step 8). Each writes one character_abilities row. */
   domainCards?: CompendiumAbility[];
   /** Tier 1 primary weapon picked in the wizard. */
@@ -58,6 +62,8 @@ export async function saveNewCharacter({
   selectedSubclass,
   ancestryFeatures = [],
   communityFeatures = [],
+  classFeatures = [],
+  subclassFeatures = [],
   domainCards = [],
   primaryWeapon = null,
   secondaryWeapon = null,
@@ -121,15 +127,29 @@ export async function saveNewCharacter({
       data: {},
     }));
 
+    // Slugify each experience name and disambiguate on collision.
+    // "World-Traveler" and "World Traveler" both slugify to `exp_world_traveler`
+    // — without `_2` / `_3` suffixes, the UNIQUE(character_id, stat_key)
+    // constraint would reject the second row and roll the whole save back.
+    const seenSlugs = new Set<string>();
     const experienceRows = (wizardState.experiences ?? [])
       .map((e) => e.name.trim())
       .filter((name) => name.length > 0)
-      .map((name) => ({
-        character_id: characterId,
-        stat_key: `exp_${slugifyExperience(name)}`,
-        value: 2,
-        data: { label: name },
-      }));
+      .map((name) => {
+        const base = `exp_${slugifyExperience(name)}`;
+        let key = base;
+        let suffix = 2;
+        while (seenSlugs.has(key)) {
+          key = `${base}_${suffix++}`;
+        }
+        seenSlugs.add(key);
+        return {
+          character_id: characterId,
+          stat_key: key,
+          value: 2,
+          data: { label: name },
+        };
+      });
 
     const statRows = [...traitRows, ...experienceRows];
 
@@ -163,11 +183,14 @@ export async function saveNewCharacter({
       ]);
     if (resourceError) throw resourceError;
 
-    // 5. Insert character_abilities for ancestry + community features + domain cards
-    // (one row per feature/card, all batched into a single insert call).
+    // 5. Insert character_abilities for ancestry + community + class + subclass
+    // features + domain cards (one row per feature/card, all batched into a
+    // single insert call).
     const abilityRows = [
       ...ancestryFeatures.map((f) => compendiumAbilityToCharacterRow(characterId, f)),
       ...communityFeatures.map((f) => compendiumAbilityToCharacterRow(characterId, f)),
+      ...classFeatures.map((f) => compendiumAbilityToCharacterRow(characterId, f)),
+      ...subclassFeatures.map((f) => compendiumAbilityToCharacterRow(characterId, f)),
       ...domainCards.map((c) => compendiumAbilityToCharacterRow(characterId, c)),
     ];
     if (abilityRows.length > 0) {
