@@ -104,6 +104,66 @@ describe("CharacterWizard help popup integration", () => {
     expect(screen.getByTestId("help-popup")).toBeInTheDocument();
   });
 
+  // ─── Tips toggle ─────────────────────────────────────────────
+  //
+  // A "Show tips" checkbox at the top of the wizard lets players disable the
+  // auto-opening help popup. Manual `?` clicks still work either way.
+
+  it("Show tips checkbox is rendered and checked by default", () => {
+    render(<CharacterWizard {...defaultProps} />);
+    const checkbox = screen.getByRole("checkbox", { name: /show tips/i });
+    expect(checkbox).toBeInTheDocument();
+    expect(checkbox).toBeChecked();
+  });
+
+  it("unchecking Show tips prevents auto-opening on subsequent steps", () => {
+    render(<CharacterWizard {...defaultProps} />);
+
+    // First step popup is already open. Dismiss it.
+    dismissHelpPopup();
+
+    // Now disable tips.
+    fireEvent.click(screen.getByRole("checkbox", { name: /show tips/i }));
+
+    // Advance to subclass — popup must NOT auto-open with tips off.
+    fireEvent.click(screen.getByText("Warrior"));
+    fireEvent.click(screen.getByRole("button", { name: /choose warrior/i }));
+    expect(screen.queryByTestId("help-popup")).not.toBeInTheDocument();
+  });
+
+  it("manual ? click still opens the popup even with tips disabled", () => {
+    render(<CharacterWizard {...defaultProps} />);
+
+    dismissHelpPopup();
+    fireEvent.click(screen.getByRole("checkbox", { name: /show tips/i })); // off
+    fireEvent.click(screen.getByText("Warrior"));
+    fireEvent.click(screen.getByRole("button", { name: /choose warrior/i }));
+    // No auto-popup
+    expect(screen.queryByTestId("help-popup")).not.toBeInTheDocument();
+
+    // Manual ? click still works
+    fireEvent.click(screen.getByRole("button", { name: /show help/i }));
+    expect(screen.getByTestId("help-popup")).toBeInTheDocument();
+  });
+
+  it("re-checking Show tips on a step that hasn't been dismissed re-opens the popup", () => {
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Dismiss the class_pick popup, then turn tips off.
+    dismissHelpPopup();
+    const checkbox = screen.getByRole("checkbox", { name: /show tips/i });
+    fireEvent.click(checkbox);
+
+    // Advance to subclass — no auto-popup because tips are off.
+    fireEvent.click(screen.getByText("Warrior"));
+    fireEvent.click(screen.getByRole("button", { name: /choose warrior/i }));
+    expect(screen.queryByTestId("help-popup")).not.toBeInTheDocument();
+
+    // Re-enable tips on the same (un-dismissed) step — popup auto-opens now.
+    fireEvent.click(checkbox);
+    expect(screen.getByTestId("help-popup")).toBeInTheDocument();
+  });
+
   it("does not auto-open when navigating back to a previously dismissed step", () => {
     render(<CharacterWizard {...defaultProps} />);
 

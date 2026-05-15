@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { WizardModal } from "./wizard-modal";
 import { WizardProgress } from "./wizard-progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import { StepHeading } from "./step-heading";
 import { HelpPopup } from "./help-popup";
 import { BackButton } from "./back-button";
@@ -448,6 +449,9 @@ export function CharacterWizard({
   // life of the modal. Clicking the ? icon re-opens manually without resetting the set.
   const [showHelp, setShowHelp] = useState(false);
   const [dismissedHelpSteps, setDismissedHelpSteps] = useState<Set<string>>(() => new Set());
+  // Player-toggleable: when false, auto-open on step entry is suppressed. The `?`
+  // button still works either way. Defaults to true for new-player onboarding.
+  const [tipsEnabled, setTipsEnabled] = useState(true);
 
   // Visible steps (filtered by conditions). Equipment's secondary-weapon step uses
   // `showWhen.requiresState` keyed on `primaryWeaponIsTwoHanded`, so that bit feeds
@@ -574,12 +578,15 @@ export function CharacterWizard({
   // Going back to a previously-dismissed step does NOT re-fire because the `if` guard
   // short-circuits when the step is already in dismissedHelpSteps — so it's safe to
   // include both deps for eslint compliance without changing observable behavior.
+  // Players who don't want auto-tips can turn `tipsEnabled` off; the `?` button still
+  // opens the popup manually either way.
   useEffect(() => {
+    if (!tipsEnabled) return;
     const step = wizardConfig.steps[currentStepKey];
     if (step?.helpText && !dismissedHelpSteps.has(currentStepKey)) {
       setShowHelp(true);
     }
-  }, [currentStepKey, wizardConfig.steps, dismissedHelpSteps]);
+  }, [currentStepKey, wizardConfig.steps, dismissedHelpSteps, tipsEnabled]);
 
   const classes = classesRaw as unknown as CompendiumClass[];
   const subclasses = subclassesRaw as unknown as CompendiumClass[];
@@ -775,6 +782,7 @@ export function CharacterWizard({
     setStepIndex(0);
     setShowHelp(false);
     setDismissedHelpSteps(new Set());
+    setTipsEnabled(true);
     onClose();
   }
 
@@ -796,6 +804,17 @@ export function CharacterWizard({
 
   return (
     <WizardModal open={open} onClose={handleClose} title="Create Character">
+      {/* Show-tips toggle: top-right of the header. Defaults to on; unchecking
+          suppresses the auto-opening help popup but leaves the `?` button working. */}
+      <label className="absolute top-3 right-12 flex items-center gap-2 cursor-pointer select-none text-xs text-muted-foreground hover:text-foreground transition-colors z-10">
+        <Checkbox
+          checked={tipsEnabled}
+          onCheckedChange={(v) => setTipsEnabled(v === true)}
+          aria-label="Show tips"
+        />
+        <span className="font-heading uppercase tracking-wider">Show tips</span>
+      </label>
+
       <WizardProgress
         steps={progressSteps}
         currentStep={currentStepKey}
