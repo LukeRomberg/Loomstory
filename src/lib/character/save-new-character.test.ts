@@ -10,6 +10,7 @@ function createMockState(overrides: Partial<WizardState> = {}): WizardState {
     subclassId: "subclass-slayer-id",
     subclassName: "Call of the Slayer",
     ancestryName: "Katari",
+    ancestryVariant: "female",
     communityName: "Wanderborne",
     statValues: { agility: 2, strength: 1, finesse: 1, instinct: 0, presence: 0, knowledge: -1 },
     experiences: [{ name: "" }, { name: "" }],

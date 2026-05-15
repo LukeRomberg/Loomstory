@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   DAGGERHEART_ANCESTRY_ICONS,
   DAGGERHEART_ANCESTRY_IMAGES,
+  getAncestryImage,
 } from "./daggerheart-ancestry-icons";
 
 // Every Daggerheart SRD ancestry — keep this list canonical with the seed
@@ -60,10 +61,48 @@ describe("DAGGERHEART_ANCESTRY_IMAGES", () => {
     }
   });
 
-  it("every path lives under /ancestries/ and ends in .png", () => {
-    for (const [ancestry, path] of Object.entries(DAGGERHEART_ANCESTRY_IMAGES)) {
-      expect(path, `${ancestry} path must start with /ancestries/`).toMatch(/^\/ancestries\//);
-      expect(path, `${ancestry} path must end with .png`).toMatch(/\.png$/);
+  it("every variant path lives under /ancestries/ and ends in .png", () => {
+    for (const [ancestry, art] of Object.entries(DAGGERHEART_ANCESTRY_IMAGES)) {
+      for (const [variant, path] of Object.entries(art)) {
+        expect(path, `${ancestry}.${variant} path must start with /ancestries/`).toMatch(
+          /^\/ancestries\//
+        );
+        expect(path, `${ancestry}.${variant} path must end with .png`).toMatch(/\.png$/);
+      }
     }
+  });
+
+  it("every entry has at least one variant", () => {
+    for (const [ancestry, art] of Object.entries(DAGGERHEART_ANCESTRY_IMAGES)) {
+      expect(
+        Object.keys(art).length,
+        `${ancestry} must have at least one of female/male/neutral`
+      ).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("getAncestryImage", () => {
+  it("returns neutral art for ungendered ancestries regardless of variant (Clank)", () => {
+    expect(getAncestryImage("Clank", "female")).toBe("/ancestries/Clank.png");
+    expect(getAncestryImage("Clank", "male")).toBe("/ancestries/Clank.png");
+  });
+
+  it("returns the preferred variant when both exist", () => {
+    expect(getAncestryImage("Drakona", "female")).toBe("/ancestries/Drakona-f.png");
+    expect(getAncestryImage("Drakona", "male")).toBe("/ancestries/Drakona-m.png");
+  });
+
+  it("falls back to the other variant when the preferred one is missing", () => {
+    // Firbolg only has male art; asking for female should still return male.
+    expect(getAncestryImage("Firbolg", "female")).toBe("/ancestries/Firbolg-m.png");
+    expect(getAncestryImage("Firbolg", "male")).toBe("/ancestries/Firbolg-m.png");
+
+    // Fungril only has female art.
+    expect(getAncestryImage("Fungril", "male")).toBe("/ancestries/Fungril-f.png");
+  });
+
+  it("returns null for ancestries without any art (forward-compat)", () => {
+    expect(getAncestryImage("Nonexistent", "female")).toBeNull();
   });
 });

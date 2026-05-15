@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -22,6 +23,12 @@ export interface PickerCard {
   textColor?: string;
   /** Optional Lucide icon rendered alongside the title in every card variant. */
   icon?: LucideIcon;
+  /**
+   * Optional public-URL path to a hero image (e.g. /ancestries/Faerie-f.png).
+   * When present, rendered as the top portion of the card in both grid +
+   * compact + expanded views.
+   */
+  heroImage?: string;
 }
 
 interface CardPickerProps {
@@ -169,7 +176,7 @@ function GridCard({
       data-selected={isSelected || undefined}
       onClick={onClick}
       className={cn(
-        "rounded-xl border-2 p-4 text-left transition-all duration-300 cursor-pointer",
+        "rounded-xl border-2 text-left transition-all duration-300 cursor-pointer overflow-hidden",
         "bg-gradient-to-br hover:shadow-lg hover:shadow-black/50",
         card.gradient ?? "from-zinc-900 to-zinc-800",
         isSelected
@@ -177,34 +184,47 @@ function GridCard({
           : "border-transparent hover:scale-[1.03]"
       )}
     >
-      <div
-        className={cn(
-          "font-heading mb-1 text-lg flex items-center gap-2",
-          card.textColor ?? "text-gold"
-        )}
-      >
-        {card.icon && <card.icon className="h-5 w-5 shrink-0" aria-hidden />}
-        <span>{card.title}</span>
-      </div>
-      <p className="text-muted-foreground leading-snug font-lore text-sm line-clamp-2">
-        {card.description}
-      </p>
-      {card.badges && card.badges.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-2">
-          {card.badges.map((badge) => (
-            <span
-              key={badge.label}
-              className={cn(
-                "text-sm font-heading uppercase tracking-wider rounded px-1.5 py-0.5",
-                badge.className ??
-                  "bg-black/30 text-muted-foreground border border-white/10"
-              )}
-            >
-              {badge.label}
-            </span>
-          ))}
+      {card.heroImage && (
+        <div className="relative w-full aspect-square bg-black/30">
+          <Image
+            src={card.heroImage}
+            alt={card.title}
+            fill
+            sizes="(max-width: 640px) 50vw, 25vw"
+            className="object-cover object-top"
+          />
         </div>
       )}
+      <div className="p-4">
+        <div
+          className={cn(
+            "font-heading mb-1 text-lg flex items-center gap-2",
+            card.textColor ?? "text-gold"
+          )}
+        >
+          {card.icon && <card.icon className="h-5 w-5 shrink-0" aria-hidden />}
+          <span>{card.title}</span>
+        </div>
+        <p className="text-muted-foreground leading-snug font-lore text-sm line-clamp-2">
+          {card.description}
+        </p>
+        {card.badges && card.badges.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {card.badges.map((badge) => (
+              <span
+                key={badge.label}
+                className={cn(
+                  "text-sm font-heading uppercase tracking-wider rounded px-1.5 py-0.5",
+                  badge.className ??
+                    "bg-black/30 text-muted-foreground border border-white/10"
+                )}
+              >
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -239,6 +259,19 @@ function CompactCard({
             : "border-transparent"
       )}
     >
+      <div className="flex items-start gap-3">
+        {card.heroImage && (
+          <div className="relative size-14 shrink-0 rounded-md overflow-hidden bg-black/30">
+            <Image
+              src={card.heroImage}
+              alt={card.title}
+              fill
+              sizes="56px"
+              className="object-cover object-top"
+            />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
       <div
         className={cn(
           "font-heading text-base flex items-center gap-2",
@@ -267,6 +300,8 @@ function CompactCard({
           ))}
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -287,12 +322,34 @@ function ExpandedCardContent({
   return (
     <div
       className={cn(
-        "rounded-xl border-2 p-6 space-y-4",
+        "rounded-xl border-2 space-y-4 overflow-hidden",
         "bg-gradient-to-br",
         card.gradient ?? "from-zinc-900 to-zinc-800",
         card.borderColor ?? "border-gold/60"
       )}
     >
+      {card.heroImage && (
+        <div className="relative w-full aspect-[3/2] bg-black/30 -mt-px">
+          <Image
+            src={card.heroImage}
+            alt={card.title}
+            fill
+            sizes="(max-width: 640px) 100vw, 50vw"
+            className="object-cover object-top"
+            priority
+          />
+          <div
+            className={cn(
+              "absolute bottom-0 left-0 right-0 p-4 font-heading text-2xl",
+              card.textColor ?? "text-gold",
+              "bg-gradient-to-t from-black/80 via-black/40 to-transparent"
+            )}
+          >
+            {card.title}
+          </div>
+        </div>
+      )}
+      <div className="p-6 pt-0 space-y-4">
       {/* Description (preserves \n\n paragraph breaks from heritage flavor text) */}
       <p className="text-muted-foreground leading-snug font-lore text-lg whitespace-pre-line">
         {card.description}
@@ -418,6 +475,7 @@ function ExpandedCardContent({
           {selectLabel} {card.title}
         </button>
       )}
+      </div>
     </div>
   );
 }

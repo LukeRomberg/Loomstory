@@ -828,6 +828,44 @@ describe("CharacterWizard", () => {
     expect(katariMatches.length).toBeGreaterThanOrEqual(1);
   });
 
+  it("ancestry step shows a Female/Male portrait toggle", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+
+    // The radiogroup exposes two radios; Female is selected by default.
+    // /^male$/i avoids "Female" matching the loose /male/i regex.
+    const female = screen.getByRole("radio", { name: /^female$/i });
+    const male = screen.getByRole("radio", { name: /^male$/i });
+    expect(female).toHaveAttribute("aria-checked", "true");
+    expect(male).toHaveAttribute("aria-checked", "false");
+
+    await user.click(male);
+    expect(female).toHaveAttribute("aria-checked", "false");
+    expect(male).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("toggling Female ↔ Male switches the ancestry card hero images", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+    await user.click(screen.getByText("Warrior"));
+    await user.click(screen.getByRole("button", { name: /choose warrior/i }));
+    await user.click(screen.getByText("Call of the Brave"));
+    await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
+
+    // Faerie has both -f and -m portraits — both images come from public/ancestries.
+    const faerieCard = screen.getByText("Faerie").closest("[data-card-id]") as HTMLElement;
+    const faerieImg = () => within(faerieCard).getByAltText("Faerie");
+
+    expect(faerieImg().getAttribute("src") ?? "").toMatch(/Faerie-f\.png/);
+
+    await user.click(screen.getByRole("radio", { name: /^male$/i }));
+    expect(faerieImg().getAttribute("src") ?? "").toMatch(/Faerie-m\.png/);
+  });
+
   it("ancestry card shows both ancestry features with descriptions when expanded", async () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);

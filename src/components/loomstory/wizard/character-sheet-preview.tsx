@@ -6,7 +6,7 @@ import { Sparkles } from "lucide-react";
 import Image from "next/image";
 import {
   DAGGERHEART_ANCESTRY_ICONS,
-  DAGGERHEART_ANCESTRY_IMAGES,
+  getAncestryImage,
 } from "@/lib/character/configs/daggerheart-ancestry-icons";
 import type {
   WizardState,
@@ -145,7 +145,9 @@ export function CharacterSheetPreview({
 
   const ClassIcon = classTheme?.icon;
   const ancestryName = wizardState.ancestryName;
-  const ancestryImage = ancestryName ? DAGGERHEART_ANCESTRY_IMAGES[ancestryName] : undefined;
+  const ancestryImage = ancestryName
+    ? getAncestryImage(ancestryName, wizardState.ancestryVariant)
+    : null;
   const AncestryIcon = ancestryName
     ? DAGGERHEART_ANCESTRY_ICONS[ancestryName]
     : undefined;

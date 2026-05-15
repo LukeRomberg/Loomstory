@@ -20,6 +20,7 @@ const mockState: WizardState = {
   subclassId: "sub-beastbound",
   subclassName: "Beastbound",
   ancestryName: "Faerie",
+  ancestryVariant: "female",
   communityName: "Wanderborne",
   statValues: { agility: 2, strength: 1, finesse: 1, instinct: 0, presence: 0, knowledge: -1 },
   experiences: [{ name: "Bounty Hunter" }, { name: "Wolf in Sheep's Clothing" }],
@@ -239,7 +240,8 @@ describe("CharacterSheetPreview — Banner", () => {
   });
 
   it("renders a headshot <img> for ancestries that have artwork (e.g. Clank)", () => {
-    // Clank is one of the 10 SRD ancestries with a PNG under /public/ancestries.
+    // Clank is the lone ungendered SRD ancestry — the banner uses the
+    // `neutral` variant regardless of ancestryVariant state.
     render(
       <CharacterSheetPreview
         {...defaultProps()}
@@ -253,17 +255,41 @@ describe("CharacterSheetPreview — Banner", () => {
     expect(icon.getAttribute("src") ?? "").toMatch(/Clank\.png/);
   });
 
-  it("falls back to the Lucide icon for ancestries without artwork (e.g. Faerie)", () => {
-    // Faerie has no PNG yet — fallback path must still render the icon slot.
+  it("respects ancestryVariant when selecting between female and male portraits", () => {
+    // Drakona has both -f and -m portraits — the banner switches based on
+    // wizardState.ancestryVariant.
+    const { rerender } = render(
+      <CharacterSheetPreview
+        {...defaultProps()}
+        wizardState={{ ...mockState, ancestryName: "Drakona", ancestryVariant: "female" }}
+      />
+    );
+    let icon = within(screen.getByTestId("preview-banner")).getByTestId("preview-ancestry-icon");
+    expect(icon.getAttribute("src") ?? "").toMatch(/Drakona-f\.png/);
+
+    rerender(
+      <CharacterSheetPreview
+        {...defaultProps()}
+        wizardState={{ ...mockState, ancestryName: "Drakona", ancestryVariant: "male" }}
+      />
+    );
+    icon = within(screen.getByTestId("preview-banner")).getByTestId("preview-ancestry-icon");
+    expect(icon.getAttribute("src") ?? "").toMatch(/Drakona-m\.png/);
+  });
+
+  it("falls back to the Lucide icon for ancestries with no artwork in the images map", () => {
+    // All 18 SRD ancestries currently have PNGs; this test uses a hypothetical
+    // ancestry name not in DAGGERHEART_ANCESTRY_IMAGES to exercise the fallback
+    // path. The Lucide map is referenced even if there's no specific icon —
+    // the empty <span> slot is the lowest-priority fallback.
     render(
       <CharacterSheetPreview
         {...defaultProps()}
-        wizardState={{ ...mockState, ancestryName: "Faerie" }}
+        wizardState={{ ...mockState, ancestryName: "Nonexistent" }}
       />
     );
     const banner = screen.getByTestId("preview-banner");
     const icon = within(banner).getByTestId("preview-ancestry-icon");
-    // The fallback renders an SVG element (Lucide), not an <img>.
     expect(icon.tagName.toLowerCase()).not.toBe("img");
   });
 

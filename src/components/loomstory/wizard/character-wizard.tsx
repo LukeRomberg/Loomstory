@@ -36,6 +36,7 @@ import {
   DAGGERHEART_BASIC_SUPPLY_NAMES,
   DAGGERHEART_DOMAINS,
 } from "@/lib/character/configs/daggerheart-wizard";
+import { getAncestryImage } from "@/lib/character/configs/daggerheart-ancestry-icons";
 import { DAGGERHEART_DOMAIN_THEMES } from "@/lib/character/configs/daggerheart-domain-themes";
 
 // ─── Props ──────────────────────────────────────────────────
@@ -229,7 +230,8 @@ function heritageToPickerCard(
   dataKey: string,
   groupLabel: string,
   allFeatures: CompendiumAbility[],
-  theme?: ClassTheme
+  theme?: ClassTheme,
+  heroImage?: string | null
 ): PickerCard {
   const features = allFeatures.filter(
     (f) => (f.data as Record<string, unknown>)?.[dataKey] === value
@@ -270,6 +272,7 @@ function heritageToPickerCard(
     gradient: theme?.gradient,
     borderColor: theme?.borderColor,
     textColor: theme?.textColor,
+    heroImage: heroImage ?? undefined,
   };
 }
 
@@ -934,9 +937,49 @@ export function CharacterWizard({
             helpText={currentStep.helpText}
             onHelpClick={handleHelpOpen}
           />
+          {/* Variant toggle: switches every ancestry card to its female or male portrait
+              (where both exist). Ungendered art (Clank) and ancestries with only one
+              variant ignore the toggle and just show whatever's available. */}
+          <div
+            role="radiogroup"
+            aria-label="Ancestry portrait variant"
+            className="flex items-center justify-center gap-2 self-center rounded-full bg-black/30 p-1"
+          >
+            {(["female", "male"] as const).map((v) => {
+              const active = wizardState.ancestryVariant === v;
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() =>
+                    setWizardState((prev) => ({ ...prev, ancestryVariant: v }))
+                  }
+                  className={cn(
+                    "rounded-full px-4 py-1 text-xs font-heading uppercase tracking-wider transition-colors cursor-pointer",
+                    active
+                      ? cn("bg-current", classTheme?.textColor ?? "text-gold")
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <span className={active ? "text-black" : ""}>
+                    {v === "female" ? "Female" : "Male"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
           <CardPicker
             cards={distinctDataValues(ancestryFeatures, "ancestry").map((name) =>
-              heritageToPickerCard(name, "ancestry", "Ancestry Features", ancestryFeatures, classTheme)
+              heritageToPickerCard(
+                name,
+                "ancestry",
+                "Ancestry Features",
+                ancestryFeatures,
+                classTheme,
+                getAncestryImage(name, wizardState.ancestryVariant)
+              )
             )}
             loading={ancestryLoading}
             selectedId={wizardState.ancestryName ?? undefined}
