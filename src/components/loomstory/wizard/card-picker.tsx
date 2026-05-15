@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export interface PickerCard {
   id: string;
@@ -19,6 +20,8 @@ export interface PickerCard {
   gradient?: string;
   borderColor?: string;
   textColor?: string;
+  /** Optional Lucide icon rendered alongside the title in every card variant. */
+  icon?: LucideIcon;
 }
 
 interface CardPickerProps {
@@ -176,11 +179,12 @@ function GridCard({
     >
       <div
         className={cn(
-          "font-heading mb-1 text-lg",
+          "font-heading mb-1 text-lg flex items-center gap-2",
           card.textColor ?? "text-gold"
         )}
       >
-        {card.title}
+        {card.icon && <card.icon className="h-5 w-5 shrink-0" aria-hidden />}
+        <span>{card.title}</span>
       </div>
       <p className="text-muted-foreground leading-snug font-lore text-sm line-clamp-2">
         {card.description}
@@ -237,11 +241,12 @@ function CompactCard({
     >
       <div
         className={cn(
-          "font-heading text-base",
+          "font-heading text-base flex items-center gap-2",
           card.textColor ?? "text-gold"
         )}
       >
-        {card.title}
+        {card.icon && <card.icon className="h-4 w-4 shrink-0" aria-hidden />}
+        <span>{card.title}</span>
       </div>
       <p className="text-muted-foreground leading-snug font-lore text-sm line-clamp-2 mt-0.5">
         {card.description}

@@ -36,6 +36,7 @@ import {
   DAGGERHEART_BASIC_SUPPLY_NAMES,
   DAGGERHEART_DOMAINS,
 } from "@/lib/character/configs/daggerheart-wizard";
+import { DAGGERHEART_DOMAIN_THEMES } from "@/lib/character/configs/daggerheart-domain-themes";
 
 // ─── Props ──────────────────────────────────────────────────
 
@@ -377,22 +378,32 @@ function classItemToPickerCard(option: string, theme?: ClassTheme): PickerCard {
 /**
  * Build a picker card for a level-1 domain card. Title = card name, badges show
  * the domain and recall cost, description is the rules text from the compendium.
+ *
+ * Coloring/icon prefer the card's *domain* theme over the parent class theme so
+ * the two cards a class can draw from (e.g. Warrior's Blade + Bone) are visually
+ * distinguishable. Falls back to the class theme if `data.domain` is missing or
+ * unrecognized.
  */
-function domainCardToPickerCard(card: CompendiumAbility, theme?: ClassTheme): PickerCard {
+export function domainCardToPickerCard(card: CompendiumAbility, theme?: ClassTheme): PickerCard {
   const data = (card.data ?? {}) as Record<string, unknown>;
   const badges: PickerCard["badges"] = [];
   if (data.domain) badges.push({ label: String(data.domain) });
   if (data.recall_cost != null) badges.push({ label: `Recall ${data.recall_cost}` });
   if (data.card_type) badges.push({ label: String(data.card_type) });
 
+  const domainName = typeof data.domain === "string" ? data.domain : undefined;
+  const domainTheme = domainName ? DAGGERHEART_DOMAIN_THEMES[domainName] : undefined;
+  const activeTheme = domainTheme ?? theme;
+
   return {
     id: card.id,
     title: card.name,
     description: card.description ?? "",
     badges,
-    gradient: theme?.gradient,
-    borderColor: theme?.borderColor,
-    textColor: theme?.textColor,
+    gradient: activeTheme?.gradient,
+    borderColor: activeTheme?.borderColor,
+    textColor: activeTheme?.textColor,
+    icon: activeTheme?.icon,
   };
 }
 
