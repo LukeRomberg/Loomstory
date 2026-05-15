@@ -33,6 +33,7 @@ import { createEmptyWizardState } from "@/lib/character/wizard-types";
 import {
   DAGGERHEART_CLASS_ITEMS,
   DAGGERHEART_BASIC_SUPPLY_NAMES,
+  DAGGERHEART_DOMAINS,
 } from "@/lib/character/configs/daggerheart-wizard";
 
 // ─── Props ──────────────────────────────────────────────────
@@ -63,8 +64,29 @@ function classToPickerCard(
   if (data.spellcast_trait) stats.push({ label: "Spellcast", value: String(data.spellcast_trait) });
   if (data.hp_die) stats.push({ label: "Hit Die", value: String(data.hp_die) });
 
-  // Build feature groups — Hope Feature + Class Feature (with descriptions, from compendium)
+  // Build feature groups — Domains, Hope Feature, Class Feature. Domains
+  // come first so players can see what the class's two specialties cover
+  // before getting into the rules text. Source = theme.domains (preferred,
+  // explicit ordering) → falls back to data.domains from the compendium row.
   const featureGroups: PickerCard["featureGroups"] = [];
+
+  const domainNames =
+    theme?.domains ??
+    (data.domains && Array.isArray(data.domains) ? (data.domains as string[]) : []);
+  const domainFeatures = domainNames
+    .map((name) => {
+      const info = DAGGERHEART_DOMAINS[name];
+      if (!info) return null;
+      return {
+        name: `${name} — ${info.tagline}`,
+        description: info.description,
+      };
+    })
+    .filter((f): f is { name: string; description: string } => f !== null);
+  if (domainFeatures.length > 0) {
+    featureGroups.push({ label: "Domains", features: domainFeatures });
+  }
+
   const classOwnFeatures = classFeatures.filter((f) => f.classes?.includes(cls.name));
 
   const hopeFeatures = classOwnFeatures.filter(

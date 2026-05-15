@@ -694,6 +694,23 @@ describe("CharacterWizard", () => {
     ).toBeInTheDocument();
   });
 
+  it("class cards show the two class domains with their SRD descriptions when expanded", async () => {
+    const user = userEvent.setup();
+    render(<CharacterWizard {...defaultProps} />);
+
+    // Expand Warrior — domains are Blade + Bone per SRD page 7.
+    await user.click(screen.getByText("Warrior"));
+
+    const detail = within(screen.getByTestId("card-picker-detail"));
+    expect(detail.getByText("Domains")).toBeInTheDocument();
+    // Domain name + tagline rendered together
+    expect(detail.getByText(/Blade.*Weapon mastery/i)).toBeInTheDocument();
+    expect(detail.getByText(/Bone.*Tactics and the body/i)).toBeInTheDocument();
+    // Full description present
+    expect(detail.getByText(/those who follow this path have the skill to cut short the lives of others/i)).toBeInTheDocument();
+    expect(detail.getByText(/uncanny control over their own physical abilities/i)).toBeInTheDocument();
+  });
+
   it("subclass cards show feature details and parent class stats when expanded", async () => {
     const user = userEvent.setup();
     render(<CharacterWizard {...defaultProps} />);

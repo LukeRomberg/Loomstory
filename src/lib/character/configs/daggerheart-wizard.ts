@@ -72,6 +72,65 @@ export const DAGGERHEART_CLASS_THEMES: Record<string, ClassTheme> = {
   },
 };
 
+// ─── Domain Descriptions ─────────────────────────────────────
+// One entry per Daggerheart SRD domain (9-09-25, page 7). The `tagline` is
+// the short hook the SRD bolds (e.g. "weapon mastery"); `description` is the
+// fuller flavor paragraph. Surfaced on the class picker so players can read
+// what each class's two domains specialize in before choosing.
+
+export interface DomainInfo {
+  tagline: string;
+  description: string;
+}
+
+export const DAGGERHEART_DOMAINS: Record<string, DomainInfo> = {
+  Arcana: {
+    tagline: "Innate and instinctual magic",
+    description:
+      "Those who choose this path tap into the raw, enigmatic forces of the realms to manipulate both their own energy and the elements. Arcana offers wielders a volatile power, but it is incredibly potent when correctly channeled.",
+  },
+  Blade: {
+    tagline: "Weapon mastery",
+    description:
+      "Whether by steel, bow, or perhaps a more specialized arm, those who follow this path have the skill to cut short the lives of others. Wielders of Blade dedicate themselves to achieving inexorable power over death.",
+  },
+  Bone: {
+    tagline: "Tactics and the body",
+    description:
+      "Practitioners of this domain have an uncanny control over their own physical abilities and an eye for predicting the behaviors of others in combat. Adherents to Bone gain an unparalleled understanding of bodies and their movements.",
+  },
+  Codex: {
+    tagline: "Intensive magical study",
+    description:
+      "Those who seek magical knowledge turn to the equations of power recorded in books, written on scrolls, etched into walls, or tattooed on bodies. Codex offers a commanding and versatile understanding of magic to devotees who pursue knowledge beyond the boundaries of common wisdom.",
+  },
+  Grace: {
+    tagline: "Charisma",
+    description:
+      "Through rapturous storytelling, charming spells, or a shroud of lies, those who channel this power define the realities of their adversaries, bending perception to their will. Grace offers its wielders raw magnetism and mastery over language.",
+  },
+  Midnight: {
+    tagline: "Shadows and secrecy",
+    description:
+      "Whether by clever tricks, deft magic, or the cloak of night, those who channel these forces practice the art of obscurity and can uncover sequestered treasures. Midnight offers the power to control and create enigmas.",
+  },
+  Sage: {
+    tagline: "The natural world",
+    description:
+      "Those who walk this path tap into the unfettered power of the earth and its creatures to unleash raw magic. Sage grants its adherents the vitality of a blooming flower and the ferocity of a ravenous predator.",
+  },
+  Splendor: {
+    tagline: "Life",
+    description:
+      "Through this magic, followers gain the ability to heal and, to an extent, control death. Splendor offers its disciples the magnificent ability to both give and end life.",
+  },
+  Valor: {
+    tagline: "Protection",
+    description:
+      "Whether through attack or defense, those who choose this discipline channel formidable strength to protect their allies in battle. Valor offers great power to those who raise their shields in defense of others.",
+  },
+};
+
 // ─── Trait Config ────────────────────────────────────────────
 
 export const DAGGERHEART_TRAIT_SLOTS = [
