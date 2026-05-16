@@ -11,7 +11,6 @@ import { ItemModal } from "@/components/loomstory/item-modal";
 import { PlotThreadModal } from "@/components/loomstory/plot-thread-modal";
 import { LoreModal } from "@/components/loomstory/lore-modal";
 import { EventModal } from "@/components/loomstory/event-modal";
-import { ConversationModal } from "@/components/loomstory/conversation-modal";
 import { CharacterModal } from "@/components/loomstory/character-modal";
 import { BookshelfImage } from "@/components/shared/bookshelf-image";
 import { CAMPAIGN_SECTIONS } from "@/lib/sections";
@@ -44,7 +43,6 @@ export function CampaignDashboard({
   const [plotThreadModalOpen, setPlotThreadModalOpen] = useState(false);
   const [loreModalOpen, setLoreModalOpen] = useState(false);
   const [eventModalOpen, setEventModalOpen] = useState(false);
-  const [conversationModalOpen, setConversationModalOpen] = useState(false);
   const [characterModalOpen, setCharacterModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -53,7 +51,6 @@ export function CampaignDashboard({
     locations: () => setLocationModalOpen(true),
     factions: () => setFactionModalOpen(true),
     events: () => setEventModalOpen(true),
-    conversations: () => setConversationModalOpen(true),
     "plot-threads": () => setPlotThreadModalOpen(true),
     items: () => setItemModalOpen(true),
     lore: () => setLoreModalOpen(true),
@@ -67,10 +64,10 @@ export function CampaignDashboard({
         <BookshelfImage
           className="max-h-screen w-full"
           sections={CAMPAIGN_SECTIONS.map((section) => {
-            if (section.slug === "sessions") {
+            if (section.slug === "sessions" || section.slug === "conversations") {
               return {
-                slug: "sessions",
-                href: `/campaign/${campaign.id}/sessions`,
+                slug: section.slug,
+                href: `/campaign/${campaign.id}/${section.slug}`,
               };
             }
             return {
@@ -115,7 +112,6 @@ export function CampaignDashboard({
       <PlotThreadModal campaignId={campaign.id} userId={userId} role={role} open={plotThreadModalOpen} onOpenChange={setPlotThreadModalOpen} />
       <LoreModal campaignId={campaign.id} userId={userId} role={role} open={loreModalOpen} onOpenChange={setLoreModalOpen} />
       <EventModal campaignId={campaign.id} userId={userId} role={role} open={eventModalOpen} onOpenChange={setEventModalOpen} />
-      <ConversationModal campaignId={campaign.id} userId={userId} role={role} open={conversationModalOpen} onOpenChange={setConversationModalOpen} />
       <CharacterModal campaignId={campaign.id} userId={userId} role={role} systemId={campaign.system_id} systemSlug={systemSlug} open={characterModalOpen} onOpenChange={setCharacterModalOpen} />
       {isGm && (
         <SettingsModal campaignId={campaign.id} userId={userId} open={settingsOpen} onOpenChange={setSettingsOpen} />

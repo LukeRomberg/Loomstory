@@ -25,21 +25,26 @@ const defaultProps = {
 describe("ConversationList", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // ─── Rendering (CONV-01) ──────────────────────────────────
+  // ─── Rendering ────────────────────────────────────────────
 
   it("renders the page heading", () => {
     render(<ConversationList {...defaultProps} />);
-    expect(screen.getByText("Conversations")).toBeInTheDocument();
+    expect(screen.getByText(/conversations/i)).toBeInTheDocument();
   });
 
-  it("renders conversation count", () => {
+  it("renders conversation count in the heading", () => {
     render(<ConversationList {...defaultProps} />);
-    expect(screen.getByText(/2 conversation/i)).toBeInTheDocument();
+    // Heading reads "Conversations (2)"
+    expect(screen.getByText("(2)")).toBeInTheDocument();
   });
 
-  it("renders conversation titles", () => {
+  it("renders conversation titles in the master list", () => {
     render(<ConversationList {...defaultProps} />);
-    expect(screen.getByText("Gareth warns the party")).toBeInTheDocument();
+    // First conversation auto-selects so its title appears in both master + detail
+    expect(
+      screen.getAllByText("Gareth warns the party").length
+    ).toBeGreaterThanOrEqual(1);
+    // Second conversation appears in master list only
     expect(screen.getByText("Negotiating passage at the gate")).toBeInTheDocument();
   });
 
@@ -48,17 +53,18 @@ describe("ConversationList", () => {
     expect(screen.getByText(/no conversations yet/i)).toBeInTheDocument();
   });
 
-  // ─── Speaker Attribution (CONV-01) ────────────────────────
+  // ─── Detail Pane (auto-selects first conversation) ────────
 
-  it("renders participant names", () => {
+  it("auto-selects the first conversation and renders its participants", () => {
     render(<ConversationList {...defaultProps} />);
     expect(screen.getAllByText(/Gareth/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Durk/).length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders dialogue turns with speaker names", () => {
+  it("renders all dialogue turns of the selected conversation in the detail pane", () => {
     render(<ConversationList {...defaultProps} />);
     expect(screen.getByText(/Crimson Hand has eyes everywhere/)).toBeInTheDocument();
+    expect(screen.getByText(/the Veil/i)).toBeInTheDocument();
   });
 
   it("renders tone tags on dialogue turns", () => {
@@ -66,32 +72,24 @@ describe("ConversationList", () => {
     expect(screen.getByText("nervous")).toBeInTheDocument();
   });
 
-  // ─── Expandable Detail ────────────────────────────────────
-
-  it("shows conversation preview (first 2 turns) by default", () => {
-    render(<ConversationList {...defaultProps} />);
-    // First conversation has 3 turns, should show preview of first 2
-    expect(screen.getByText(/Crimson Hand has eyes everywhere/)).toBeInTheDocument();
-    expect(screen.getByText(/faced worse/)).toBeInTheDocument();
-  });
-
-  it("shows expand button when conversation has more than 2 turns", () => {
-    render(<ConversationList {...defaultProps} />);
-    expect(screen.getAllByText(/more/i).length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("expands to show all turns when clicked", async () => {
+  it("changes the detail pane when a different conversation is clicked", async () => {
     const user = userEvent.setup();
     render(<ConversationList {...defaultProps} />);
-    const expandBtns = screen.getAllByText(/more/i);
-    await user.click(expandBtns[0]);
-    // Now the third turn should be visible
-    expect(screen.getByText(/the Veil/i)).toBeInTheDocument();
+    // Click the second conversation in the master list
+    const masterItem = screen
+      .getAllByText("Negotiating passage at the gate")[0]
+      .closest("button");
+    expect(masterItem).not.toBeNull();
+    await user.click(masterItem!);
+    // Now its title also shows in the detail pane (multiple occurrences)
+    expect(
+      screen.getAllByText("Negotiating passage at the gate").length
+    ).toBeGreaterThanOrEqual(2);
   });
 
   // ─── GM Notes ─────────────────────────────────────────────
 
-  it("shows GM notes for conversations that have them", () => {
+  it("shows GM notes for conversations that have them (GM view, selected)", () => {
     render(<ConversationList {...defaultProps} />);
     expect(screen.getByText(/Gareth is lying/i)).toBeInTheDocument();
   });
@@ -101,33 +99,34 @@ describe("ConversationList", () => {
     expect(screen.queryByText(/Gareth is lying/i)).not.toBeInTheDocument();
   });
 
-  // ─── Session Filter ───────────────────────────────────────
+  // ─── Filters ──────────────────────────────────────────────
 
   it("renders session filter dropdown", () => {
     render(<ConversationList {...defaultProps} />);
     expect(screen.getByText(/all sessions/i)).toBeInTheDocument();
   });
 
-  // ─── Participant Search ───────────────────────────────────
-
-  it("renders search input for filtering by participant", () => {
+  it("renders search input", () => {
     render(<ConversationList {...defaultProps} />);
     expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
   });
 
-  it("filters conversations by participant name", async () => {
+  it("filters conversations in the master list by participant name", async () => {
     const user = userEvent.setup();
     render(<ConversationList {...defaultProps} />);
     await user.type(screen.getByPlaceholderText(/search/i), "Hale");
-    // Only the gate conversation should show
+    // Gareth conversation should no longer be in the master list
     expect(screen.queryByText("Gareth warns the party")).not.toBeInTheDocument();
-    expect(screen.getByText("Negotiating passage at the gate")).toBeInTheDocument();
+    // Negotiating conversation should still show (and is auto-selected now)
+    expect(
+      screen.getAllByText("Negotiating passage at the gate").length
+    ).toBeGreaterThanOrEqual(1);
   });
 
   // ─── Navigation ───────────────────────────────────────────
 
-  it("has a back button to campaign page", () => {
+  it("renders a back link to the bookshelf", () => {
     render(<ConversationList {...defaultProps} />);
-    expect(screen.getByText(/test campaign/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/back to bookshelf/i)).toBeInTheDocument();
   });
 });
