@@ -25,8 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Bookshelf } from "@/components/shared/bookshelf";
-import { BookSpine } from "@/components/shared/book-spine";
+import { BookshelfImage } from "@/components/shared/bookshelf-image";
 import { CAMPAIGN_SECTIONS } from "@/lib/sections";
 import {
   Dialog,
@@ -75,17 +74,6 @@ interface CampaignDashboardProps {
   systemName: string | null;
   systemSlug: string | null;
   sessions: Session[];
-  entityCounts: {
-    npcs: number;
-    locations: number;
-    factions: number;
-    events: number;
-    conversations: number;
-    plotThreads: number;
-    items: number;
-    lore: number;
-    characters: number;
-  };
   userId: string;
 }
 
@@ -95,7 +83,6 @@ export function CampaignDashboard({
   systemName,
   systemSlug,
   sessions: initialSessions,
-  entityCounts,
   userId,
 }: CampaignDashboardProps) {
   const router = useRouter();
@@ -207,9 +194,8 @@ export function CampaignDashboard({
       </div>
 
       {/* Knowledge Base bookshelf */}
-      <Bookshelf campaignName="Knowledge Base">
-        {CAMPAIGN_SECTIONS.map((section) => {
-          const count = entityCounts[section.countKey];
+      <BookshelfImage
+        sections={CAMPAIGN_SECTIONS.map((section) => {
           const modalSetters: Record<string, () => void> = {
             npcs: () => setNpcModalOpen(true),
             locations: () => setLocationModalOpen(true),
@@ -221,18 +207,12 @@ export function CampaignDashboard({
             lore: () => setLoreModalOpen(true),
             characters: () => setCharacterModalOpen(true),
           };
-          return (
-            <BookSpine
-              key={section.slug}
-              title={section.title}
-              subtitle={`${count} ${count === 1 ? "entry" : "entries"}`}
-              color={section.color}
-              emblem={section.emblem}
-              onClick={modalSetters[section.slug]}
-            />
-          );
+          return {
+            slug: section.slug,
+            onClick: modalSetters[section.slug],
+          };
         })}
-      </Bookshelf>
+      />
 
       {/* Recent Sessions */}
       <div>
