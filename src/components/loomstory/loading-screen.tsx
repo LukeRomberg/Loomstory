@@ -11,14 +11,14 @@ export function LoadingScreen({
 }: LoadingScreenProps) {
   const containerClass =
     layout === "full"
-      ? "fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-background/80 backdrop-blur-sm"
+      ? "fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-background/60"
       : "flex h-full min-h-[240px] w-full flex-col items-center justify-center gap-5 rounded-lg bg-background/70 backdrop-blur-sm";
 
   return (
     <div role="status" aria-label={label} className={containerClass}>
       <div className="animate-candle-flicker">
         <Image
-          src="/brand/loomstory-monogram-gold.svg"
+          src="/brand/loomstory-monogram.svg"
           alt=""
           width={96}
           height={96}

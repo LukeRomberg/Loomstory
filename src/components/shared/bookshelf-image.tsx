@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { CAMPAIGN_SECTIONS } from "@/lib/sections";
+import { LinkPendingOverlay } from "@/components/shared/link-pending-overlay";
 
 interface BookshelfSection {
   slug: string;
@@ -75,6 +76,7 @@ export function BookshelfImage({ sections, className }: BookshelfImageProps) {
               style={pos}
             >
               <span className="sr-only">{title}</span>
+              <LinkPendingOverlay />
             </Link>
           );
         }
