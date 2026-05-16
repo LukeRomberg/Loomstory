@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Cinzel, Lora, JetBrains_Mono } from "next/font/google";
+import { Cinzel_Decorative, Cinzel, Lora, JetBrains_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-sans",
+const cinzelDecorative = Cinzel_Decorative({
+  variable: "--font-heading",
   subsets: ["latin"],
+  weight: ["400", "700", "900"],
 });
 
 const cinzel = Cinzel({
-  variable: "--font-heading",
+  variable: "--font-subheading",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
@@ -20,7 +21,6 @@ const lora = Lora({
   variable: "--font-lore",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  preload: false,
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -55,7 +55,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body
         className={cn(
-          inter.variable,
+          cinzelDecorative.variable,
           cinzel.variable,
           lora.variable,
           jetbrainsMono.variable,
