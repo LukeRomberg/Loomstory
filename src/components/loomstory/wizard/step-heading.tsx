@@ -14,9 +14,9 @@ export function StepHeading({ title, subtitle, helpText, onHelpClick }: StepHead
   const showHelpButton = !!(helpText && onHelpClick);
 
   return (
-    <div className="text-center mb-8">
-      <div className="flex items-center justify-center gap-2">
-        <h2 className="font-heading text-3xl text-gold">{title}</h2>
+    <div className="text-right mb-2 shrink-0">
+      <div className="flex items-baseline justify-end gap-2">
+        <h2 className="font-heading text-xl text-gold leading-none">{title}</h2>
         {showHelpButton && (
           <button
             type="button"
@@ -32,7 +32,7 @@ export function StepHeading({ title, subtitle, helpText, onHelpClick }: StepHead
         )}
       </div>
       {subtitle && (
-        <p className="text-muted-foreground font-lore text-sm mt-2">
+        <p className="text-muted-foreground font-lore text-xs mt-1 max-w-md ml-auto">
           {subtitle}
         </p>
       )}

@@ -176,7 +176,7 @@ function GridCard({
       data-selected={isSelected || undefined}
       onClick={onClick}
       className={cn(
-        "rounded-xl border-2 text-left transition-all duration-300 cursor-pointer overflow-hidden",
+        "rounded-xl border-2 p-4 text-left transition-all duration-300 cursor-pointer",
         "bg-gradient-to-br hover:shadow-lg hover:shadow-black/50",
         card.gradient ?? "from-zinc-900 to-zinc-800",
         isSelected
@@ -184,46 +184,48 @@ function GridCard({
           : "border-transparent hover:scale-[1.03]"
       )}
     >
-      {card.heroImage && (
-        <div className="relative w-full aspect-square bg-black/30">
-          <Image
-            src={card.heroImage}
-            alt={card.title}
-            fill
-            sizes="(max-width: 640px) 50vw, 25vw"
-            className="object-cover object-top"
-          />
-        </div>
-      )}
-      <div className="p-4">
-        <div
-          className={cn(
-            "font-heading mb-1 text-lg flex items-center gap-2",
-            card.textColor ?? "text-gold"
-          )}
-        >
-          {card.icon && <card.icon className="h-5 w-5 shrink-0" aria-hidden />}
-          <span>{card.title}</span>
-        </div>
-        <p className="text-muted-foreground leading-snug font-lore text-sm line-clamp-2">
-          {card.description}
-        </p>
-        {card.badges && card.badges.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {card.badges.map((badge) => (
-              <span
-                key={badge.label}
-                className={cn(
-                  "text-sm font-heading uppercase tracking-wider rounded px-1.5 py-0.5",
-                  badge.className ??
-                    "bg-black/30 text-muted-foreground border border-white/10"
-                )}
-              >
-                {badge.label}
-              </span>
-            ))}
+      <div className={card.heroImage ? "flex gap-3" : ""}>
+        {card.heroImage && (
+          <div className="relative size-20 shrink-0 rounded-md overflow-hidden bg-black/30">
+            <Image
+              src={card.heroImage}
+              alt={card.title}
+              fill
+              sizes="80px"
+              className="object-cover object-top"
+            />
           </div>
         )}
+        <div className={card.heroImage ? "flex-1 min-w-0" : ""}>
+          <div
+            className={cn(
+              "font-heading mb-1 text-lg flex items-center gap-2",
+              card.textColor ?? "text-gold"
+            )}
+          >
+            {card.icon && <card.icon className="h-5 w-5 shrink-0" aria-hidden />}
+            <span>{card.title}</span>
+          </div>
+          <p className="text-muted-foreground leading-snug font-lore text-sm line-clamp-2">
+            {card.description}
+          </p>
+          {card.badges && card.badges.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {card.badges.map((badge) => (
+                <span
+                  key={badge.label}
+                  className={cn(
+                    "text-sm font-heading uppercase tracking-wider rounded px-1.5 py-0.5",
+                    badge.className ??
+                      "bg-black/30 text-muted-foreground border border-white/10"
+                  )}
+                >
+                  {badge.label}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -322,34 +324,49 @@ function ExpandedCardContent({
   return (
     <div
       className={cn(
-        "rounded-xl border-2 space-y-4 overflow-hidden",
+        "rounded-xl border-2",
         "bg-gradient-to-br",
         card.gradient ?? "from-zinc-900 to-zinc-800",
         card.borderColor ?? "border-gold/60"
       )}
     >
-      {card.heroImage && (
-        <div className="relative w-full aspect-[3/2] bg-black/30 -mt-px">
-          <Image
-            src={card.heroImage}
-            alt={card.title}
-            fill
-            sizes="(max-width: 640px) 100vw, 50vw"
-            className="object-cover object-top"
-            priority
-          />
-          <div
-            className={cn(
-              "absolute bottom-0 left-0 right-0 p-4 font-heading text-2xl",
-              card.textColor ?? "text-gold",
-              "bg-gradient-to-t from-black/80 via-black/40 to-transparent"
-            )}
-          >
-            {card.title}
+      <div
+        className={cn(
+          "p-6 space-y-4",
+          // Hero gets its own column when present so the image sits next to
+          // the description instead of stacked above it.
+          card.heroImage &&
+            "sm:grid sm:grid-cols-[minmax(140px,220px)_1fr] sm:gap-6 sm:space-y-0"
+        )}
+      >
+        {card.heroImage && (
+          <div className="relative w-full aspect-[3/4] bg-black/30 rounded-lg overflow-hidden self-start">
+            <Image
+              src={card.heroImage}
+              alt={card.title}
+              fill
+              sizes="(max-width: 640px) 60vw, 220px"
+              className="object-cover object-top"
+              priority
+            />
           </div>
-        </div>
-      )}
-      <div className="p-6 pt-0 space-y-4">
+        )}
+        <div className="space-y-4 min-w-0">
+          {/* Title is only rendered here when there's no hero image — for
+              hero cards, the card-list compact view + the obvious selection
+              context make a duplicate title on the detail unnecessary, but
+              we still want one for plain-content detail panels. */}
+          {!card.heroImage ? null : (
+            <h3
+              className={cn(
+                "font-heading text-2xl",
+                card.textColor ?? "text-gold"
+              )}
+            >
+              {card.title}
+            </h3>
+          )}
+
       {/* Description (preserves \n\n paragraph breaks from heritage flavor text) */}
       <p className="text-muted-foreground leading-snug font-lore text-lg whitespace-pre-line">
         {card.description}
@@ -475,6 +492,7 @@ function ExpandedCardContent({
           {selectLabel} {card.title}
         </button>
       )}
+        </div>
       </div>
     </div>
   );

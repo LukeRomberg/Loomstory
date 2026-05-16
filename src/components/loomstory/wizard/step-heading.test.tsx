@@ -45,4 +45,20 @@ describe("StepHeading", () => {
     await user.click(screen.getByRole("button", { name: /show help/i }));
     expect(onHelpClick).toHaveBeenCalledOnce();
   });
+
+  // Compact / right-aligned layout — replaces the earlier big-centered design
+  // so step content gets back the vertical real estate.
+  it("renders the title at a compact size (no longer text-3xl)", () => {
+    render(<StepHeading title="Choose Your Class" />);
+    const title = screen.getByText("Choose Your Class");
+    expect(title.className).not.toMatch(/\btext-3xl\b/);
+  });
+
+  it("aligns the heading to the right", () => {
+    const { container } = render(<StepHeading title="Choose Your Class" />);
+    // The wrapper should not be center-aligned anymore.
+    const root = container.firstChild as HTMLElement;
+    expect(root.className).not.toMatch(/\btext-center\b/);
+    expect(root.className).toMatch(/\b(text-right|items-end|justify-end|self-end)\b/);
+  });
 });
