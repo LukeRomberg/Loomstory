@@ -1,21 +1,19 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { CampaignList } from "./campaign-list";
 
 export default async function DashboardPage() {
+  const { id: userId } = await requireUser();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
-
-  // Fetch campaigns where user is a member
-  const { data: memberships } = await supabase
-    .from("campaign_members")
-    .select("campaign_id, role")
-    .eq("user_id", user.id)
-    .is("deleted_at", null);
+  const [{ data: memberships }, { data: systems }] = await Promise.all([
+    supabase
+      .from("campaign_members")
+      .select("campaign_id, role")
+      .eq("user_id", userId)
+      .is("deleted_at", null),
+    supabase.from("systems").select("id, name, slug").order("name"),
+  ]);
 
   const campaignIds = memberships?.map((m) => m.campaign_id) ?? [];
   const roleMap = new Map(
@@ -47,17 +45,11 @@ export default async function DashboardPage() {
       })) ?? [];
   }
 
-  // Fetch systems for the create dialog
-  const { data: systems } = await supabase
-    .from("systems")
-    .select("id, name, slug")
-    .order("name");
-
   return (
     <CampaignList
       campaigns={campaigns}
       systems={systems ?? []}
-      userId={user.id}
+      userId={userId}
     />
   );
 }

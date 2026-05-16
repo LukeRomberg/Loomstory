@@ -1,16 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth";
 import { UserMenu } from "./user-menu";
 
 export async function AppHeader() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getRequestUser();
   if (!user) return null;
 
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
     .select("display_name, avatar_url")

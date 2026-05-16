@@ -1,5 +1,6 @@
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { ConversationList } from "./conversation-list";
 
 export default async function ConversationsPage({
@@ -8,39 +9,41 @@ export default async function ConversationsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const { id: userId } = await requireUser();
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
-  const { data: membership } = await supabase
-    .from("campaign_members").select("role")
-    .eq("campaign_id", id).eq("user_id", user.id).is("deleted_at", null).single();
-  if (!membership) notFound();
-
-  const { data: campaign } = await supabase
-    .from("campaigns").select("id, name")
-    .eq("id", id).is("deleted_at", null).single();
-  if (!campaign) notFound();
-
-  const { data: conversations } = await supabase
-    .from("conversation_logs")
-    .select("id, session_id, event_id, title, participants, content, content_plain, gm_notes, gm_only, created_at")
-    .eq("campaign_id", id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
-
-  const { data: sessions } = await supabase
-    .from("sessions")
-    .select("id, title, session_number")
-    .eq("campaign_id", id)
-    .is("deleted_at", null)
-    .order("session_number", { ascending: true });
-
-  // Fetch known entities for participant picker
-  const [npcs, characters] = await Promise.all([
+  const [
+    { data: membership },
+    { data: campaign },
+    { data: conversations },
+    { data: sessions },
+    npcs,
+    characters,
+  ] = await Promise.all([
+    supabase
+      .from("campaign_members").select("role")
+      .eq("campaign_id", id).eq("user_id", userId).is("deleted_at", null).single(),
+    supabase
+      .from("campaigns").select("id, name")
+      .eq("id", id).is("deleted_at", null).single(),
+    supabase
+      .from("conversation_logs")
+      .select("id, session_id, event_id, title, participants, content, content_plain, gm_notes, gm_only, created_at")
+      .eq("campaign_id", id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("sessions")
+      .select("id, title, session_number")
+      .eq("campaign_id", id)
+      .is("deleted_at", null)
+      .order("session_number", { ascending: true }),
     supabase.from("npcs").select("id, name").eq("campaign_id", id).is("deleted_at", null).order("name"),
     supabase.from("characters").select("id, name").eq("campaign_id", id).is("deleted_at", null).order("name"),
   ]);
+
+  if (!membership) notFound();
+  if (!campaign) notFound();
 
   const knownEntities = [
     ...(npcs.data ?? []).map((n) => ({ id: n.id, name: n.name, entity_type: "npc" })),
@@ -54,7 +57,7 @@ export default async function ConversationsPage({
       conversations={conversations ?? []}
       sessions={sessions ?? []}
       role={membership.role}
-      userId={user.id}
+      userId={userId}
       knownEntities={knownEntities}
     />
   );

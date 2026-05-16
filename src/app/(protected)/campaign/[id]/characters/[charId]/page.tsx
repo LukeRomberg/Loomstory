@@ -1,5 +1,6 @@
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { CharacterSheet } from "./character-sheet";
 import type { Section } from "@/types/system-template";
 
@@ -9,18 +10,19 @@ export default async function CharacterPage({
   params: Promise<{ id: string; charId: string }>;
 }) {
   const { id, charId } = await params;
+  const { id: userId } = await requireUser();
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
-  const { data: membership } = await supabase
-    .from("campaign_members").select("role")
-    .eq("campaign_id", id).eq("user_id", user.id).is("deleted_at", null).single();
+  const [{ data: membership }, { data: campaign }] = await Promise.all([
+    supabase
+      .from("campaign_members").select("role")
+      .eq("campaign_id", id).eq("user_id", userId).is("deleted_at", null).single(),
+    supabase
+      .from("campaigns").select("id, name, system_id")
+      .eq("id", id).is("deleted_at", null).single(),
+  ]);
+
   if (!membership) notFound();
-
-  const { data: campaign } = await supabase
-    .from("campaigns").select("id, name, system_id")
-    .eq("id", id).is("deleted_at", null).single();
   if (!campaign) notFound();
 
   // Fetch character + all child table data in parallel
@@ -47,7 +49,7 @@ export default async function CharacterPage({
       campaignId={id}
       campaignName={campaign.name}
       role={membership.role}
-      userId={user.id}
+      userId={userId}
       template={template}
       stats={statsResult.data ?? []}
       abilities={abilitiesResult.data ?? []}

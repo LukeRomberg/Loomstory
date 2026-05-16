@@ -26,4 +26,7 @@ vi.mock("next/headers", () => ({
     getAll: () => [],
     set: vi.fn(),
   }),
+  headers: async () => ({
+    get: () => null,
+  }),
 }));
