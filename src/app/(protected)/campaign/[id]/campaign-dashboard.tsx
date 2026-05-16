@@ -26,6 +26,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Bookshelf } from "@/components/shared/bookshelf";
+import { BookSpine } from "@/components/shared/book-spine";
+import { CAMPAIGN_SECTIONS } from "@/lib/sections";
 import {
   Dialog,
   DialogContent,
@@ -216,135 +219,33 @@ export function CampaignDashboard({
         }}
       />
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card
-          className="grain gold-glow cursor-pointer"
-          onClick={() => setNpcModalOpen(true)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-heading flex items-center gap-2">
-              <Users className="size-4 text-gold" />
-              NPCs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{entityCounts.npcs}</p>
-          </CardContent>
-        </Card>
-        <Card
-          className="grain gold-glow cursor-pointer"
-          onClick={() => setLocationModalOpen(true)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-heading flex items-center gap-2">
-              <MapPin className="size-4 text-gold" />
-              Locations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{entityCounts.locations}</p>
-          </CardContent>
-        </Card>
-        <Card
-          className="grain gold-glow cursor-pointer"
-          onClick={() => setFactionModalOpen(true)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-heading flex items-center gap-2">
-              <Shield className="size-4 text-gold" />
-              Factions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{entityCounts.factions}</p>
-          </CardContent>
-        </Card>
-        <Card
-          className="grain gold-glow cursor-pointer"
-          onClick={() => setEventModalOpen(true)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-heading flex items-center gap-2">
-              <Scroll className="size-4 text-gold" />
-              Events
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{entityCounts.events}</p>
-          </CardContent>
-        </Card>
-        <Card
-          className="grain gold-glow cursor-pointer"
-          onClick={() => setConversationModalOpen(true)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-heading flex items-center gap-2">
-              <MessageSquare className="size-4 text-gold" />
-              Conversations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{entityCounts.conversations}</p>
-          </CardContent>
-        </Card>
-        <Card
-          className="grain gold-glow cursor-pointer"
-          onClick={() => setPlotThreadModalOpen(true)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-heading flex items-center gap-2">
-              <GitBranch className="size-4 text-gold" />
-              Plot Threads
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{entityCounts.plotThreads}</p>
-          </CardContent>
-        </Card>
-        <Card
-          className="grain gold-glow cursor-pointer"
-          onClick={() => setItemModalOpen(true)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-heading flex items-center gap-2">
-              <Sword className="size-4 text-gold" />
-              Items
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{entityCounts.items}</p>
-          </CardContent>
-        </Card>
-        <Card
-          className="grain gold-glow cursor-pointer"
-          onClick={() => setLoreModalOpen(true)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-heading flex items-center gap-2">
-              <BookOpen className="size-4 text-gold" />
-              Lore
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{entityCounts.lore}</p>
-          </CardContent>
-        </Card>
-        <Card
-          className="grain gold-glow cursor-pointer"
-          onClick={() => setCharacterModalOpen(true)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-heading flex items-center gap-2">
-              <UserCircle className="size-4 text-gold" />
-              Characters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{entityCounts.characters}</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Knowledge Base bookshelf */}
+      <Bookshelf campaignName="Knowledge Base">
+        {CAMPAIGN_SECTIONS.map((section) => {
+          const count = entityCounts[section.countKey];
+          const modalSetters: Record<string, () => void> = {
+            npcs: () => setNpcModalOpen(true),
+            locations: () => setLocationModalOpen(true),
+            factions: () => setFactionModalOpen(true),
+            events: () => setEventModalOpen(true),
+            conversations: () => setConversationModalOpen(true),
+            "plot-threads": () => setPlotThreadModalOpen(true),
+            items: () => setItemModalOpen(true),
+            lore: () => setLoreModalOpen(true),
+            characters: () => setCharacterModalOpen(true),
+          };
+          return (
+            <BookSpine
+              key={section.slug}
+              title={section.title}
+              subtitle={`${count} ${count === 1 ? "entry" : "entries"}`}
+              color={section.color}
+              emblem={section.emblem}
+              onClick={modalSetters[section.slug]}
+            />
+          );
+        })}
+      </Bookshelf>
 
       {/* Recent Sessions */}
       <div>
