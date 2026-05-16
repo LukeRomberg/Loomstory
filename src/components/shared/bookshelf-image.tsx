@@ -23,16 +23,16 @@ const HOTSPOTS: Record<
   string,
   { left: string; top: string; width: string; height: string }
 > = {
-  npcs: { left: "16%", top: "13%", width: "6.5%", height: "45%" },
-  factions: { left: "24.5%", top: "13%", width: "6.5%", height: "45%" },
+  npcs: { left: "18%", top: "13%", width: "6.5%", height: "45%" },
+  factions: { left: "25.5%", top: "13%", width: "6.5%", height: "45%" },
   events: { left: "33%", top: "13%", width: "6.5%", height: "45%" },
   conversations: { left: "41.5%", top: "13%", width: "10%", height: "45%" },
   "plot-threads": { left: "53.5%", top: "13%", width: "6.5%", height: "45%" },
-  items: { left: "62%", top: "13%", width: "6.5%", height: "45%" },
-  lore: { left: "70.5%", top: "13%", width: "10%", height: "45%" },
-  characters: { left: "82.5%", top: "13%", width: "6.5%", height: "45%" },
-  locations: { left: "8%", top: "61%", width: "12%", height: "26%" },
-  sessions: { left: "16%", top: "77%", width: "16%", height: "13%" },
+  items: { left: "61%", top: "13%", width: "6.5%", height: "45%" },
+  lore: { left: "69.5%", top: "13%", width: "10%", height: "45%" },
+  characters: { left: "81.5%", top: "13%", width: "6.5%", height: "45%" },
+  locations: { left: "6%", top: "61%", width: "12%", height: "26%" },
+  sessions: { left: "18%", top: "80%", width: "16%", height: "13%" },
 };
 
 export function BookshelfImage({ sections, className }: BookshelfImageProps) {
@@ -59,8 +59,10 @@ export function BookshelfImage({ sections, className }: BookshelfImageProps) {
         const title = titleBySlug.get(section.slug) ?? section.slug;
         if (!pos) return null;
 
-        const hotspotClassName =
-          "absolute cursor-pointer rounded-sm transition-all duration-150 hover:bg-gold/20 hover:shadow-[inset_0_0_24px_rgba(200,162,94,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold";
+        const hotspotClassName = cn(
+          "absolute cursor-pointer transition-all duration-150 hover:bg-gold/20 hover:shadow-[inset_0_0_24px_rgba(200,162,94,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
+          section.slug === "locations" ? "rounded-full" : "rounded-sm"
+        );
 
         if (section.href) {
           return (
