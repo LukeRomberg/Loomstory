@@ -36,32 +36,20 @@ export default async function CampaignPage({
 
   if (!membership) notFound();
 
-  // Fetch system name
+  // Fetch system slug (needed for CharacterModal)
   const { data: system } = campaign.system_id
     ? await supabase
         .from("systems")
-        .select("name, slug")
+        .select("slug")
         .eq("id", campaign.system_id)
         .single()
     : { data: null };
-
-  // Fetch recent sessions
-  const { data: sessions } = await supabase
-    .from("sessions")
-    .select("id, title, date_played, session_number, status")
-    .eq("campaign_id", id)
-    .is("deleted_at", null)
-    .order("session_number", { ascending: false, nullsFirst: false })
-    .order("date_played", { ascending: false, nullsFirst: false })
-    .limit(5);
 
   return (
     <CampaignDashboard
       campaign={campaign}
       role={membership.role}
-      systemName={system?.name ?? null}
       systemSlug={system?.slug ?? null}
-      sessions={sessions ?? []}
       userId={user.id}
     />
   );

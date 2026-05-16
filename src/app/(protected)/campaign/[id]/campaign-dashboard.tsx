@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
+import { ChevronLeft, Settings } from "lucide-react";
 import { SettingsModal } from "@/components/loomstory/settings-modal";
-import { IconButton } from "@/components/shared/icon-button";
 import { NpcModal } from "@/components/loomstory/npc-modal";
 import { LocationModal } from "@/components/loomstory/location-modal";
 import { FactionModal } from "@/components/loomstory/faction-modal";
@@ -15,53 +13,8 @@ import { LoreModal } from "@/components/loomstory/lore-modal";
 import { EventModal } from "@/components/loomstory/event-modal";
 import { ConversationModal } from "@/components/loomstory/conversation-modal";
 import { CharacterModal } from "@/components/loomstory/character-modal";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { BookshelfImage } from "@/components/shared/bookshelf-image";
 import { CAMPAIGN_SECTIONS } from "@/lib/sections";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { EmptyState } from "@/components/loomstory/empty-state";
-import {
-  ChevronLeft,
-  Settings,
-  Plus,
-  ScrollText,
-  Scroll,
-  MessageSquare,
-  Users,
-  MapPin,
-  Shield,
-  Crown,
-  GitBranch,
-  Sword,
-  BookOpen,
-  Sparkles,
-  UserCircle,
-} from "lucide-react";
-
-interface Session {
-  id: string;
-  title: string;
-  date_played: string | null;
-  session_number: number | null;
-  status: string;
-}
 
 interface CampaignDashboardProps {
   campaign: {
@@ -71,27 +24,19 @@ interface CampaignDashboardProps {
     system_id: string | null;
   };
   role: string;
-  systemName: string | null;
   systemSlug: string | null;
-  sessions: Session[];
   userId: string;
 }
 
 export function CampaignDashboard({
   campaign,
   role,
-  systemName,
   systemSlug,
-  sessions: initialSessions,
   userId,
 }: CampaignDashboardProps) {
   const router = useRouter();
   const isGm = role === "gm";
 
-  const [sessions, setSessions] = useState(
-    isGm ? initialSessions : initialSessions.filter((s) => s.status === "published")
-  );
-  const [open, setOpen] = useState(false);
   const [npcModalOpen, setNpcModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [factionModalOpen, setFactionModalOpen] = useState(false);
@@ -99,312 +44,82 @@ export function CampaignDashboard({
   const [plotThreadModalOpen, setPlotThreadModalOpen] = useState(false);
   const [loreModalOpen, setLoreModalOpen] = useState(false);
   const [eventModalOpen, setEventModalOpen] = useState(false);
-  const [eventModalInitialId, setEventModalInitialId] = useState<string | undefined>(undefined);
   const [conversationModalOpen, setConversationModalOpen] = useState(false);
   const [characterModalOpen, setCharacterModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [datePlayed, setDatePlayed] = useState("");
-  const [sessionNumber, setSessionNumber] = useState("");
-  const [creating, setCreating] = useState(false);
 
-  const nextSessionNumber =
-    sessions.length > 0
-      ? Math.max(...sessions.map((s) => s.session_number ?? 0)) + 1
-      : 1;
-
-  async function handleCreateSession(e: React.FormEvent) {
-    e.preventDefault();
-    setCreating(true);
-
-    const supabase = createClient();
-
-    const { data: session, error: createError } = await supabase
-      .from("sessions")
-      .insert({
-        campaign_id: campaign.id,
-        title,
-        date_played: datePlayed || null,
-        session_number: sessionNumber
-          ? parseInt(sessionNumber)
-          : nextSessionNumber,
-        status: "draft",
-        created_by: userId,
-      })
-      .select()
-      .single();
-
-    if (createError || !session) {
-      toast.error("Failed to create session", { description: createError?.message });
-      setCreating(false);
-      return;
-    }
-
-    setOpen(false);
-    setTitle("");
-    setDatePlayed("");
-    setSessionNumber("");
-    setCreating(false);
-
-    router.push(`/campaign/${campaign.id}/session/${session.id}`);
-  }
+  const modalSetters: Record<string, () => void> = {
+    npcs: () => setNpcModalOpen(true),
+    locations: () => setLocationModalOpen(true),
+    factions: () => setFactionModalOpen(true),
+    events: () => setEventModalOpen(true),
+    conversations: () => setConversationModalOpen(true),
+    "plot-threads": () => setPlotThreadModalOpen(true),
+    items: () => setItemModalOpen(true),
+    lore: () => setLoreModalOpen(true),
+    characters: () => setCharacterModalOpen(true),
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-            Back to campaigns
-          </button>
-          <h2 className="text-2xl font-heading font-semibold text-foreground">
-            {campaign.name}
-          </h2>
-          <div className="flex items-center gap-2 mt-1">
-            {systemName && (
-              <Badge variant="outline" className="text-xs">
-                {systemName}
-              </Badge>
-            )}
-            <Badge
-              variant={isGm ? "default" : "secondary"}
-              className="text-xs font-heading"
-            >
-              <Crown className="size-3 mr-1" />
-              {isGm ? "Game Master" : "Player"}
-            </Badge>
-          </div>
-          {campaign.description && (
-            <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-              {campaign.description}
-            </p>
-          )}
-        </div>
-        {isGm && (
-          <IconButton
-            icon={Settings}
-            label="Campaign settings"
-            onClick={() => setSettingsOpen(true)}
-          />
-        )}
-      </div>
-
-      {/* Knowledge Base bookshelf */}
-      <BookshelfImage
-        sections={CAMPAIGN_SECTIONS.map((section) => {
-          if (section.slug === "sessions") {
-            return {
-              slug: "sessions",
-              href: `/campaign/${campaign.id}/sessions`,
-            };
-          }
-          const modalSetters: Record<string, () => void> = {
-            npcs: () => setNpcModalOpen(true),
-            locations: () => setLocationModalOpen(true),
-            factions: () => setFactionModalOpen(true),
-            events: () => setEventModalOpen(true),
-            conversations: () => setConversationModalOpen(true),
-            "plot-threads": () => setPlotThreadModalOpen(true),
-            items: () => setItemModalOpen(true),
-            lore: () => setLoreModalOpen(true),
-            characters: () => setCharacterModalOpen(true),
-          };
-          return {
-            slug: section.slug,
-            onClick: modalSetters[section.slug],
-          };
-        })}
-      />
-
-      {/* Recent Sessions */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-heading font-medium">Recent Sessions</h3>
-          <div className="flex items-center gap-2">
-            {isGm && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="font-heading"
-                onClick={() =>
-                  router.push(`/campaign/${campaign.id}/prep`)
-                }
-              >
-                <Sparkles className="size-4 mr-1.5" />
-                Session Prep
-              </Button>
-            )}
-            {sessions.length > 0 && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() =>
-                  router.push(`/campaign/${campaign.id}/sessions`)
-                }
-              >
-                View all
-              </Button>
-            )}
-            {isGm && (
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger
-                  render={
-                    <Button size="sm" className="gold-glow font-heading">
-                      <Plus className="size-4 mr-1.5" />
-                      New Session
-                    </Button>
-                  }
-                />
-                <DialogContent>
-                  <form onSubmit={handleCreateSession}>
-                    <DialogHeader>
-                      <DialogTitle className="font-heading">
-                        New Session
-                      </DialogTitle>
-                      <DialogDescription>
-                        Create a session to start capturing notes.
-                      </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="session-title">Title</Label>
-                        <Input
-                          id="session-title"
-                          placeholder="The Siege of Ironhold"
-                          value={title}
-                          onChange={(e) => setTitle(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="session-number">Session #</Label>
-                          <Input
-                            id="session-number"
-                            type="number"
-                            placeholder={String(nextSessionNumber)}
-                            value={sessionNumber}
-                            onChange={(e) => setSessionNumber(e.target.value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="date-played">Date Played</Label>
-                          <Input
-                            id="date-played"
-                            type="date"
-                            value={datePlayed}
-                            onChange={(e) => setDatePlayed(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <DialogFooter>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => setOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={creating || !title.trim()}
-                        className="gold-glow"
-                      >
-                        {creating ? "Creating..." : "Create Session"}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
-        </div>
-
-        {sessions.length === 0 ? (
-          <EmptyState
-            icon={ScrollText}
-            message="No sessions yet. Create your first session to start building your story."
-            action={
-              isGm
-                ? { label: "New Session", onClick: () => setOpen(true) }
-                : undefined
+    <>
+      {/* Immersive bookshelf — sits at z-45 to cover the AppHeader (z-40) but stay below modals (z-50) */}
+      <div className="fixed inset-0 z-[45] flex items-center justify-center overflow-hidden bg-leather">
+        <BookshelfImage
+          className="max-h-screen w-full"
+          sections={CAMPAIGN_SECTIONS.map((section) => {
+            if (section.slug === "sessions") {
+              return {
+                slug: "sessions",
+                href: `/campaign/${campaign.id}/sessions`,
+              };
             }
-          />
-        ) : (
-          <div className="space-y-2">
-            {sessions.map((session) => (
-              <Card
-                key={session.id}
-                className="grain gold-glow cursor-pointer"
-                onClick={() =>
-                  router.push(
-                    `/campaign/${campaign.id}/session/${session.id}`
-                  )
-                }
-              >
-                <CardContent className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
-                    {session.session_number != null && (
-                      <span className="text-xs text-muted-foreground font-mono w-8">
-                        #{session.session_number}
-                      </span>
-                    )}
-                    <span className="font-medium">{session.title}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {session.date_played && (
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(session.date_played).toLocaleDateString()}
-                      </span>
-                    )}
-                    <Badge
-                      variant={
-                        session.status === "published"
-                          ? "default"
-                          : "secondary"
-                      }
-                      className="text-xs"
-                    >
-                      {session.status}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+            return {
+              slug: section.slug,
+              onClick: modalSetters[section.slug],
+            };
+          })}
+        />
+
+        {/* Overlay: back to library */}
+        <button
+          onClick={() => router.push("/dashboard")}
+          aria-label="Back to library"
+          className="absolute left-4 top-4 z-[46] flex items-center gap-1.5 rounded-md px-3 py-2 font-subheading text-xs uppercase tracking-[0.18em] text-gold/80 transition hover:bg-leather/60 hover:text-gold"
+        >
+          <ChevronLeft className="size-4" />
+          Library
+        </button>
+
+        {/* Overlay: campaign name plate */}
+        <div className="pointer-events-none absolute left-1/2 top-5 z-[46] -translate-x-1/2 font-heading text-sm uppercase tracking-[0.22em] text-gold/85 sm:text-base">
+          {campaign.name}
+        </div>
+
+        {/* Overlay: settings cog (GM only) */}
+        {isGm && (
+          <button
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Campaign settings"
+            className="absolute right-4 top-4 z-[46] rounded-md p-2 text-gold/80 transition hover:bg-leather/60 hover:text-gold"
+          >
+            <Settings className="size-5" />
+          </button>
         )}
       </div>
 
-      {/* Entity Modals */}
+      {/* Modals — render at z-50, sit above the bookshelf */}
       <NpcModal campaignId={campaign.id} userId={userId} role={role} open={npcModalOpen} onOpenChange={setNpcModalOpen} />
       <LocationModal campaignId={campaign.id} userId={userId} role={role} open={locationModalOpen} onOpenChange={setLocationModalOpen} />
       <FactionModal campaignId={campaign.id} userId={userId} role={role} open={factionModalOpen} onOpenChange={setFactionModalOpen} />
       <ItemModal campaignId={campaign.id} userId={userId} role={role} open={itemModalOpen} onOpenChange={setItemModalOpen} />
       <PlotThreadModal campaignId={campaign.id} userId={userId} role={role} open={plotThreadModalOpen} onOpenChange={setPlotThreadModalOpen} />
       <LoreModal campaignId={campaign.id} userId={userId} role={role} open={loreModalOpen} onOpenChange={setLoreModalOpen} />
-      <EventModal
-        campaignId={campaign.id}
-        userId={userId}
-        role={role}
-        open={eventModalOpen}
-        onOpenChange={(next) => {
-          setEventModalOpen(next);
-          if (!next) setEventModalInitialId(undefined);
-        }}
-        initialSelectedId={eventModalInitialId}
-      />
+      <EventModal campaignId={campaign.id} userId={userId} role={role} open={eventModalOpen} onOpenChange={setEventModalOpen} />
       <ConversationModal campaignId={campaign.id} userId={userId} role={role} open={conversationModalOpen} onOpenChange={setConversationModalOpen} />
       <CharacterModal campaignId={campaign.id} userId={userId} role={role} systemId={campaign.system_id} systemSlug={systemSlug} open={characterModalOpen} onOpenChange={setCharacterModalOpen} />
       {isGm && (
         <SettingsModal campaignId={campaign.id} userId={userId} open={settingsOpen} onOpenChange={setSettingsOpen} />
       )}
-    </div>
+    </>
   );
 }

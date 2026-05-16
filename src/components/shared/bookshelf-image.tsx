@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { CAMPAIGN_SECTIONS } from "@/lib/sections";
 
 interface BookshelfSection {
@@ -41,7 +42,7 @@ export function BookshelfImage({ sections, className }: BookshelfImageProps) {
 
   return (
     <div
-      className={`relative mx-auto w-full ${className ?? ""}`}
+      className={cn("relative", className)}
       style={{ aspectRatio: "1448 / 1086" }}
     >
       <Image
