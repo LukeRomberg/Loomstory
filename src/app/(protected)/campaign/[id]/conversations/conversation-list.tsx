@@ -144,16 +144,10 @@ export function ConversationList({
             </button>
           )}
 
-          {/* Parchment content overlay — debug border (remove when sizing is right) */}
+          {/* Parchment content overlay */}
           <div
             className="absolute flex flex-col gap-3 text-leather"
-            style={{
-              left: "16%",
-              right: "16%",
-              top: "14%",
-              bottom: "16%",
-              border: "2px solid hotpink",
-            }}
+            style={{ left: "16%", right: "16%", top: "14%", bottom: "16%" }}
           >
             {/* Header row */}
             <div className="flex shrink-0 items-center gap-3">

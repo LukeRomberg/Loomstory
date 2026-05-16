@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Settings } from "lucide-react";
 import { SettingsModal } from "@/components/loomstory/settings-modal";
 import { NpcModal } from "@/components/loomstory/npc-modal";
-import { LocationModal } from "@/components/loomstory/location-modal";
 import { FactionModal } from "@/components/loomstory/faction-modal";
 import { ItemModal } from "@/components/loomstory/item-modal";
 import { PlotThreadModal } from "@/components/loomstory/plot-thread-modal";
@@ -37,7 +36,6 @@ export function CampaignDashboard({
   const isGm = role === "gm";
 
   const [npcModalOpen, setNpcModalOpen] = useState(false);
-  const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [factionModalOpen, setFactionModalOpen] = useState(false);
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [plotThreadModalOpen, setPlotThreadModalOpen] = useState(false);
@@ -48,7 +46,6 @@ export function CampaignDashboard({
 
   const modalSetters: Record<string, () => void> = {
     npcs: () => setNpcModalOpen(true),
-    locations: () => setLocationModalOpen(true),
     factions: () => setFactionModalOpen(true),
     events: () => setEventModalOpen(true),
     "plot-threads": () => setPlotThreadModalOpen(true),
@@ -64,7 +61,11 @@ export function CampaignDashboard({
         <BookshelfImage
           className="max-h-screen w-full"
           sections={CAMPAIGN_SECTIONS.map((section) => {
-            if (section.slug === "sessions" || section.slug === "conversations") {
+            if (
+              section.slug === "sessions" ||
+              section.slug === "conversations" ||
+              section.slug === "locations"
+            ) {
               return {
                 slug: section.slug,
                 href: `/campaign/${campaign.id}/${section.slug}`,
@@ -106,7 +107,6 @@ export function CampaignDashboard({
 
       {/* Modals — render at z-50, sit above the bookshelf */}
       <NpcModal campaignId={campaign.id} userId={userId} role={role} open={npcModalOpen} onOpenChange={setNpcModalOpen} />
-      <LocationModal campaignId={campaign.id} userId={userId} role={role} open={locationModalOpen} onOpenChange={setLocationModalOpen} />
       <FactionModal campaignId={campaign.id} userId={userId} role={role} open={factionModalOpen} onOpenChange={setFactionModalOpen} />
       <ItemModal campaignId={campaign.id} userId={userId} role={role} open={itemModalOpen} onOpenChange={setItemModalOpen} />
       <PlotThreadModal campaignId={campaign.id} userId={userId} role={role} open={plotThreadModalOpen} onOpenChange={setPlotThreadModalOpen} />

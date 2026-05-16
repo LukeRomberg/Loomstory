@@ -14,7 +14,9 @@ vi.mock("@/lib/supabase/client", () => ({
     from: () => ({
       insert: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: { id: "new-loc", name: "New Loc" }, error: null }),
+      single: vi
+        .fn()
+        .mockResolvedValue({ data: { id: "new-loc", name: "New Loc" }, error: null }),
     }),
   }),
 }));
@@ -32,20 +34,21 @@ describe("LocationList", () => {
 
   it("renders the page heading", () => {
     render(<LocationList {...defaultProps} />);
-    expect(screen.getByText("Locations")).toBeInTheDocument();
+    expect(screen.getByText(/locations/i)).toBeInTheDocument();
   });
 
-  it("renders location cards with name", () => {
+  it("renders location name (in master list + selected detail)", () => {
     render(<LocationList {...defaultProps} />);
-    expect(screen.getByText("Ironhold")).toBeInTheDocument();
+    // First location auto-selects so name shows in both master list and detail
+    expect(screen.getAllByText("Ironhold").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders location type badge", () => {
+  it("renders the location type", () => {
     render(<LocationList {...defaultProps} />);
-    expect(screen.getByText("city")).toBeInTheDocument();
+    expect(screen.getAllByText("city").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders location description", () => {
+  it("renders selected location's description in the detail pane", () => {
     render(<LocationList {...defaultProps} />);
     expect(screen.getByText(/fortified city/)).toBeInTheDocument();
   });
@@ -55,22 +58,27 @@ describe("LocationList", () => {
     expect(screen.getByText(/no locations yet/i)).toBeInTheDocument();
   });
 
-  it("navigates to location detail on card click", async () => {
+  it("navigates to full detail page when Open full details is clicked", async () => {
     const user = userEvent.setup();
     render(<LocationList {...defaultProps} />);
-    await user.click(screen.getByText("Ironhold"));
+    await user.click(screen.getByText(/open full details/i));
     expect(mockPush).toHaveBeenCalledWith(
       "/campaign/campaign-1/locations/location-1"
     );
   });
 
-  it("shows create button for GMs", () => {
+  it("shows new-location action for GMs", () => {
     render(<LocationList {...defaultProps} />);
-    expect(screen.getByText(/new location/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/new location/i)).toBeInTheDocument();
   });
 
-  it("hides create button for players", () => {
+  it("hides new-location action for players", () => {
     render(<LocationList {...defaultProps} role="player" />);
-    expect(screen.queryByText(/new location/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/new location/i)).not.toBeInTheDocument();
+  });
+
+  it("renders a back link to the bookshelf", () => {
+    render(<LocationList {...defaultProps} />);
+    expect(screen.getByLabelText(/back to bookshelf/i)).toBeInTheDocument();
   });
 });
