@@ -196,6 +196,12 @@ export function CampaignDashboard({
       {/* Knowledge Base bookshelf */}
       <BookshelfImage
         sections={CAMPAIGN_SECTIONS.map((section) => {
+          if (section.slug === "sessions") {
+            return {
+              slug: "sessions",
+              href: `/campaign/${campaign.id}/sessions`,
+            };
+          }
           const modalSetters: Record<string, () => void> = {
             npcs: () => setNpcModalOpen(true),
             locations: () => setLocationModalOpen(true),

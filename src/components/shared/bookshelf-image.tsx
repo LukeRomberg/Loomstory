@@ -14,21 +14,23 @@ interface BookshelfImageProps {
 }
 
 // Hotspot positions are percentages of the 1448×1086 source image.
-// The 9 books occupy roughly the top half of the bookshelf.
+// Top shelf: 8 books in a row (NPCs through Characters).
+// Bottom shelf interactive items: Locations (globe), Sessions (stacked green books).
 // Tune these via dev server inspection if the click targets feel off.
 const HOTSPOTS: Record<
   string,
   { left: string; top: string; width: string; height: string }
 > = {
-  npcs: { left: "19.5%", top: "16%", width: "5.5%", height: "40%" },
-  locations: { left: "25.5%", top: "16%", width: "5.5%", height: "40%" },
-  factions: { left: "31.5%", top: "16%", width: "5.5%", height: "40%" },
-  events: { left: "37.5%", top: "16%", width: "5.5%", height: "40%" },
-  conversations: { left: "43.5%", top: "16%", width: "8%", height: "40%" },
-  "plot-threads": { left: "52%", top: "16%", width: "5.5%", height: "40%" },
-  items: { left: "58%", top: "16%", width: "5.5%", height: "40%" },
-  lore: { left: "64%", top: "16%", width: "8%", height: "40%" },
-  characters: { left: "72.5%", top: "16%", width: "5.5%", height: "40%" },
+  npcs: { left: "20%", top: "13%", width: "6.5%", height: "45%" },
+  factions: { left: "26.5%", top: "13%", width: "6.5%", height: "45%" },
+  events: { left: "33%", top: "13%", width: "6.5%", height: "45%" },
+  conversations: { left: "39.5%", top: "13%", width: "10%", height: "45%" },
+  "plot-threads": { left: "49.5%", top: "13%", width: "6.5%", height: "45%" },
+  items: { left: "56%", top: "13%", width: "6.5%", height: "45%" },
+  lore: { left: "62.5%", top: "13%", width: "10%", height: "45%" },
+  characters: { left: "72.5%", top: "13%", width: "6.5%", height: "45%" },
+  locations: { left: "8%", top: "61%", width: "12%", height: "26%" },
+  sessions: { left: "16%", top: "77%", width: "16%", height: "13%" },
 };
 
 export function BookshelfImage({ sections, className }: BookshelfImageProps) {
