@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { WizardModal } from "./wizard-modal";
 import { WizardProgress } from "./wizard-progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { StepHeading } from "./step-heading";
+import { StepHeader } from "./step-header";
 import { HelpPopup } from "./help-popup";
 import { BackButton } from "./back-button";
 import { WizardFooter } from "./wizard-footer";
@@ -855,8 +855,7 @@ export function CharacterWizard({
       {/* ── Class pick step ── */}
       {currentStepKey === "class_pick" && currentStep && (
         <div key="class_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
-          <BackButton onClick={goBack} />
-          <StepHeading
+          <StepHeader
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
@@ -899,12 +898,12 @@ export function CharacterWizard({
       {/* ── Subclass pick step ── */}
       {currentStepKey === "subclass_pick" && currentStep && (
         <div key="subclass_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
-          <BackButton onClick={goBack} />
-          <StepHeading
+          <StepHeader
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
             onHelpClick={handleHelpOpen}
+            onBack={goBack}
           />
           <CardPicker
             cards={subclasses.map((c) =>
@@ -930,46 +929,47 @@ export function CharacterWizard({
       {/* ── Ancestry pick step ── */}
       {currentStepKey === "ancestry_pick" && currentStep && (
         <div key="ancestry_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
-          <BackButton onClick={goBack} />
-          <StepHeading
+          <StepHeader
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
             onHelpClick={handleHelpOpen}
-          />
-          {/* Variant toggle: switches every ancestry card to its female or male portrait
-              (where both exist). Ungendered art (Clank) and ancestries with only one
-              variant ignore the toggle and just show whatever's available. */}
-          <div
-            role="radiogroup"
-            aria-label="Ancestry portrait variant"
-            className="flex items-center justify-center gap-2 self-center rounded-full bg-black/30 p-1"
+            onBack={goBack}
           >
-            {(["female", "male"] as const).map((v) => {
-              const active = wizardState.ancestryVariant === v;
-              return (
-                <button
-                  key={v}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  onClick={() =>
-                    setWizardState((prev) => ({ ...prev, ancestryVariant: v }))
-                  }
-                  className={cn(
-                    "rounded-full px-4 py-1 text-xs font-heading uppercase tracking-wider transition-colors cursor-pointer",
-                    active
-                      ? cn("bg-current", classTheme?.textColor ?? "text-gold")
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <span className={active ? "text-black" : ""}>
-                    {v === "female" ? "Female" : "Male"}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+            {/* Variant toggle: switches every ancestry card to its female or male portrait
+                (where both exist). Ungendered art (Clank) and ancestries with only one
+                variant ignore the toggle and just show whatever's available. */}
+            <div
+              role="radiogroup"
+              aria-label="Ancestry portrait variant"
+              className="flex items-center gap-2 rounded-full bg-black/30 p-1"
+            >
+              {(["female", "male"] as const).map((v) => {
+                const active = wizardState.ancestryVariant === v;
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() =>
+                      setWizardState((prev) => ({ ...prev, ancestryVariant: v }))
+                    }
+                    className={cn(
+                      "rounded-full px-4 py-1 text-xs font-heading uppercase tracking-wider transition-colors cursor-pointer",
+                      active
+                        ? cn("bg-current", classTheme?.textColor ?? "text-gold")
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <span className={active ? "text-black" : ""}>
+                      {v === "female" ? "Female" : "Male"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </StepHeader>
           <CardPicker
             cards={distinctDataValues(ancestryFeatures, "ancestry").map((name) =>
               heritageToPickerCard(
@@ -994,12 +994,12 @@ export function CharacterWizard({
       {/* ── Community pick step ── */}
       {currentStepKey === "community_pick" && currentStep && (
         <div key="community_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
-          <BackButton onClick={goBack} />
-          <StepHeading
+          <StepHeader
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
             onHelpClick={handleHelpOpen}
+            onBack={goBack}
           />
           <CardPicker
             cards={distinctDataValues(communityFeatures, "community").map((name) =>
@@ -1018,12 +1018,12 @@ export function CharacterWizard({
       {/* ── Equipment: primary weapon ── */}
       {currentStepKey === "weapon_primary_pick" && currentStep && (
         <div key="weapon_primary_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
-          <BackButton onClick={goBack} />
-          <StepHeading
+          <StepHeader
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
             onHelpClick={handleHelpOpen}
+            onBack={goBack}
           />
           <CardPicker
             cards={primaryWeapons.map((w) => weaponToPickerCard(w, classTheme))}
@@ -1050,12 +1050,12 @@ export function CharacterWizard({
       {/* ── Equipment: secondary weapon (only when primary is One-Handed) ── */}
       {currentStepKey === "weapon_secondary_pick" && currentStep && (
         <div key="weapon_secondary_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
-          <BackButton onClick={goBack} />
-          <StepHeading
+          <StepHeader
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
             onHelpClick={handleHelpOpen}
+            onBack={goBack}
           />
           <CardPicker
             cards={secondaryWeapons.map((w) => weaponToPickerCard(w, classTheme))}
@@ -1072,12 +1072,12 @@ export function CharacterWizard({
       {/* ── Equipment: armor ── */}
       {currentStepKey === "armor_pick" && currentStep && (
         <div key="armor_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
-          <BackButton onClick={goBack} />
-          <StepHeading
+          <StepHeader
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
             onHelpClick={handleHelpOpen}
+            onBack={goBack}
           />
           <CardPicker
             cards={tier1Armor.map((a) => armorToPickerCard(a, classTheme))}
@@ -1094,12 +1094,12 @@ export function CharacterWizard({
       {/* ── Equipment: starting potion ── */}
       {currentStepKey === "potion_pick" && currentStep && (
         <div key="potion_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
-          <BackButton onClick={goBack} />
-          <StepHeading
+          <StepHeader
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
             onHelpClick={handleHelpOpen}
+            onBack={goBack}
           />
           <CardPicker
             cards={startingPotions.map((p) => potionToPickerCard(p, classTheme))}
@@ -1117,12 +1117,12 @@ export function CharacterWizard({
       {/* ── Equipment: class-specific item (free-text, hardcoded options) ── */}
       {currentStepKey === "class_item_pick" && currentStep && (
         <div key="class_item_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
-          <BackButton onClick={goBack} />
-          <StepHeading
+          <StepHeader
             title={currentStep.label}
             subtitle={currentStep.subtitle}
             helpText={currentStep.helpText}
             onHelpClick={handleHelpOpen}
+            onBack={goBack}
           />
           <CardPicker
             cards={(DAGGERHEART_CLASS_ITEMS[wizardState.className ?? ""] ?? []).map((opt) =>
@@ -1146,12 +1146,12 @@ export function CharacterWizard({
         };
         return (
           <div key="traits" className="animate-fade-in space-y-6">
-            <BackButton onClick={goBack} />
-            <StepHeading
+            <StepHeader
               title={currentStep.label}
               subtitle={currentStep.subtitle}
               helpText={currentStep.helpText}
               onHelpClick={handleHelpOpen}
+              onBack={goBack}
             />
             <div
               className={cn(
@@ -1183,12 +1183,12 @@ export function CharacterWizard({
         };
         return (
           <div key="experiences_pick" className="animate-fade-in space-y-6">
-            <BackButton onClick={goBack} />
-            <StepHeading
+            <StepHeader
               title={currentStep.label}
               subtitle={currentStep.subtitle}
               helpText={currentStep.helpText}
               onHelpClick={handleHelpOpen}
+              onBack={goBack}
             />
             <div
               className={cn(
@@ -1218,12 +1218,12 @@ export function CharacterWizard({
         const cap = cfg?.selectCount ?? 2;
         return (
           <div key="domain_cards_pick" className="animate-fade-in flex flex-col gap-6 flex-1 min-h-0">
-            <BackButton onClick={goBack} />
-            <StepHeading
+            <StepHeader
               title={currentStep.label}
               subtitle={`${currentStep.subtitle ?? ""} (${pickedDomainCardIds.length}/${cap} chosen)`}
               helpText={currentStep.helpText}
               onHelpClick={handleHelpOpen}
+              onBack={goBack}
             />
             <CardPicker
               cards={domainCards.map((c) => domainCardToPickerCard(c, classTheme))}
