@@ -26,6 +26,7 @@ export default async function DashboardPage() {
     description: string | null;
     cover_image_url: string | null;
     system_id: string | null;
+    emblem: string | null;
     created_at: string;
     role: string;
   }[] = [];
@@ -33,7 +34,7 @@ export default async function DashboardPage() {
   if (campaignIds.length > 0) {
     const { data } = await supabase
       .from("campaigns")
-      .select("id, name, description, cover_image_url, system_id, created_at")
+      .select("id, name, description, cover_image_url, system_id, emblem, created_at")
       .in("id", campaignIds)
       .is("deleted_at", null)
       .order("created_at", { ascending: false });

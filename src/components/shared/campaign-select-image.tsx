@@ -12,6 +12,7 @@ interface CampaignSummary {
   name: string;
   role: string;
   systemName?: string;
+  emblem?: string | null;
 }
 
 interface CampaignSelectImageProps {
@@ -92,7 +93,7 @@ export function CampaignSelectImage({
       {pageCampaigns.map((campaign, i) => {
         const pos = HOTSPOTS[i];
         const isGm = campaign.role === "gm";
-        const emblemIcon = pickEmblem(campaign.id);
+        const emblemIcon = campaign.emblem ?? pickEmblem(campaign.id);
         return (
           <Link
             key={campaign.id}

@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CampaignSelectImage } from "@/components/shared/campaign-select-image";
+import { EmblemPicker } from "@/components/shared/emblem-picker";
+import { useGameIcons } from "@/hooks/use-game-icons";
 
 interface Campaign {
   id: string;
@@ -31,6 +33,7 @@ interface Campaign {
   description: string | null;
   cover_image_url: string | null;
   system_id: string | null;
+  emblem: string | null;
   created_at: string;
   role: string;
 }
@@ -66,6 +69,7 @@ export function CampaignSelectScreen({
         id: c.id,
         name: c.name,
         role: c.role,
+        emblem: c.emblem,
         systemName: c.system_id
           ? systemNameById.get(c.system_id)
           : undefined,
@@ -76,7 +80,9 @@ export function CampaignSelectScreen({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [systemId, setSystemId] = useState("");
+  const [emblem, setEmblem] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const { icons: emblemOptions, loading: emblemsLoading } = useGameIcons();
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -90,6 +96,7 @@ export function CampaignSelectScreen({
         name,
         description: description || null,
         system_id: systemId || null,
+        emblem,
         created_by: userId,
       })
       .select()
@@ -115,6 +122,7 @@ export function CampaignSelectScreen({
     setName("");
     setDescription("");
     setSystemId("");
+    setEmblem(null);
     setCreating(false);
 
     router.push(`/campaign/${campaign.id}`);
@@ -185,6 +193,15 @@ export function CampaignSelectScreen({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Book Emblem</Label>
+                <EmblemPicker
+                  availableEmblems={emblemOptions}
+                  value={emblem}
+                  onChange={setEmblem}
+                  loading={emblemsLoading}
                 />
               </div>
             </div>

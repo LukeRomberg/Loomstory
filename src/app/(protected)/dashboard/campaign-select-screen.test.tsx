@@ -15,16 +15,15 @@ vi.mock("@/hooks/use-transition-router", () => ({
 
 const mockCampaignSingle = vi.fn();
 const mockMemberInsert = vi.fn();
+const mockCampaignInsert = vi.fn((_payload: Record<string, unknown>) => ({
+  select: () => ({ single: mockCampaignSingle }),
+}));
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     from: (table: string) => {
       if (table === "campaigns") {
-        return {
-          insert: () => ({
-            select: () => ({ single: mockCampaignSingle }),
-          }),
-        };
+        return { insert: mockCampaignInsert };
       }
       if (table === "campaign_members") {
         return { insert: mockMemberInsert };
@@ -32,6 +31,19 @@ vi.mock("@/lib/supabase/client", () => ({
       return {};
     },
   }),
+}));
+
+vi.mock("@/hooks/use-game-icons", () => ({
+  useGameIcons: () => ({
+    icons: ["game-icons:wolf-head", "game-icons:castle", "game-icons:wyvern"],
+    loading: false,
+    error: null,
+  }),
+  FALLBACK_GAME_ICONS: [
+    "game-icons:wolf-head",
+    "game-icons:castle",
+    "game-icons:wyvern",
+  ],
 }));
 
 vi.mock("sonner", () => ({
@@ -45,6 +57,7 @@ function makeCampaign(i: number, role: "gm" | "player" = "gm") {
     description: null,
     cover_image_url: null,
     system_id: null,
+    emblem: null as string | null,
     created_at: "2026-05-18T00:00:00Z",
     role,
   };
@@ -141,6 +154,58 @@ describe("CampaignSelectScreen", () => {
 
       await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith("/campaign/new-id");
+      });
+    });
+
+    it("renders the emblem picker inside the create dialog", async () => {
+      const user = userEvent.setup();
+      render(
+        <CampaignSelectScreen
+          campaigns={[]}
+          systems={[{ id: "s1", name: "Daggerheart", slug: "daggerheart" }]}
+          userId="u1"
+        />
+      );
+      await user.click(screen.getByRole("button", { name: /new campaign/i }));
+      expect(screen.getByPlaceholderText(/search emblems/i)).toBeInTheDocument();
+    });
+
+    it("includes the selected emblem in the insert payload", async () => {
+      mockCampaignSingle.mockResolvedValue({
+        data: {
+          id: "new-id",
+          name: "Saga",
+          description: null,
+          cover_image_url: null,
+          system_id: null,
+          emblem: "game-icons:wyvern",
+          created_at: "2026-05-18T00:00:00Z",
+        },
+        error: null,
+      });
+
+      const user = userEvent.setup();
+      render(
+        <CampaignSelectScreen
+          campaigns={[]}
+          systems={[]}
+          userId="u1"
+        />
+      );
+      await user.click(screen.getByRole("button", { name: /new campaign/i }));
+      await user.type(screen.getByLabelText(/campaign name/i), "Saga");
+      await user.click(screen.getByRole("button", { name: /wyvern/i }));
+      await user.click(
+        screen.getByRole("button", { name: /^create campaign$/i })
+      );
+
+      await waitFor(() => {
+        expect(mockCampaignInsert).toHaveBeenCalled();
+      });
+      const payload = mockCampaignInsert.mock.calls[0]?.[0];
+      expect(payload).toMatchObject({
+        name: "Saga",
+        emblem: "game-icons:wyvern",
       });
     });
 

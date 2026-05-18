@@ -11,7 +11,15 @@ function makeCampaigns(count: number, role: "gm" | "player" = "gm") {
   }));
 }
 
-function makeCampaign(over: Partial<{ id: string; name: string; role: string; systemName: string }> = {}) {
+function makeCampaign(
+  over: Partial<{
+    id: string;
+    name: string;
+    role: string;
+    systemName: string;
+    emblem: string | null;
+  }> = {}
+) {
   return {
     id: "a",
     name: "Alpha",
@@ -138,6 +146,38 @@ describe("CampaignSelectImage", () => {
         />
       );
       expect(screen.queryByTestId("book-system")).not.toBeInTheDocument();
+    });
+
+    it("uses campaign.emblem verbatim when it is set", () => {
+      render(
+        <CampaignSelectImage
+          campaigns={[makeCampaign({ id: "x", emblem: "game-icons:wyvern" })]}
+          page={0}
+          onPageChange={vi.fn()}
+          onCreateCampaign={vi.fn()}
+        />
+      );
+      expect(screen.getByTestId("book-emblem")).toHaveAttribute(
+        "data-emblem",
+        "game-icons:wyvern"
+      );
+    });
+
+    it("falls back to the deterministic hash emblem when campaign.emblem is null", () => {
+      render(
+        <CampaignSelectImage
+          campaigns={[makeCampaign({ id: "x", emblem: null })]}
+          page={0}
+          onPageChange={vi.fn()}
+          onCreateCampaign={vi.fn()}
+        />
+      );
+      const emblem = screen
+        .getByTestId("book-emblem")
+        .getAttribute("data-emblem");
+      // Should be one of the curated 9, not the verbatim test value
+      expect(emblem).toMatch(/^game-icons:/);
+      expect(emblem).not.toBe("game-icons:wyvern");
     });
 
     it("picks a stable emblem for the same id and different emblems for different ids", () => {

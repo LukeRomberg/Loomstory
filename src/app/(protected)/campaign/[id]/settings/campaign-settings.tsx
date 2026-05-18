@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, Trash2 } from "lucide-react";
+import { EmblemPicker } from "@/components/shared/emblem-picker";
+import { useGameIcons } from "@/hooks/use-game-icons";
 
 interface Campaign {
   id: string;
@@ -42,6 +44,7 @@ interface Campaign {
   system_id: string | null;
   house_rules: string | null;
   cover_image_url: string | null;
+  emblem: string | null;
 }
 
 interface System {
@@ -64,7 +67,9 @@ export function CampaignSettings({
   const [description, setDescription] = useState(campaign.description ?? "");
   const [systemId, setSystemId] = useState(campaign.system_id ?? "");
   const [houseRules, setHouseRules] = useState(campaign.house_rules ?? "");
+  const [emblem, setEmblem] = useState<string | null>(campaign.emblem ?? null);
   const [saving, setSaving] = useState(false);
+  const { icons: emblemOptions, loading: emblemsLoading } = useGameIcons();
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archiving, setArchiving] = useState(false);
 
@@ -80,6 +85,7 @@ export function CampaignSettings({
         description: description || null,
         system_id: systemId || null,
         house_rules: houseRules || null,
+        emblem,
       })
       .eq("id", campaign.id);
 
@@ -180,6 +186,15 @@ export function CampaignSettings({
                 value={houseRules}
                 onChange={(e) => setHouseRules(e.target.value)}
                 rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Book Emblem</Label>
+              <EmblemPicker
+                availableEmblems={emblemOptions}
+                value={emblem}
+                onChange={setEmblem}
+                loading={emblemsLoading}
               />
             </div>
           </CardContent>

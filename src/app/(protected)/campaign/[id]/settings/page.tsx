@@ -30,7 +30,7 @@ export default async function CampaignSettingsPage({
       .single(),
     supabase
       .from("campaigns")
-      .select("id, name, description, system_id, house_rules, cover_image_url")
+      .select("id, name, description, system_id, house_rules, cover_image_url, emblem")
       .eq("id", id)
       .is("deleted_at", null)
       .single(),
