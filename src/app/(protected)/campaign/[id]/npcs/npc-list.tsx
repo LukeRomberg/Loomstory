@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -47,7 +47,7 @@ export function NpcList({
   role,
   userId,
 }: NpcListProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
   const [npcs] = useState(initialNpcs);
   const [search, setSearch] = useState("");

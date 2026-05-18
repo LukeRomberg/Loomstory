@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { ChevronLeft, Settings } from "lucide-react";
 import { SettingsModal } from "@/components/loomstory/settings-modal";
 import { FactionModal } from "@/components/loomstory/faction-modal";
@@ -30,7 +30,7 @@ export function CampaignDashboard({
   systemSlug,
   userId,
 }: CampaignDashboardProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
 
   const [factionModalOpen, setFactionModalOpen] = useState(false);

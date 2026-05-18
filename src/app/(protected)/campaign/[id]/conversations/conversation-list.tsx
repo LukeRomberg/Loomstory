@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -72,7 +72,7 @@ export function ConversationList({
   userId,
   knownEntities,
 }: ConversationListProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
   const [sessionFilter, setSessionFilter] = useState<string>("all");
   const [search, setSearch] = useState("");

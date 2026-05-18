@@ -20,12 +20,11 @@ export async function AppHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <Image
-            src="/brand/loomstory-monogram.svg"
+            src="/brand/loomstory-monogram.png"
             alt=""
             width={36}
             height={36}
             priority
-            unoptimized
             className="h-8 w-auto"
           />
           <h1 className="font-heading text-lg font-semibold text-gold tracking-wide">

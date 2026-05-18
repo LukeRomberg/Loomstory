@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +47,7 @@ export function SessionList({
   role,
   userId,
 }: SessionListProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
   const [sessions, setSessions] = useState(
     isGm ? initialSessions : initialSessions.filter((s) => s.status === "published")

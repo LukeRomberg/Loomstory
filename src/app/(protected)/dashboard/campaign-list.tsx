@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -58,7 +58,7 @@ export function CampaignList({
   systems,
   userId,
 }: CampaignListProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");

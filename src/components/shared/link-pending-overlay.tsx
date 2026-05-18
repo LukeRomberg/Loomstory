@@ -1,14 +1,23 @@
 "use client";
 
+import { useEffect } from "react";
 import { useLinkStatus } from "next/link";
-import { createPortal } from "react-dom";
-import { LoadingScreen } from "@/components/loomstory/loading-screen";
+import {
+  startNavigation,
+  endNavigation,
+} from "@/lib/navigation-state";
 
-// Drop inside any <Link> to render the candle-flicker overlay on top of the
-// current page while that link's navigation is pending. Uses a portal so the
-// overlay covers the viewport rather than being clipped by the Link's box.
+// Drop inside any <Link> to register that link's pending state with the
+// global navigation overlay (rendered once in the (protected) layout).
+// Renders nothing itself.
 export function LinkPendingOverlay() {
   const { pending } = useLinkStatus();
-  if (!pending || typeof document === "undefined") return null;
-  return createPortal(<LoadingScreen layout="full" />, document.body);
+
+  useEffect(() => {
+    if (!pending) return;
+    startNavigation();
+    return () => endNavigation();
+  }, [pending]);
+
+  return null;
 }

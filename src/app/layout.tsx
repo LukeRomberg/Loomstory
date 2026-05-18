@@ -41,8 +41,8 @@ export const metadata: Metadata = {
   title: "Loomstory",
   description: "Weave sessions into story.",
   icons: {
-    icon: "/brand/loomstory-monogram.svg",
-    apple: "/brand/loomstory-monogram.svg",
+    icon: "/brand/loomstory-monogram.png",
+    apple: "/brand/loomstory-monogram.png",
   },
 };
 
