@@ -7,12 +7,20 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,12 +32,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Library } from "@/components/shared/library";
-import { Bookshelf } from "@/components/shared/bookshelf";
-import { BookSpine } from "@/components/shared/book-spine";
-import { NewCampaignBook } from "@/components/shared/new-campaign-book";
-import { IlluminatedHeading } from "@/components/shared/illuminated-heading";
-import { CAMPAIGN_SECTIONS } from "@/lib/sections";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/loomstory/empty-state";
+import { LinkPendingOverlay } from "@/components/shared/link-pending-overlay";
+import { Crown, Plus, ScrollText, User } from "lucide-react";
 
 interface Campaign {
   id: string;
@@ -114,134 +120,167 @@ export function CampaignList({
   }
 
   return (
-    <>
-      <Library>
-        <header className="text-center">
-          <IlluminatedHeading level={1}>Campaign Journals</IlluminatedHeading>
-          <p className="mt-3 font-lore italic text-gold/70 sm:text-lg">
-            Choose your adventure.
+    <div>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h2 className="font-heading text-2xl font-semibold text-foreground">
+            Your Campaigns
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Select a campaign or create a new one.
           </p>
-        </header>
+        </div>
 
-        {campaigns.length === 0 ? (
-          <Bookshelf campaignName="Begin Your First Tale">
-            <NewCampaignBook onClick={() => setOpen(true)} />
-          </Bookshelf>
-        ) : (
-          <>
-            {campaigns.map((campaign) => {
-              const systemName = getSystemName(campaign.system_id);
-              const roleLabel = campaign.role === "gm" ? "Game Master" : "Player";
-              const subtitle = [systemName, roleLabel].filter(Boolean).join(" · ");
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger
+            render={
+              <Button className="gold-glow font-heading">
+                <Plus className="mr-1.5 size-4" />
+                New Campaign
+              </Button>
+            }
+          />
+          <DialogContent>
+            <form onSubmit={handleCreate}>
+              <DialogHeader>
+                <DialogTitle className="font-heading">
+                  Create a Campaign
+                </DialogTitle>
+                <DialogDescription>
+                  Set up a new campaign for your table.
+                </DialogDescription>
+              </DialogHeader>
 
-              return (
-                <Bookshelf
-                  key={campaign.id}
-                  campaignName={campaign.name}
-                  subtitle={subtitle}
-                >
-                  <Link
-                    href={`/campaign/${campaign.id}`}
-                    className="self-center font-subheading text-[10px] uppercase tracking-[0.18em] text-gold/70 hover:text-gold mr-2"
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-name">Campaign Name</Label>
+                  <Input
+                    id="campaign-name"
+                    placeholder="The Crimson Accord"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-system">Rule System</Label>
+                  <Select
+                    value={systemId}
+                    onValueChange={(v) => setSystemId(v ?? "")}
                   >
-                    Enter →
-                  </Link>
-                  {CAMPAIGN_SECTIONS.map((section) => (
-                    <BookSpine
-                      key={section.slug}
-                      title={section.title}
-                      color={section.color}
-                      emblem={section.emblem}
-                      href={`/campaign/${campaign.id}/${section.slug}`}
-                    />
-                  ))}
-                </Bookshelf>
-              );
-            })}
-
-            <Bookshelf campaignName="Begin Anew">
-              <NewCampaignBook onClick={() => setOpen(true)} />
-            </Bookshelf>
-          </>
-        )}
-      </Library>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <form onSubmit={handleCreate}>
-            <DialogHeader>
-              <DialogTitle className="font-heading">
-                Create a Campaign
-              </DialogTitle>
-              <DialogDescription>
-                Set up a new campaign for your table.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="campaign-name">Campaign Name</Label>
-                <Input
-                  id="campaign-name"
-                  placeholder="The Crimson Accord"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
+                    <SelectTrigger id="campaign-system">
+                      <SelectValue placeholder="Select a system...">
+                        {systemId
+                          ? systems.find((s) => s.id === systemId)?.name
+                          : undefined}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {systems.map((system) => (
+                        <SelectItem key={system.id} value={system.id}>
+                          {system.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-desc">Description</Label>
+                  <Textarea
+                    id="campaign-desc"
+                    placeholder="A brief description of your campaign..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="campaign-system">Rule System</Label>
-                <Select
-                  value={systemId}
-                  onValueChange={(v) => setSystemId(v ?? "")}
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setOpen(false)}
                 >
-                  <SelectTrigger id="campaign-system">
-                    <SelectValue placeholder="Select a system...">
-                      {systemId
-                        ? systems.find((s) => s.id === systemId)?.name
-                        : undefined}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {systems.map((system) => (
-                      <SelectItem key={system.id} value={system.id}>
-                        {system.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="campaign-desc">Description</Label>
-                <Textarea
-                  id="campaign-desc"
-                  placeholder="A brief description of your campaign..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </div>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={creating || !name.trim()}
+                  className="gold-glow"
+                >
+                  {creating ? "Creating..." : "Create Campaign"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setOpen(false)}
+      {campaigns.length === 0 ? (
+        <EmptyState
+          icon={ScrollText}
+          message="No campaigns yet. Create your first one to get started."
+          action={{
+            label: "Create Campaign",
+            onClick: () => setOpen(true),
+          }}
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {campaigns.map((campaign) => {
+            const systemName = getSystemName(campaign.system_id);
+            return (
+              <Link
+                key={campaign.id}
+                href={`/campaign/${campaign.id}`}
+                className="block"
               >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={creating || !name.trim()}
-                className="gold-glow"
-              >
-                {creating ? "Creating..." : "Create Campaign"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </>
+                <Card className="grain gold-glow relative cursor-pointer transition-all hover:ring-gold/30">
+                  <LinkPendingOverlay />
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="font-heading">
+                        {campaign.name}
+                      </CardTitle>
+                      <Badge
+                        variant={campaign.role === "gm" ? "default" : "secondary"}
+                        className="ml-2 shrink-0 font-heading text-xs"
+                      >
+                        {campaign.role === "gm" ? (
+                          <>
+                            <Crown className="mr-1 size-3" />
+                            GM
+                          </>
+                        ) : (
+                          <>
+                            <User className="mr-1 size-3" />
+                            Player
+                          </>
+                        )}
+                      </Badge>
+                    </div>
+                    {campaign.description && (
+                      <CardDescription className="line-clamp-2">
+                        {campaign.description}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {systemName && (
+                        <Badge variant="outline" className="text-xs">
+                          {systemName}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
