@@ -155,10 +155,7 @@ export function CharacterSheetPreview({
       {/* ─── BANNER ─────────────────────────────────────────── */}
       <div
         data-testid="preview-banner"
-        className={cn(
-          "rounded-lg border-2 bg-transparent p-4",
-          classTheme?.borderColor ?? "border-leather/40"
-        )}
+        className="rounded-lg border-2 border-leather/40 bg-transparent p-4"
       >
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {ClassIcon ? (
@@ -211,24 +208,22 @@ export function CharacterSheetPreview({
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-4">
         {/* ── LEFT COLUMN ──────────────────────────────────── */}
         <div className="space-y-4">
-          <SectionCard title="Combat" testId="preview-combat" theme={classTheme}>
+          <SectionCard title="Combat" testId="preview-combat" >
             <div className="grid grid-cols-2 gap-4 mb-3">
               <StatTile
                 label="Evasion"
                 value={evasion != null ? String(evasion) : "—"}
-                theme={classTheme}
-              />
+                             />
               <StatTile
                 label="Armor"
                 value={armorScore != null ? String(armorScore) : "—"}
-                theme={classTheme}
-              />
+                             />
             </div>
             <PipRow label="HP" count={hpSlots} testIdPrefix="hp-pip" />
             <PipRow label="Stress" count={STRESS_MAX} testIdPrefix="stress-pip" muted />
           </SectionCard>
 
-          <SectionCard title="Hope" testId="preview-hope" theme={classTheme}>
+          <SectionCard title="Hope" testId="preview-hope" >
             <div className="flex gap-2 mb-3">
               {Array.from({ length: STARTING_HOPE }).map((_, i) => (
                 <span
@@ -249,18 +244,16 @@ export function CharacterSheetPreview({
               <FeatureBlock
                 name={stripPrefix(hopeFeature.name, wizardState.className)}
                 description={hopeFeature.description ?? ""}
-                theme={classTheme}
-              />
+                             />
             )}
           </SectionCard>
 
           {classFeature && (
-            <SectionCard title="Class Feature" theme={classTheme}>
+            <SectionCard title="Class Feature" >
               <FeatureBlock
                 name={stripPrefix(classFeature.name, wizardState.className)}
                 description={classFeature.description ?? ""}
-                theme={classTheme}
-              />
+                             />
             </SectionCard>
           )}
 
@@ -268,13 +261,11 @@ export function CharacterSheetPreview({
             <SectionCard
               title="Subclass Feature"
               testId="preview-subclass-feature"
-              theme={classTheme}
-            >
+                         >
               <FeatureBlock
                 name={stripPrefix(subclassFoundation.name, wizardState.subclassName)}
                 description={subclassFoundation.description ?? ""}
-                theme={classTheme}
-              />
+                             />
             </SectionCard>
           )}
 
@@ -282,8 +273,7 @@ export function CharacterSheetPreview({
             <SectionCard
               title="Experiences"
               testId="preview-experiences"
-              theme={classTheme}
-            >
+                         >
               <ul className="space-y-1.5">
                 {nonEmptyExperiences.map((exp, i) => (
                   <li
@@ -301,15 +291,14 @@ export function CharacterSheetPreview({
 
         {/* ── RIGHT COLUMN ─────────────────────────────────── */}
         <div className="space-y-4">
-          <SectionCard title="Traits" testId="preview-traits" theme={classTheme}>
+          <SectionCard title="Traits" testId="preview-traits" >
             <div className="grid grid-cols-3 gap-3">
               {TRAITS.map(({ key, label }) => (
                 <TraitTile
                   key={key}
                   label={label}
                   value={wizardState.statValues[key]}
-                  theme={classTheme}
-                />
+                                 />
               ))}
             </div>
           </SectionCard>
@@ -318,8 +307,7 @@ export function CharacterSheetPreview({
             <SectionCard
               title="Active Weapons"
               testId="preview-weapons"
-              theme={classTheme}
-            >
+                         >
               <div className="flex items-baseline justify-between mb-2 text-[10px] font-semibold uppercase tracking-wider text-leather/70">
                 <span>Proficiency</span>
                 <span
@@ -340,8 +328,7 @@ export function CharacterSheetPreview({
             <SectionCard
               title="Active Armor"
               testId="preview-armor"
-              theme={classTheme}
-            >
+                         >
               <div className="space-y-1">
                 <div className="font-heading font-bold text-sm text-leather">
                   {armor.name}
@@ -356,8 +343,7 @@ export function CharacterSheetPreview({
           <SectionCard
             title="Inventory"
             testId="preview-inventory"
-            theme={classTheme}
-          >
+                     >
             <ul className="space-y-0.5 text-xs">
               {BASIC_SUPPLIES.map((s) => (
                 <li key={s} className="font-medium text-leather/85">
@@ -380,24 +366,21 @@ export function CharacterSheetPreview({
         <SectionCard
           title="Heritage Features"
           testId="preview-heritage-features"
-          theme={classTheme}
-        >
+                 >
           <div className="space-y-3">
             {ancestryFeatures.map((f) => (
               <FeatureBlock
                 key={f.id}
                 name={stripPrefix(f.name, wizardState.ancestryName)}
                 description={f.description ?? ""}
-                theme={classTheme}
-              />
+                             />
             ))}
             {communityFeatures.map((f) => (
               <FeatureBlock
                 key={f.id}
                 name={stripPrefix(f.name, wizardState.communityName)}
                 description={f.description ?? ""}
-                theme={classTheme}
-              />
+                             />
             ))}
           </div>
         </SectionCard>
@@ -408,11 +391,10 @@ export function CharacterSheetPreview({
         <SectionCard
           title="Domain Cards"
           testId="preview-domain-cards"
-          theme={classTheme}
-        >
+                 >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {domainCards.map((card) => (
-              <DomainCardDisplay key={card.id} card={card} theme={classTheme} />
+              <DomainCardDisplay key={card.id} card={card}  />
             ))}
           </div>
         </SectionCard>
@@ -444,21 +426,16 @@ export function CharacterSheetPreview({
 function SectionCard({
   title,
   testId,
-  theme,
   children,
 }: {
   title: string;
   testId?: string;
-  theme?: ClassTheme;
   children: React.ReactNode;
 }) {
   return (
     <div
       data-testid={testId}
-      className={cn(
-        "rounded-lg border bg-transparent p-3",
-        theme?.borderColor ?? "border-leather/40"
-      )}
+      className="rounded-lg border border-leather/40 bg-transparent p-3"
     >
       <div className="text-[10px] font-heading font-bold uppercase tracking-[0.18em] text-leather mb-2">
         {title}
@@ -468,22 +445,9 @@ function SectionCard({
   );
 }
 
-function StatTile({
-  label,
-  value,
-  theme,
-}: {
-  label: string;
-  value: string;
-  theme?: ClassTheme;
-}) {
+function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      className={cn(
-        "rounded border bg-transparent px-2 py-1.5 text-center",
-        theme?.borderColor ?? "border-leather/30"
-      )}
-    >
+    <div className="rounded border border-leather/30 bg-transparent px-2 py-1.5 text-center">
       <div className="text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70">
         {label}
       </div>
@@ -527,19 +491,12 @@ function PipRow({
 function TraitTile({
   label,
   value,
-  theme,
 }: {
   label: string;
   value: number | undefined;
-  theme?: ClassTheme;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded border bg-transparent px-2 py-1.5 text-center",
-        theme?.borderColor ?? "border-leather/30"
-      )}
-    >
+    <div className="rounded border border-leather/30 bg-transparent px-2 py-1.5 text-center">
       <div className="text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70 mb-0.5">
         {label}
       </div>
@@ -576,19 +533,12 @@ function WeaponRow({
 function FeatureBlock({
   name,
   description,
-  theme,
 }: {
   name: string;
   description: string;
-  theme?: ClassTheme;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded border bg-transparent px-2 py-1.5",
-        theme?.borderColor ?? "border-leather/25"
-      )}
-    >
+    <div className="rounded border border-leather/25 bg-transparent px-2 py-1.5">
       <div className="font-heading font-bold text-sm text-leather mb-0.5">
         {name}
       </div>
@@ -599,22 +549,11 @@ function FeatureBlock({
   );
 }
 
-function DomainCardDisplay({
-  card,
-  theme,
-}: {
-  card: CompendiumAbility;
-  theme?: ClassTheme;
-}) {
+function DomainCardDisplay({ card }: { card: CompendiumAbility }) {
   const data = card.data as Record<string, unknown>;
   const domain = data?.domain as string | undefined;
   return (
-    <div
-      className={cn(
-        "rounded border bg-transparent p-2",
-        theme?.borderColor ?? "border-leather/30"
-      )}
-    >
+    <div className="rounded border border-leather/30 bg-transparent p-2">
       <div className="flex items-baseline justify-between mb-1">
         <div className="font-heading font-bold text-sm text-leather">
           {card.name}

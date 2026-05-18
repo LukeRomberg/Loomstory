@@ -9,6 +9,7 @@ import { WizardProgress } from "./wizard-progress";
 import { Button } from "@/components/ui/button";
 import { useStepData } from "@/lib/character/use-step-data";
 import { getVisibleSteps } from "@/lib/character/wizard-registry";
+import { DAGGERHEART_DOMAINS } from "@/lib/character/configs/daggerheart-wizard";
 import type {
   WizardConfig,
   WizardState,
@@ -132,7 +133,6 @@ export function CharacterCreationWizard({
         classes={classes}
         loading={classesLoading}
         selectedId={wizardState.classId}
-        classThemes={wizardConfig.classThemes}
         onSelect={(id) => {
           const cls = classes.find((c) => c.id === id);
           const isChange =
@@ -251,7 +251,6 @@ function ClassListPicker({
   classes,
   loading,
   selectedId,
-  classThemes,
   onSelect,
   title,
   subtitle,
@@ -259,7 +258,6 @@ function ClassListPicker({
   classes: CompendiumClass[];
   loading: boolean;
   selectedId: string | null;
-  classThemes?: Record<string, ClassTheme>;
   onSelect: (id: string) => void;
   title: string;
   subtitle: string | null;
@@ -282,28 +280,21 @@ function ClassListPicker({
         ) : classes.length === 0 ? (
           <p className="text-sm italic text-leather/60">No classes available.</p>
         ) : (
-          classes.map((c) => {
-            const theme = classThemes?.[c.name];
-            const isSelected = selectedId === c.id;
-            return (
-              <button
-                key={c.id}
-                aria-label={`Choose ${c.name}`}
-                onClick={() => onSelect(c.id)}
-                className={cn(
-                  "w-full rounded border-2 px-3 py-2 text-left font-heading text-sm transition",
-                  isSelected
-                    ? cn(
-                        "bg-leather/10 font-bold text-leather",
-                        theme?.borderColor ?? "border-leather/50"
-                      )
-                    : "border-leather/15 text-leather/85 hover:bg-leather/5 hover:text-leather"
-                )}
-              >
-                {c.name}
-              </button>
-            );
-          })
+          classes.map((c) => (
+            <button
+              key={c.id}
+              aria-label={`Choose ${c.name}`}
+              onClick={() => onSelect(c.id)}
+              className={cn(
+                "w-full rounded border px-3 py-2 text-left font-heading text-sm transition",
+                selectedId === c.id
+                  ? "border-leather/50 bg-leather/10 font-bold text-leather"
+                  : "border-leather/15 text-leather/85 hover:bg-leather/5 hover:text-leather"
+              )}
+            >
+              {c.name}
+            </button>
+          ))
         )}
       </div>
     </>
@@ -320,57 +311,150 @@ function ClassDetailPanel({
   theme?: ClassTheme;
 }) {
   const Icon = theme?.icon;
+  const data = klass.data as Record<string, unknown>;
+  const description = (data.description as string) ?? "";
+
+  const stats: { label: string; value: string }[] = [];
+  if (data.hp_slots) stats.push({ label: "HP Slots", value: String(data.hp_slots) });
+  if (data.evasion) stats.push({ label: "Evasion", value: String(data.evasion) });
+  if (data.spellcast_trait)
+    stats.push({ label: "Spellcast", value: String(data.spellcast_trait) });
+  if (data.hp_die) stats.push({ label: "Hit Die", value: String(data.hp_die) });
+
+  const domainNames =
+    theme?.domains ??
+    (Array.isArray(data.domains) ? (data.domains as string[]) : []);
+
+  const namePrefix = `${klass.name}: `;
+  const stripName = (n: string) =>
+    n.startsWith(namePrefix) ? n.slice(namePrefix.length) : n;
+
+  const classOwnFeatures = features.filter((f) => f.classes?.includes(klass.name));
+  const hopeFeatures = classOwnFeatures.filter(
+    (f) => (f.data as Record<string, unknown>)?.feature_category === "hope_feature"
+  );
+  const classFeatures = classOwnFeatures.filter(
+    (f) => (f.data as Record<string, unknown>)?.feature_category === "class_feature"
+  );
+
   return (
-    <div
-      className={cn(
-        "scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 bg-transparent p-3 pr-2 text-leather",
-        theme?.borderColor ?? "border-leather/40"
-      )}
-    >
+    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border border-leather/40 bg-transparent p-3 pr-2 text-leather">
       <div className="flex items-center gap-2">
         {Icon && <Icon className="size-6 text-leather" />}
         <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
           {klass.name}
         </h3>
       </div>
-      {theme?.domains && theme.domains.length > 0 && (
+
+      {domainNames.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {theme.domains.map((d) => (
+          {domainNames.map((d) => (
             <span
               key={d}
-              className={cn(
-                "rounded border px-2 py-0.5 text-[11px] font-semibold uppercase text-leather",
-                theme?.borderColor ?? "border-leather/40"
-              )}
+              className="rounded border border-leather/40 px-2 py-0.5 text-[11px] font-semibold uppercase text-leather"
             >
               {d}
             </span>
           ))}
         </div>
       )}
-      {klass.hp_die && (
-        <p className="text-sm text-leather">
-          <span className="font-semibold">Hit Die:</span> {klass.hp_die}
+
+      {description && (
+        <p className="whitespace-pre-line font-lore text-sm leading-snug text-leather/85">
+          {description}
         </p>
       )}
-      {features.length > 0 && (
-        <div>
-          <h4 className="mb-1.5 font-heading text-sm font-bold uppercase tracking-[0.1em] text-leather/85">
-            Starting Features
-          </h4>
-          <ul className="space-y-2">
-            {features.map((f) => (
-              <li key={f.id} className="text-sm">
-                <div className="font-semibold text-leather">{f.name}</div>
-                {f.description && (
-                  <div className="whitespace-pre-line text-leather/80">
-                    {f.description}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
+
+      {stats.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className="rounded border border-leather/30 bg-transparent px-2 py-1 text-center"
+            >
+              <div className="text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70">
+                {s.label}
+              </div>
+              <div className="font-mono text-sm text-leather">{s.value}</div>
+            </div>
+          ))}
         </div>
+      )}
+
+      {domainNames.length > 0 && (
+        <DetailGroup label="Domains">
+          {domainNames.map((d) => {
+            const info = DAGGERHEART_DOMAINS[d];
+            if (!info) return null;
+            return (
+              <DetailEntry
+                key={d}
+                name={`${d} — ${info.tagline}`}
+                description={info.description}
+              />
+            );
+          })}
+        </DetailGroup>
+      )}
+
+      {hopeFeatures.length > 0 && (
+        <DetailGroup label="Hope Feature">
+          {hopeFeatures.map((f) => (
+            <DetailEntry
+              key={f.id}
+              name={stripName(f.name)}
+              description={f.description ?? ""}
+            />
+          ))}
+        </DetailGroup>
+      )}
+
+      {classFeatures.length > 0 && (
+        <DetailGroup label="Class Feature">
+          {classFeatures.map((f) => (
+            <DetailEntry
+              key={f.id}
+              name={stripName(f.name)}
+              description={f.description ?? ""}
+            />
+          ))}
+        </DetailGroup>
+      )}
+    </div>
+  );
+}
+
+function DetailGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <h4 className="font-heading text-xs font-bold uppercase tracking-[0.14em] text-leather/85">
+        {label}
+      </h4>
+      <div className="space-y-2">{children}</div>
+    </div>
+  );
+}
+
+function DetailEntry({
+  name,
+  description,
+}: {
+  name: string;
+  description: string;
+}) {
+  return (
+    <div className="text-sm">
+      <div className="font-heading font-bold text-leather">{name}</div>
+      {description && (
+        <p className="whitespace-pre-line font-lore text-leather/80 leading-snug">
+          {description}
+        </p>
       )}
     </div>
   );

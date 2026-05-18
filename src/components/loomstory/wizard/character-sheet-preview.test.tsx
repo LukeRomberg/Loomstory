@@ -537,23 +537,15 @@ describe("CharacterSheetPreview — Domain cards", () => {
 // ─── Theming ────────────────────────────────────────────────────
 
 describe("CharacterSheetPreview — Theming", () => {
-  it("renders the banner with a transparent class-themed border (no gradient fill)", () => {
-    // Themed gradients stay out, but the class color comes back on the border
-    // so the parchment look gets a pop from the chosen class.
+  it("renders the banner with a transparent leather-bordered frame", () => {
+    // The parchment look uses a single leather border with no gradient fill
+    // and no class-color tinting — colors were too bright, picking them up
+    // again is parked.
     render(<CharacterSheetPreview {...defaultProps()} />);
     const banner = screen.getByTestId("preview-banner");
-    expect(banner.className).toContain("bg-transparent");
-    expect(banner.className).toContain(
-      DAGGERHEART_CLASS_THEMES.Ranger.borderColor
-    );
+    expect(banner.className).toContain("border-leather");
     expect(banner.className).not.toContain("from-emerald");
     expect(banner.className).not.toContain("from-zinc");
-  });
-
-  it("falls back to a leather border when no class theme is supplied", () => {
-    render(<CharacterSheetPreview {...defaultProps()} classTheme={undefined} />);
-    const banner = screen.getByTestId("preview-banner");
-    expect(banner.className).toContain("border-leather");
   });
 });
 

@@ -15,7 +15,12 @@ const { mockClasses, mockClassFeatures } = vi.hoisted(() => ({
       is_subclass: false,
       parent_class_id: null,
       hp_die: "d10",
-      data: {},
+      data: {
+        description: "Disciplined fighters with steel and grit.",
+        hp_slots: 6,
+        evasion: 11,
+        hp_die: "d10",
+      },
       source: "Daggerheart SRD",
     },
     {
@@ -31,13 +36,23 @@ const { mockClasses, mockClassFeatures } = vi.hoisted(() => ({
   mockClassFeatures: [
     {
       id: "f1",
-      name: "Hope Feature",
+      name: "Warrior: Attack of Opportunity",
       ability_type: "class_feature",
-      description: "Spend Hope to do X",
+      description: "Strike when an enemy moves past you.",
       level: 1,
       classes: ["Warrior"],
       source: null,
-      data: {},
+      data: { feature_category: "class_feature" },
+    },
+    {
+      id: "f2",
+      name: "Warrior: No Mercy",
+      ability_type: "class_feature",
+      description: "Spend Hope to do X.",
+      level: 1,
+      classes: ["Warrior"],
+      source: null,
+      data: { feature_category: "hope_feature" },
     },
   ],
 }));
@@ -77,7 +92,7 @@ const wizardConfig: WizardConfig = {
     },
   },
   phases: [
-    { key: "build", label: "Build", steps: ["class_pick", "subclass_pick", "review"] },
+    { label: "Build", steps: ["class_pick", "subclass_pick", "review"] },
   ],
   classThemes: {
     Warrior: {
@@ -140,10 +155,16 @@ describe("CharacterCreationWizard", () => {
     renderWizard();
     await user.click(screen.getByLabelText(/choose warrior/i));
     expect(screen.getAllByText("Warrior").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Hope Feature")).toBeInTheDocument();
-    expect(screen.getByText("Hit Die:")).toBeInTheDocument();
-    expect(screen.getByText("Blade")).toBeInTheDocument();
-    expect(screen.getByText("Bone")).toBeInTheDocument();
+    expect(screen.getByText(/disciplined fighters/i)).toBeInTheDocument();
+    expect(screen.getByText("HP Slots")).toBeInTheDocument();
+    expect(screen.getAllByText("Evasion").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Hit Die")).toBeInTheDocument();
+    expect(screen.getAllByText("Blade").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Bone").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Hope Feature").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Class Feature").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("No Mercy").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Attack of Opportunity").length).toBeGreaterThanOrEqual(1);
   });
 
   it("Continue is disabled until a class is selected", async () => {
