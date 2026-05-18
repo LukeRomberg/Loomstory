@@ -28,7 +28,6 @@ export default function CharacterCreationPreviewPage() {
 
   return (
     <CharacterCreationShell
-      debugBorder
       onClose={() => router.push("/dashboard")}
       topBar={
         <div className="flex w-full items-center justify-between gap-2 px-2 text-[10px] uppercase tracking-[0.16em] sm:text-xs">
