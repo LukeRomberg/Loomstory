@@ -32,35 +32,40 @@ describe("LoreList", () => {
 
   it("renders the page heading", () => {
     render(<LoreList {...defaultProps} />);
-    expect(screen.getByText("Lore")).toBeInTheDocument();
+    expect(screen.getByText(/lore/i)).toBeInTheDocument();
   });
 
-  it("renders lore entry count", () => {
+  it("renders the entry count in the heading", () => {
     render(<LoreList {...defaultProps} />);
-    expect(screen.getByText(/2 entr/i)).toBeInTheDocument();
+    expect(screen.getByText("(2)")).toBeInTheDocument();
   });
 
   it("renders lore entry titles", () => {
     render(<LoreList {...defaultProps} />);
-    expect(screen.getByText("The Founding of Ironhold")).toBeInTheDocument();
+    // First entry auto-selects so its title appears in both master list and detail
+    expect(
+      screen.getAllByText("The Founding of Ironhold").length
+    ).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("The Veil's True Identity")).toBeInTheDocument();
   });
 
-  it("renders content preview", () => {
+  it("renders selected entry's content in the detail pane", () => {
     render(<LoreList {...defaultProps} />);
     expect(screen.getByText(/founded 300 years ago/)).toBeInTheDocument();
   });
 
-  it("renders tags as badges", () => {
+  it("renders tags on the selected entry", () => {
     render(<LoreList {...defaultProps} />);
-    expect(screen.getByText("history")).toBeInTheDocument();
-    expect(screen.getByText("ironhold")).toBeInTheDocument();
-    expect(screen.getByText("dwarves")).toBeInTheDocument();
+    // First entry is auto-selected — its tags render in detail badges (plus possibly master list preview)
+    expect(screen.getAllByText(/history/i).length).toBeGreaterThanOrEqual(1);
   });
 
-  it("shows gm_only indicator for hidden entries", () => {
+  it("shows GM Only badge in the detail pane when a gm_only entry is selected", async () => {
+    const user = userEvent.setup();
     render(<LoreList {...defaultProps} />);
-    expect(screen.getAllByText(/gm only/i).length).toBeGreaterThanOrEqual(1);
+    // Select the second entry (mock has gm_only: true)
+    await user.click(screen.getByText("The Veil's True Identity"));
+    expect(screen.getByText(/gm only/i)).toBeInTheDocument();
   });
 
   it("shows empty state when no lore", () => {
@@ -68,31 +73,29 @@ describe("LoreList", () => {
     expect(screen.getByText(/no lore entries yet/i)).toBeInTheDocument();
   });
 
-  it("shows create button for GMs", () => {
+  it("shows the new-entry overlay for GMs", () => {
     render(<LoreList {...defaultProps} />);
-    expect(screen.getByText(/new entry/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/new lore entry/i)).toBeInTheDocument();
   });
 
-  it("hides create button for players", () => {
+  it("hides the new-entry overlay for players", () => {
     render(<LoreList {...defaultProps} role="player" />);
-    expect(screen.queryByText(/new entry/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/new lore entry/i)).not.toBeInTheDocument();
   });
 
-  it("opens create dialog when button is clicked", async () => {
+  it("opens the create dialog when New is clicked", async () => {
     const user = userEvent.setup();
     render(<LoreList {...defaultProps} />);
-    await user.click(screen.getByText(/new entry/i));
+    await user.click(screen.getByLabelText(/new lore entry/i));
     expect(screen.getByLabelText("Title")).toBeInTheDocument();
   });
 
-  it("has a back button to campaign page", () => {
+  it("renders a back link to the bookshelf", () => {
     render(<LoreList {...defaultProps} />);
-    expect(screen.getByText(/test campaign/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/back to bookshelf/i)).toBeInTheDocument();
   });
 
-  // ─── Tag Filter ───────────────────────────────────────────
-
-  it("renders search input for filtering", () => {
+  it("renders search input", () => {
     render(<LoreList {...defaultProps} />);
     expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
   });
@@ -102,6 +105,18 @@ describe("LoreList", () => {
     render(<LoreList {...defaultProps} />);
     await user.type(screen.getByPlaceholderText(/search/i), "Veil");
     expect(screen.queryByText("The Founding of Ironhold")).not.toBeInTheDocument();
-    expect(screen.getByText("The Veil's True Identity")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("The Veil's True Identity").length
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it("navigates to full detail page when Open full details is clicked", async () => {
+    const user = userEvent.setup();
+    render(<LoreList {...defaultProps} />);
+    await user.click(screen.getByText(/open full details/i));
+    // First entry is auto-selected (mock entry id)
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringMatching(/^\/campaign\/campaign-1\/lore\//)
+    );
   });
 });
