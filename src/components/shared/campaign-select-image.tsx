@@ -42,27 +42,16 @@ const HOTSPOTS: Position[] = [
 ];
 
 // Game-icons collection — detail-rich fantasy glyphs (https://game-icons.net)
-// served through @iconify/react. Names are stable Iconify identifiers.
+// served through @iconify/react. One emblem per visible book slot.
 export const EMBLEMS: readonly string[] = [
   "game-icons:crossed-swords",
-  "game-icons:dragon-head",
-  "game-icons:wizard-staff",
   "game-icons:spell-book",
   "game-icons:treasure-map",
-  "game-icons:castle",
-  "game-icons:skull-crossed-bones",
-  "game-icons:crystal-ball",
-  "game-icons:ancient-scroll",
-  "game-icons:helmet",
   "game-icons:battle-axe",
-  "game-icons:phoenix",
-  "game-icons:wolf-head",
-  "game-icons:broadsword",
-  "game-icons:thrown-daggers",
-  "game-icons:rune-stone",
-  "game-icons:moon-orbit",
   "game-icons:knight-banner",
-  "game-icons:evil-eyes",
+  "game-icons:broadsword",
+  "game-icons:castle",
+  "game-icons:wolf-head",
   "game-icons:potion-ball",
 ];
 
