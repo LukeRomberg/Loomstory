@@ -2,33 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Anchor,
-  BookOpen,
-  Castle,
-  ChevronLeft,
-  ChevronRight,
-  Compass,
-  Crown,
-  Dices,
-  Eye,
-  Feather,
-  Flame,
-  Gem,
-  Hammer,
-  Moon,
-  Mountain,
-  Plus,
-  ScrollText,
-  Shield,
-  Skull,
-  Snowflake,
-  Sparkles,
-  Star,
-  Sword,
-  User,
-  type LucideIcon,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
+import { ChevronLeft, ChevronRight, Crown, Plus, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LinkPendingOverlay } from "@/components/shared/link-pending-overlay";
 
@@ -66,30 +41,32 @@ const HOTSPOTS: Position[] = [
   { left: "71.5%", top: "65.5%", width: "9%", height: "20%" },
 ];
 
-const EMBLEMS: ReadonlyArray<readonly [string, LucideIcon]> = [
-  ["sword", Sword],
-  ["skull", Skull],
-  ["crown", Crown],
-  ["scroll", ScrollText],
-  ["dice", Dices],
-  ["sparkles", Sparkles],
-  ["book", BookOpen],
-  ["flame", Flame],
-  ["moon", Moon],
-  ["star", Star],
-  ["shield", Shield],
-  ["compass", Compass],
-  ["castle", Castle],
-  ["anchor", Anchor],
-  ["feather", Feather],
-  ["gem", Gem],
-  ["hammer", Hammer],
-  ["snowflake", Snowflake],
-  ["eye", Eye],
-  ["mountain", Mountain],
+// Game-icons collection — detail-rich fantasy glyphs (https://game-icons.net)
+// served through @iconify/react. Names are stable Iconify identifiers.
+const EMBLEMS: readonly string[] = [
+  "game-icons:crossed-swords",
+  "game-icons:dragon-head",
+  "game-icons:wizard-staff",
+  "game-icons:spell-book",
+  "game-icons:treasure-map",
+  "game-icons:castle",
+  "game-icons:skull-crossed-bones",
+  "game-icons:crystal-ball",
+  "game-icons:ancient-scroll",
+  "game-icons:helmet",
+  "game-icons:battle-axe",
+  "game-icons:phoenix",
+  "game-icons:wolf-head",
+  "game-icons:broadsword",
+  "game-icons:thrown-daggers",
+  "game-icons:rune-stone",
+  "game-icons:moon-orbit",
+  "game-icons:knight-banner",
+  "game-icons:evil-eyes",
+  "game-icons:potion-ball",
 ];
 
-function pickEmblem(id: string): readonly [string, LucideIcon] {
+function pickEmblem(id: string): string {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) | 0;
@@ -126,7 +103,7 @@ export function CampaignSelectImage({
       {pageCampaigns.map((campaign, i) => {
         const pos = HOTSPOTS[i];
         const isGm = campaign.role === "gm";
-        const [emblemKey, Emblem] = pickEmblem(campaign.id);
+        const emblemIcon = pickEmblem(campaign.id);
         return (
           <Link
             key={campaign.id}
@@ -150,12 +127,17 @@ export function CampaignSelectImage({
               )}
             </span>
 
-            <Emblem
+            <span
               data-testid="book-emblem"
-              data-emblem={emblemKey}
+              data-emblem={emblemIcon}
               aria-hidden="true"
-              className="size-5 text-gold/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:size-7"
-            />
+              className="text-gold/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+            >
+              <Icon
+                icon={emblemIcon}
+                className="size-6 sm:size-9"
+              />
+            </span>
 
             <span className="embossed-gold line-clamp-2 max-w-[95%] text-center font-heading text-[9px] font-bold uppercase leading-tight tracking-[0.1em] sm:text-[11px]">
               {campaign.name}

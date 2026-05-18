@@ -17,8 +17,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { OpenBookView } from "@/components/shared/open-book-view";
-import { cn } from "@/lib/utils";
-import { EyeOff } from "lucide-react";
+import {
+  MasterList,
+  MasterListItem,
+} from "@/components/shared/master-list";
 import { NpcDetail } from "./npc-detail";
 
 interface Npc {
@@ -139,62 +141,34 @@ export function NpcList({
   }
 
   const leftPage = (
-    <>
-      <div className="flex shrink-0 items-center gap-2">
-        <h2 className="mr-auto font-heading text-base uppercase tracking-[0.15em] text-leather sm:text-lg">
-          NPCs{" "}
-          <span className="ml-1 font-sans text-xs font-normal text-leather/65 sm:text-sm">
-            ({npcs.length})
-          </span>
-        </h2>
-        <Input
-          placeholder="Search…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="h-8 w-40 border-leather/30 bg-parchment/30 text-xs text-leather placeholder:text-leather/40"
+    <MasterList
+      title="NPCs"
+      count={npcs.length}
+      search={search}
+      onSearchChange={setSearch}
+      isEmpty={filtered.length === 0}
+      emptyMessage={npcs.length === 0 ? "No NPCs yet." : "No matches."}
+    >
+      {filtered.map((npc) => (
+        <MasterListItem
+          key={npc.id}
+          selected={selected?.id === npc.id}
+          onClick={() => selectNpc(npc.id)}
+          title={npc.name}
+          hidden={npc.gm_only}
+          subtitle={
+            <>
+              {npc.status}
+              {npc.tags && npc.tags.length > 0 && (
+                <span className="ml-1.5 normal-case font-medium tracking-normal text-leather/55">
+                  · {npc.tags.slice(0, 3).join(" · ")}
+                </span>
+              )}
+            </>
+          }
         />
-      </div>
-
-      <div className="scrollbar-none flex-1 overflow-y-auto pr-1">
-        {filtered.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-center text-xs italic text-leather/60">
-            {npcs.length === 0 ? "No NPCs yet." : "No matches."}
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            {filtered.map((npc) => (
-              <button
-                key={npc.id}
-                onClick={() => selectNpc(npc.id)}
-                className={cn(
-                  "w-full rounded border border-leather/15 px-3 py-2 text-left transition",
-                  "hover:bg-leather/5",
-                  selected?.id === npc.id &&
-                    "border-leather/40 bg-leather/10"
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="line-clamp-1 font-heading text-sm text-leather">
-                    {npc.name}
-                  </div>
-                  {npc.gm_only && (
-                    <EyeOff className="size-3.5 shrink-0 text-leather/70" />
-                  )}
-                </div>
-                <div className="mt-0.5 line-clamp-1 text-xs font-semibold uppercase tracking-[0.08em] text-leather/70">
-                  {npc.status}
-                  {npc.tags && npc.tags.length > 0 && (
-                    <span className="ml-1.5 normal-case font-medium tracking-normal text-leather/55">
-                      · {npc.tags.slice(0, 3).join(" · ")}
-                    </span>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
+      ))}
+    </MasterList>
   );
 
   const rightPage = selected ? (

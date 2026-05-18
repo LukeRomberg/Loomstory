@@ -151,6 +151,7 @@ export function EntityDetailTabs({
             knownEntities={relationsData.knownEntities as never[]}
             role={role}
             userId={userId}
+            tone="leather"
           />
         ) : null
       )}
@@ -162,6 +163,7 @@ export function EntityDetailTabs({
           <EntityHistory
             campaignId={campaignId}
             history={historyData as never}
+            tone="leather"
           />
         ) : null
       )}
@@ -170,7 +172,7 @@ export function EntityDetailTabs({
         loadingTab ? (
           <LoadingScreen />
         ) : versionsData ? (
-          <EntityVersions versions={versionsData as never[]} />
+          <EntityVersions versions={versionsData as never[]} tone="leather" />
         ) : null
       )}
     </div>

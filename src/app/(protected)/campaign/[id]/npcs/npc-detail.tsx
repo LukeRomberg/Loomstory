@@ -8,7 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  BookCard,
+  BookCardContent,
+  BookCardHeader,
+  BookCardTitle,
+} from "@/components/shared/book-card";
 import {
   Dialog,
   DialogContent,
@@ -269,11 +274,11 @@ export function NpcDetail({
         userId={userId ?? ""}
         overviewContent={
           editing && isGm ? (
-            <Card className="grain bg-parchment/40 border-leather/30 !text-leather">
-              <CardHeader>
-                <CardTitle className="font-heading text-leather">Edit NPC</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 [&_label]:text-leather">
+            <BookCard>
+              <BookCardHeader>
+                <BookCardTitle>Edit NPC</BookCardTitle>
+              </BookCardHeader>
+              <BookCardContent className="space-y-4 [&_label]:text-leather">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
                   <Input
@@ -363,21 +368,19 @@ export function NpcDetail({
                     Cancel
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </BookCardContent>
+            </BookCard>
           ) : (
             <div className="space-y-5">
               {npc.description && (
-                <Card className="grain bg-parchment/40 border-leather/30 !text-leather">
-                  <CardHeader>
-                    <CardTitle className="font-heading text-sm text-leather">
-                      Description
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm font-lore text-leather">{npc.description}</p>
-                  </CardContent>
-                </Card>
+                <BookCard>
+                  <BookCardHeader>
+                    <BookCardTitle>Description</BookCardTitle>
+                  </BookCardHeader>
+                  <BookCardContent>
+                    <p className="text-sm font-lore">{npc.description}</p>
+                  </BookCardContent>
+                </BookCard>
               )}
 
               {npc.tags && npc.tags.length > 0 && (
@@ -401,11 +404,11 @@ export function NpcDetail({
                     <div className="text-xs font-heading uppercase tracking-wider text-leather/70 mb-2">
                       GM Notes
                     </div>
-                    <Card className="grain bg-parchment/40 border-leather/30 !text-leather">
-                      <CardContent className="py-3">
-                        <p className="text-sm text-leather">{npc.gm_notes}</p>
-                      </CardContent>
-                    </Card>
+                    <BookCard>
+                      <BookCardContent className="py-3">
+                        <p className="text-sm">{npc.gm_notes}</p>
+                      </BookCardContent>
+                    </BookCard>
                   </div>
                 </>
               )}
@@ -417,11 +420,11 @@ export function NpcDetail({
                     <div className="text-xs font-heading uppercase tracking-wider text-leather/70 mb-2">
                       Player Notes
                     </div>
-                    <Card className="grain bg-parchment/40 border-leather/30 !text-leather">
-                      <CardContent className="py-3">
-                        <p className="text-sm text-leather">{npc.player_notes}</p>
-                      </CardContent>
-                    </Card>
+                    <BookCard>
+                      <BookCardContent className="py-3">
+                        <p className="text-sm">{npc.player_notes}</p>
+                      </BookCardContent>
+                    </BookCard>
                   </div>
                 </>
               )}

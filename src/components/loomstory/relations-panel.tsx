@@ -8,6 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  BookCard,
+  BookCardContent,
+} from "@/components/shared/book-card";
+import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -61,6 +65,7 @@ interface RelationsPanelProps {
   role: string;
   userId: string;
   onEntityClick?: (entityType: string, entityId: string, entityName: string) => void;
+  tone?: "default" | "leather";
 }
 
 export function RelationsPanel({
@@ -74,7 +79,12 @@ export function RelationsPanel({
   role,
   userId,
   onEntityClick,
+  tone = "default",
 }: RelationsPanelProps) {
+  const isLeather = tone === "leather";
+  const CardCmp = isLeather ? BookCard : Card;
+  const CardContentCmp = isLeather ? BookCardContent : CardContent;
+  const mutedText = isLeather ? "text-leather/65" : "text-muted-foreground";
   const router = useTransitionRouter();
   const isGm = role === "gm";
   const [relations, setRelations] = useState(initialRelations);
@@ -331,8 +341,8 @@ export function RelationsPanel({
           {relations.map((rel) => {
             const other = getOtherEntity(rel);
             return (
-              <Card key={rel.id} className="grain">
-                <CardContent className="flex items-center justify-between py-2">
+              <CardCmp key={rel.id} className={isLeather ? "" : "grain"}>
+                <CardContentCmp className="flex items-center justify-between py-2">
                   <div
                     className="flex items-center gap-2 cursor-pointer hover:text-gold transition-colors"
                     onClick={() =>
@@ -343,18 +353,18 @@ export function RelationsPanel({
                           )
                     }
                   >
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className={isLeather ? "text-[10px] border-leather/40 text-leather" : "text-[10px]"}>
                       {other.type}
                     </Badge>
-                    <span className="text-sm font-medium">{other.name}</span>
-                    <ArrowRight className="size-3 text-muted-foreground" />
-                    <Badge variant="secondary" className="text-xs">
+                    <span className={`text-sm font-medium ${isLeather ? "text-leather" : ""}`}>{other.name}</span>
+                    <ArrowRight className={`size-3 ${mutedText}`} />
+                    <Badge variant={isLeather ? "outline" : "secondary"} className={isLeather ? "text-xs border-leather/40 bg-leather/10 text-leather" : "text-xs"}>
                       {getRelationLabel(rel.relation_type)}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     {rel.description && (
-                      <span className="text-xs text-muted-foreground italic max-w-[200px] truncate">
+                      <span className={`text-xs italic max-w-[200px] truncate ${mutedText}`}>
                         {rel.description}
                       </span>
                     )}
@@ -379,8 +389,8 @@ export function RelationsPanel({
                       </>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </CardContentCmp>
+              </CardCmp>
             );
           })}
         </div>
