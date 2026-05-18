@@ -107,7 +107,7 @@ export function ConversationList({
     <>
       <div className="fixed inset-0 z-[45] flex items-center justify-center overflow-hidden bg-leather">
         <div
-          className="relative max-h-screen w-full"
+          className="relative w-[min(100vw,calc(100vh*16/9))]"
           style={{ aspectRatio: "16 / 9" }}
         >
           <Image

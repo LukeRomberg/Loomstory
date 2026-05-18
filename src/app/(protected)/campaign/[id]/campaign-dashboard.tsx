@@ -59,7 +59,7 @@ export function CampaignDashboard({
       {/* Immersive bookshelf — sits at z-45 to cover the AppHeader (z-40) but stay below modals (z-50) */}
       <div className="fixed inset-0 z-[45] flex items-center justify-center overflow-hidden bg-leather">
         <BookshelfImage
-          className="max-h-screen w-full"
+          className="w-[min(100vw,calc(100vh*16/9))]"
           sections={CAMPAIGN_SECTIONS.map((section) => {
             if (
               section.slug === "sessions" ||
