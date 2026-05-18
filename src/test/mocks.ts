@@ -50,6 +50,7 @@ export const mockCampaign = {
   system_id: "system-dnd5e",
   cover_image_url: null,
   house_rules: null,
+  emblem: null as string | null,
   created_by: "test-user-id",
   created_at: "2026-03-27T00:00:00Z",
 };

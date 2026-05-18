@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { SkeletonList } from "@/components/shared/skeleton-card";
+import { EmblemPicker } from "@/components/shared/emblem-picker";
+import { useGameIcons } from "@/hooks/use-game-icons";
 import { PlayerList } from "@/app/(protected)/campaign/[id]/settings/player-list";
 import { InviteManager } from "@/app/(protected)/campaign/[id]/settings/invite-manager";
 import { Trash2 } from "lucide-react";
@@ -47,6 +49,7 @@ interface Campaign {
   system_id: string | null;
   house_rules: string | null;
   cover_image_url: string | null;
+  emblem: string | null;
 }
 
 interface System {
@@ -78,7 +81,9 @@ export function SettingsModal({
   const [description, setDescription] = useState("");
   const [systemId, setSystemId] = useState("");
   const [houseRules, setHouseRules] = useState("");
+  const [emblem, setEmblem] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { icons: emblemOptions, loading: emblemsLoading } = useGameIcons();
 
   // Members & invites (passed to reusable components)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -99,7 +104,7 @@ export function SettingsModal({
     const [campaignRes, systemsRes, membersRes, invitesRes] = await Promise.all([
       supabase
         .from("campaigns")
-        .select("id, name, description, system_id, house_rules, cover_image_url")
+        .select("id, name, description, system_id, house_rules, cover_image_url, emblem")
         .eq("id", campaignId)
         .is("deleted_at", null)
         .single(),
@@ -127,6 +132,7 @@ export function SettingsModal({
       setDescription(campaignRes.data.description ?? "");
       setSystemId(campaignRes.data.system_id ?? "");
       setHouseRules(campaignRes.data.house_rules ?? "");
+      setEmblem(campaignRes.data.emblem ?? null);
     }
     setSystems(systemsRes.data ?? []);
     // Flatten profiles join (Supabase returns array without generated types)
@@ -158,6 +164,7 @@ export function SettingsModal({
         description: description || null,
         system_id: systemId || null,
         house_rules: houseRules || null,
+        emblem,
       })
       .eq("id", campaignId);
 
@@ -261,6 +268,15 @@ export function SettingsModal({
                       value={houseRules}
                       onChange={(e) => setHouseRules(e.target.value)}
                       rows={4}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Book Emblem</Label>
+                    <EmblemPicker
+                      availableEmblems={emblemOptions}
+                      value={emblem}
+                      onChange={setEmblem}
+                      loading={emblemsLoading}
                     />
                   </div>
                 </CardContent>

@@ -12,6 +12,15 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush, refresh: mockRefresh }),
 }));
 
+vi.mock("@/hooks/use-game-icons", () => ({
+  useGameIcons: () => ({
+    icons: ["game-icons:wolf-head", "game-icons:castle", "game-icons:wyvern"],
+    loading: false,
+    error: null,
+  }),
+  FALLBACK_GAME_ICONS: ["game-icons:wolf-head"],
+}));
+
 // Clipboard mock
 beforeEach(() => {
   if (!navigator.clipboard) {
@@ -30,19 +39,24 @@ vi.stubGlobal("crypto", {
 
 const pendingInvites = mockInvites.filter((i) => !i.accepted_at);
 
+const mockCampaignUpdate = vi.fn((_payload: Record<string, unknown>) => ({
+  eq: vi.fn().mockResolvedValue({ error: null }),
+}));
+let campaignFixture: Record<string, unknown> = mockCampaign;
+
 const mockFrom = vi.fn((table: string) => {
   if (table === "campaigns") {
     return {
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           is: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: mockCampaign, error: null }),
+            single: vi
+              .fn()
+              .mockResolvedValue({ data: campaignFixture, error: null }),
           }),
         }),
       }),
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ error: null }),
-      }),
+      update: mockCampaignUpdate,
     };
   }
   if (table === "systems") {
@@ -103,7 +117,10 @@ const defaultProps = {
 };
 
 describe("SettingsModal", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    campaignFixture = mockCampaign;
+  });
 
   // ─── Loading & Structure ────────────────────────────────
 
@@ -149,6 +166,41 @@ describe("SettingsModal", () => {
     render(<SettingsModal {...defaultProps} />);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /save changes/i })).toBeInTheDocument();
+    });
+  });
+
+  // ─── Emblem Picker ────────────────────────────────────
+
+  it("renders the emblem picker once data loads", async () => {
+    render(<SettingsModal {...defaultProps} />);
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/search emblems/i)).toBeInTheDocument();
+    });
+  });
+
+  it("pre-selects the campaign's current emblem", async () => {
+    campaignFixture = { ...mockCampaign, emblem: "game-icons:castle" };
+    render(<SettingsModal {...defaultProps} />);
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /castle/i })
+      ).toHaveAttribute("aria-pressed", "true");
+    });
+  });
+
+  it("includes the chosen emblem in the update payload", async () => {
+    const user = userEvent.setup();
+    render(<SettingsModal {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /wyvern/i })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole("button", { name: /wyvern/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => expect(mockCampaignUpdate).toHaveBeenCalled());
+    expect(mockCampaignUpdate.mock.calls[0]?.[0]).toMatchObject({
+      emblem: "game-icons:wyvern",
     });
   });
 
