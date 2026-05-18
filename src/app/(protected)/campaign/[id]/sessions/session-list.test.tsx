@@ -3,19 +3,47 @@ import { render, screen } from "@testing-library/react";
 import { SessionList } from "./session-list";
 
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 const mockRefresh = vi.fn();
+let searchParams = new URLSearchParams();
 vi.mock("@/hooks/use-transition-router", () => ({
-  useTransitionRouter: () => ({ push: mockPush, refresh: mockRefresh }),
+  useTransitionRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    refresh: mockRefresh,
+  }),
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    refresh: mockRefresh,
+  }),
+  useSearchParams: () => searchParams,
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
+    auth: {
+      getUser: vi
+        .fn()
+        .mockResolvedValue({ data: { user: { id: "user-1" } } }),
+    },
+    rpc: vi.fn().mockResolvedValue({ error: null }),
     from: () => ({
       insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({ error: null }),
       select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: { id: "new-session" }, error: null }),
+      single: vi
+        .fn()
+        .mockResolvedValue({ data: { id: "new-session" }, error: null }),
     }),
   }),
+}));
+
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn(), loading: vi.fn() },
 }));
 
 const mockSession = {
@@ -23,7 +51,13 @@ const mockSession = {
   title: "The Siege of Ironhold",
   date_played: "2026-05-18",
   session_number: 1,
+  raw_notes: null,
+  ai_summary: null,
+  gm_notes: null,
+  player_summary: null,
+  player_visible: false,
   status: "draft",
+  created_by: "user-1",
   created_at: "2026-05-18T00:00:00Z",
 };
 
@@ -36,7 +70,10 @@ const defaultProps = {
 };
 
 describe("SessionList", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    searchParams = new URLSearchParams();
+  });
 
   it("renders the page heading", () => {
     render(<SessionList {...defaultProps} />);
@@ -51,13 +88,8 @@ describe("SessionList", () => {
   it("renders the session title (master + detail)", () => {
     render(<SessionList {...defaultProps} />);
     expect(
-      screen.getAllByText("The Siege of Ironhold").length
+      screen.getAllByText(/the siege of ironhold/i).length
     ).toBeGreaterThanOrEqual(1);
-  });
-
-  it("renders the session number with a # prefix", () => {
-    render(<SessionList {...defaultProps} />);
-    expect(screen.getAllByText("#1").length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows empty state when no sessions", () => {
@@ -67,7 +99,6 @@ describe("SessionList", () => {
 
   it("hides draft sessions from players", () => {
     render(<SessionList {...defaultProps} role="player" />);
-    // The single mock session is draft, so the count is 0 from a player POV
     expect(screen.getByText("(0)")).toBeInTheDocument();
   });
 
@@ -84,15 +115,5 @@ describe("SessionList", () => {
   it("renders a back link to the bookshelf", () => {
     render(<SessionList {...defaultProps} />);
     expect(screen.getByLabelText(/back to bookshelf/i)).toBeInTheDocument();
-  });
-
-  it("navigates to the session detail when Open session is clicked", async () => {
-    const userEvent = (await import("@testing-library/user-event")).default;
-    const user = userEvent.setup();
-    render(<SessionList {...defaultProps} />);
-    await user.click(screen.getByText(/open session/i));
-    expect(mockPush).toHaveBeenCalledWith(
-      expect.stringMatching(/^\/campaign\/campaign-1\/session\//)
-    );
   });
 });

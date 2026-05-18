@@ -32,7 +32,9 @@ export default async function SessionsPage({
       .single(),
     supabase
       .from("sessions")
-      .select("id, title, date_played, session_number, status, created_at")
+      .select(
+        "id, title, date_played, session_number, raw_notes, ai_summary, gm_notes, player_summary, player_visible, status, created_by, created_at"
+      )
       .eq("campaign_id", id)
       .is("deleted_at", null)
       .order("session_number", { ascending: false, nullsFirst: false })

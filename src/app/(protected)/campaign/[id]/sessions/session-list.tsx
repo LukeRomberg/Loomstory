@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useTransitionRouter } from "@/hooks/use-transition-router";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -16,32 +16,34 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { OpenBookView } from "@/components/shared/open-book-view";
-import { cn } from "@/lib/utils";
-import { ChevronRight } from "lucide-react";
+import {
+  MasterList,
+  MasterListItem,
+} from "@/components/shared/master-list";
+import { SessionDetail } from "./session-detail";
 
-interface Session {
+interface SessionRow {
   id: string;
   title: string;
   date_played: string | null;
   session_number: number | null;
+  raw_notes: string | null;
+  ai_summary: string | null;
+  gm_notes: string | null;
+  player_summary: string | null;
+  player_visible: boolean;
   status: string;
+  created_by: string;
   created_at: string;
 }
 
 interface SessionListProps {
   campaignId: string;
   campaignName: string;
-  sessions: Session[];
+  sessions: SessionRow[];
   role: string;
   userId: string;
 }
-
-const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
-  draft: "secondary",
-  processing: "default",
-  processed: "default",
-  published: "default",
-};
 
 export function SessionList({
   campaignId,
@@ -51,15 +53,17 @@ export function SessionList({
   userId,
 }: SessionListProps) {
   const router = useTransitionRouter();
+  const searchParams = useSearchParams();
   const isGm = role === "gm";
   const visible = isGm
     ? initialSessions
     : initialSessions.filter((s) => s.status === "published");
 
-  const [sessions] = useState(visible);
+  const [sessions, setSessions] = useState(visible);
   const [search, setSearch] = useState("");
+  const urlSelected = searchParams.get("selected");
   const [selectedId, setSelectedId] = useState<string | null>(
-    visible[0]?.id ?? null
+    urlSelected ?? visible[0]?.id ?? null
   );
   const [createOpen, setCreateOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -84,7 +88,23 @@ export function SessionList({
     );
   }, [sessions, search]);
 
-  const selected = filtered.find((s) => s.id === selectedId) ?? filtered[0] ?? null;
+  const selected =
+    filtered.find((s) => s.id === selectedId) ?? filtered[0] ?? null;
+
+  const selectSession = useCallback(
+    (id: string) => {
+      setSelectedId(id);
+      router.replace(`/campaign/${campaignId}/sessions?selected=${id}`);
+    },
+    [campaignId, router]
+  );
+
+  const handleDeleted = useCallback(() => {
+    if (!selected) return;
+    const remaining = sessions.filter((s) => s.id !== selected.id);
+    setSessions(remaining);
+    setSelectedId(remaining[0]?.id ?? null);
+  }, [sessions, selected]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -98,7 +118,9 @@ export function SessionList({
         campaign_id: campaignId,
         title,
         date_played: datePlayed || null,
-        session_number: sessionNumber ? parseInt(sessionNumber) : nextSessionNumber,
+        session_number: sessionNumber
+          ? parseInt(sessionNumber)
+          : nextSessionNumber,
         status: "draft",
         created_by: userId,
       })
@@ -111,82 +133,72 @@ export function SessionList({
       return;
     }
 
+    const created: SessionRow = {
+      id: session.id,
+      title: session.title,
+      date_played: session.date_played ?? null,
+      session_number: session.session_number ?? null,
+      raw_notes: null,
+      ai_summary: null,
+      gm_notes: null,
+      player_summary: null,
+      player_visible: false,
+      status: session.status ?? "draft",
+      created_by: session.created_by ?? userId,
+      created_at: session.created_at ?? new Date().toISOString(),
+      ...session,
+    };
+    setSessions((prev) => [created, ...prev]);
+    selectSession(created.id);
     setCreateOpen(false);
     setTitle("");
     setDatePlayed("");
     setSessionNumber("");
     setCreating(false);
-    router.push(`/campaign/${campaignId}/session/${session.id}`);
   }
 
   const leftPage = (
-    <>
-      <div className="flex shrink-0 items-center gap-2">
-        <h2 className="mr-auto font-heading text-base uppercase tracking-[0.15em] text-leather sm:text-lg">
-          Sessions{" "}
-          <span className="ml-1 font-sans text-xs font-normal text-leather/65 sm:text-sm">
-            ({sessions.length})
-          </span>
-        </h2>
-        <Input
-          placeholder="Search…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="h-8 w-40 border-leather/30 bg-parchment/30 text-xs text-leather placeholder:text-leather/40"
+    <MasterList
+      title="Sessions"
+      count={sessions.length}
+      search={search}
+      onSearchChange={setSearch}
+      isEmpty={filtered.length === 0}
+      emptyMessage={sessions.length === 0 ? "No sessions yet." : "No matches."}
+    >
+      {filtered.map((s) => (
+        <MasterListItem
+          key={s.id}
+          selected={selected?.id === s.id}
+          onClick={() => selectSession(s.id)}
+          title={
+            s.session_number != null
+              ? `#${s.session_number} ${s.title}`
+              : s.title
+          }
+          subtitle={
+            <>
+              {s.status}
+              {s.date_played && (
+                <span className="ml-1.5 normal-case font-medium tracking-normal text-leather/55">
+                  · {new Date(s.date_played).toLocaleDateString()}
+                </span>
+              )}
+            </>
+          }
         />
-      </div>
-
-      <div className="scrollbar-none flex-1 overflow-y-auto pr-1">
-        {filtered.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-center text-xs italic text-leather/60">
-            {sessions.length === 0 ? "No sessions yet." : "No matches."}
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            {filtered.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSelectedId(s.id)}
-                className={cn(
-                  "w-full rounded border border-leather/15 px-3 py-2 text-left transition",
-                  "hover:bg-leather/5",
-                  selected?.id === s.id && "border-leather/40 bg-leather/10"
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-baseline gap-1.5 min-w-0">
-                    {s.session_number != null && (
-                      <span className="shrink-0 font-mono text-xs font-semibold text-leather/70">
-                        #{s.session_number}
-                      </span>
-                    )}
-                    <div className="line-clamp-1 font-heading text-sm text-leather">
-                      {s.title}
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-0.5 line-clamp-1 text-xs font-semibold uppercase tracking-[0.08em] text-leather/70">
-                  {s.status}
-                  {s.date_played && (
-                    <span className="ml-1.5 normal-case font-medium tracking-normal text-leather/55">
-                      · {new Date(s.date_played).toLocaleDateString()}
-                    </span>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
+      ))}
+    </MasterList>
   );
 
   const rightPage = selected ? (
     <SessionDetail
+      key={selected.id}
+      campaignId={campaignId}
       session={selected}
-      onOpenFull={() =>
-        router.push(`/campaign/${campaignId}/session/${selected.id}`)
-      }
+      role={role}
+      userId={userId}
+      onDeleted={handleDeleted}
     />
   ) : (
     <div className="flex h-full items-center justify-center text-xs italic text-leather/60">
@@ -251,10 +263,18 @@ export function SessionList({
                 </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setCreateOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={creating || !title.trim()} className="gold-glow">
+                <Button
+                  type="submit"
+                  disabled={creating || !title.trim()}
+                  className="gold-glow"
+                >
                   {creating ? "Creating..." : "Create Session"}
                 </Button>
               </DialogFooter>
@@ -263,56 +283,5 @@ export function SessionList({
         </Dialog>
       )}
     </OpenBookView>
-  );
-}
-
-function SessionDetail({
-  session,
-  onOpenFull,
-}: {
-  session: Session;
-  onOpenFull: () => void;
-}) {
-  const variant = STATUS_VARIANTS[session.status] ?? "secondary";
-  return (
-    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto pr-1">
-      <div>
-        <div className="flex items-baseline gap-2">
-          {session.session_number != null && (
-            <span className="font-mono text-sm font-semibold text-leather/70">
-              #{session.session_number}
-            </span>
-          )}
-          <h3 className="font-heading text-base uppercase tracking-[0.12em] text-leather sm:text-lg">
-            {session.title}
-          </h3>
-        </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          <Badge variant={variant} className="text-[11px] font-semibold uppercase">
-            {session.status}
-          </Badge>
-          {session.date_played && (
-            <Badge
-              variant="outline"
-              className="border-leather/40 text-[11px] font-semibold text-leather"
-            >
-              {new Date(session.date_played).toLocaleDateString()}
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      <p className="text-sm italic text-leather/80">
-        Open the session to view notes, encounters, and prep.
-      </p>
-
-      <button
-        onClick={onOpenFull}
-        className="mt-2 inline-flex items-center gap-1 font-subheading text-xs font-semibold uppercase tracking-[0.15em] text-leather/85 transition hover:text-leather"
-      >
-        Open session
-        <ChevronRight className="size-3.5" />
-      </button>
-    </div>
   );
 }

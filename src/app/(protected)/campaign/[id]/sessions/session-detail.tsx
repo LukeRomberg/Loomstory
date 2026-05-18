@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  BookCard,
+  BookCardContent,
+  BookCardHeader,
+  BookCardTitle,
+} from "@/components/shared/book-card";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,6 @@ import { TiptapEditor } from "@/components/loomstory/tiptap-editor";
 import { ExtractionReview } from "@/components/loomstory/extraction-review";
 import { SessionPanels } from "./session-panels";
 import {
-  ChevronLeft,
   Save,
   Trash2,
   Pencil,
@@ -52,18 +51,18 @@ interface Session {
 
 interface SessionDetailProps {
   campaignId: string;
-  campaignName: string;
   session: Session;
   role: string;
   userId: string;
+  onDeleted?: () => void;
 }
 
 export function SessionDetail({
   campaignId,
-  campaignName,
   session: initialSession,
   role,
   userId,
+  onDeleted,
 }: SessionDetailProps) {
   const router = useTransitionRouter();
   const isGm = role === "gm";
@@ -86,14 +85,7 @@ export function SessionDetail({
     conversations: Record<string, unknown>;
   } | null>(null);
 
-  // Load existing extractions if session is processed
-  useEffect(() => {
-    if (session.status === "processed" || session.status === "processing") {
-      loadExtractions();
-    }
-  }, [session.id, session.status]);
-
-  async function loadExtractions() {
+  const loadExtractions = useCallback(async () => {
     try {
       const res = await fetch(`/api/session-process/${session.id}`);
       const data = await res.json();
@@ -115,7 +107,14 @@ export function SessionDetail({
     } catch {
       // Extractions might not exist yet
     }
-  }
+  }, [session.id]);
+
+  // Load existing extractions if session is processed
+  useEffect(() => {
+    if (session.status === "processed" || session.status === "processing") {
+      loadExtractions();
+    }
+  }, [session.id, session.status, loadExtractions]);
 
   const handleNotesChange = useCallback((html: string) => {
     setNotes(html);
@@ -139,7 +138,6 @@ export function SessionDetail({
   }
 
   async function handleProcess() {
-    // Save notes first
     setSaving(true);
     const supabase = createClient();
     await supabase
@@ -229,17 +227,20 @@ export function SessionDetail({
   async function handleDelete() {
     setDeleting(true);
     const supabase = createClient();
-    const { error } = await supabase
-      .rpc("soft_delete_entity", { p_entity_type: "session", p_entity_id: session.id });
+    const { error } = await supabase.rpc("soft_delete_entity", {
+      p_entity_type: "session",
+      p_entity_id: session.id,
+    });
 
     if (error) {
       toast.error("Failed to delete", { description: error.message });
       setDeleting(false);
       return;
     }
-
     toast.success("Session archived");
-    router.push(`/campaign/${campaignId}/sessions`);
+    setDeleteOpen(false);
+    setDeleting(false);
+    onDeleted?.();
     router.refresh();
   }
 
@@ -253,38 +254,38 @@ export function SessionDetail({
     setSession((prev) => ({ ...prev, status: "draft" }));
   }
 
+  const headerBlock = (
+    <SessionHeader
+      session={session}
+      isGm={isGm}
+      editingMeta={editingMeta}
+      setEditingMeta={setEditingMeta}
+      title={title}
+      setTitle={setTitle}
+      datePlayed={datePlayed}
+      setDatePlayed={setDatePlayed}
+      sessionNumber={sessionNumber}
+      setSessionNumber={setSessionNumber}
+      saving={saving}
+      onSaveMeta={handleSaveMeta}
+      deleteOpen={deleteOpen}
+      setDeleteOpen={setDeleteOpen}
+      deleting={deleting}
+      onDelete={handleDelete}
+      onResetMeta={() => {
+        setEditingMeta(false);
+        setTitle(session.title);
+        setDatePlayed(session.date_played ?? "");
+        setSessionNumber(session.session_number?.toString() ?? "");
+      }}
+    />
+  );
+
   // ─── Render: Extraction Review Mode ─────────────────────
   if (extractionData && isGm) {
     return (
-      <div className="space-y-6">
-        {/* Header */}
-        <SessionHeader
-          campaignId={campaignId}
-          campaignName={campaignName}
-          session={session}
-          isGm={isGm}
-          editingMeta={editingMeta}
-          setEditingMeta={setEditingMeta}
-          title={title}
-          setTitle={setTitle}
-          datePlayed={datePlayed}
-          setDatePlayed={setDatePlayed}
-          sessionNumber={sessionNumber}
-          setSessionNumber={setSessionNumber}
-          saving={saving}
-          onSaveMeta={handleSaveMeta}
-          deleteOpen={deleteOpen}
-          setDeleteOpen={setDeleteOpen}
-          deleting={deleting}
-          onDelete={handleDelete}
-          onResetMeta={() => {
-            setEditingMeta(false);
-            setTitle(session.title);
-            setDatePlayed(session.date_played ?? "");
-            setSessionNumber(session.session_number?.toString() ?? "");
-          }}
-        />
-
+      <div className="scrollbar-none flex h-full flex-col gap-4 overflow-y-auto pr-1 text-leather">
+        {headerBlock}
         <ExtractionReview
           sessionId={session.id}
           campaignId={campaignId}
@@ -299,43 +300,20 @@ export function SessionDetail({
 
   // ─── Render: Notes Mode ─────────────────────────────────
   return (
-    <div className="space-y-6">
-      <SessionHeader
-        campaignId={campaignId}
-        campaignName={campaignName}
-        session={session}
-        isGm={isGm}
-        editingMeta={editingMeta}
-        setEditingMeta={setEditingMeta}
-        title={title}
-        setTitle={setTitle}
-        datePlayed={datePlayed}
-        setDatePlayed={setDatePlayed}
-        sessionNumber={sessionNumber}
-        setSessionNumber={setSessionNumber}
-        saving={saving}
-        onSaveMeta={handleSaveMeta}
-        deleteOpen={deleteOpen}
-        setDeleteOpen={setDeleteOpen}
-        deleting={deleting}
-        onDelete={handleDelete}
-        onResetMeta={() => {
-          setEditingMeta(false);
-          setTitle(session.title);
-          setDatePlayed(session.date_played ?? "");
-          setSessionNumber(session.session_number?.toString() ?? "");
-        }}
-      />
+    <div className="scrollbar-none flex h-full flex-col gap-4 overflow-y-auto pr-1 text-leather">
+      {headerBlock}
 
       {isGm && (
-        <Card className="grain">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="font-heading">Session Notes</CardTitle>
+        <BookCard>
+          <BookCardHeader className="flex flex-row items-center justify-between gap-2">
+            <BookCardTitle>Session Notes</BookCardTitle>
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 onClick={handleSaveNotes}
                 disabled={saving}
+                variant="outline"
+                className="border-leather/40 bg-transparent text-leather hover:bg-leather/10 hover:text-leather"
               >
                 <Save className="size-4 mr-1.5" />
                 {saving ? "Saving..." : "Save Notes"}
@@ -359,15 +337,15 @@ export function SessionDetail({
                 )}
               </Button>
             </div>
-          </CardHeader>
-          <CardContent>
+          </BookCardHeader>
+          <BookCardContent>
             <TiptapEditor
               content={notes}
               onChange={handleNotesChange}
               placeholder="Write your session notes here... What happened? Who did the party meet? What decisions were made?"
             />
-          </CardContent>
-        </Card>
+          </BookCardContent>
+        </BookCard>
       )}
 
       <SessionPanels
@@ -385,8 +363,6 @@ export function SessionDetail({
 // ─── Session Header (shared between modes) ────────────────
 
 function SessionHeader({
-  campaignId,
-  campaignName,
   session,
   isGm,
   editingMeta,
@@ -405,8 +381,6 @@ function SessionHeader({
   onDelete,
   onResetMeta,
 }: {
-  campaignId: string;
-  campaignName: string;
   session: Session;
   isGm: boolean;
   editingMeta: boolean;
@@ -425,21 +399,11 @@ function SessionHeader({
   onDelete: () => void;
   onResetMeta: () => void;
 }) {
-  const router = useTransitionRouter();
-
   return (
-    <div className="flex items-start justify-between">
-      <div>
-        <button
-          onClick={() => router.push(`/campaign/${campaignId}/sessions`)}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
-        >
-          <ChevronLeft className="size-4" />
-          {campaignName} — Sessions
-        </button>
-
+    <div className="flex items-start justify-between gap-2">
+      <div className="min-w-0 flex-1">
         {editingMeta ? (
-          <form onSubmit={onSaveMeta} className="space-y-3">
+          <form onSubmit={onSaveMeta} className="space-y-3 [&_label]:text-leather">
             <div className="space-y-2">
               <Label htmlFor="edit-title">Title</Label>
               <Input
@@ -470,7 +434,7 @@ function SessionHeader({
               </div>
             </div>
             <div className="flex gap-2">
-              <Button type="submit" size="sm" disabled={saving}>
+              <Button type="submit" size="sm" disabled={saving} className="gold-glow">
                 {saving ? "Saving..." : "Save"}
               </Button>
               <Button
@@ -478,6 +442,7 @@ function SessionHeader({
                 variant="ghost"
                 size="sm"
                 onClick={onResetMeta}
+                className="text-leather hover:bg-leather/10 hover:text-leather"
               >
                 <X className="size-4" />
               </Button>
@@ -485,9 +450,9 @@ function SessionHeader({
           </form>
         ) : (
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-heading font-semibold">
+            <h2 className="font-heading text-lg font-semibold uppercase tracking-[0.12em] text-leather sm:text-xl">
               {session.session_number != null && (
-                <span className="text-muted-foreground mr-2">
+                <span className="mr-2 text-leather/65">
                   #{session.session_number}
                 </span>
               )}
@@ -498,6 +463,7 @@ function SessionHeader({
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => setEditingMeta(true)}
+                className="text-leather hover:bg-leather/10 hover:text-leather"
               >
                 <Pencil className="size-3.5" />
               </Button>
@@ -505,31 +471,32 @@ function SessionHeader({
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex flex-wrap items-center gap-1.5 mt-1">
           <Badge
-            variant={
-              session.status === "published" ? "default" : "secondary"
-            }
-            className="text-xs"
+            variant="outline"
+            className="border-leather/40 bg-leather/10 text-[11px] font-semibold text-leather"
           >
             {session.status}
           </Badge>
           {session.date_played && (
-            <span className="text-xs text-muted-foreground">
-              Played{" "}
-              {new Date(session.date_played).toLocaleDateString()}
+            <span className="text-xs text-leather/70">
+              Played {new Date(session.date_played).toLocaleDateString()}
             </span>
           )}
         </div>
       </div>
 
       {isGm && (
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 text-leather">
           <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
             <DialogTrigger
               render={
-                <Button variant="ghost" size="icon">
-                  <Trash2 className="size-4 text-red-400" />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="hover:bg-leather/10"
+                >
+                  <Trash2 className="size-4 text-red-700" />
                 </Button>
               }
             />
