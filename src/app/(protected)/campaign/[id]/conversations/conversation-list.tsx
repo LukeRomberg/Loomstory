@@ -122,10 +122,10 @@ export function ConversationList({
           <button
             onClick={() => router.push(`/campaign/${campaignId}`)}
             aria-label="Back to bookshelf"
-            className="absolute left-[3%] top-[4%] z-10 flex items-center gap-1 text-gold/75 transition hover:text-gold"
+            className="absolute left-[3%] top-[4%] z-10 flex items-center gap-1.5 rounded-md bg-leather/70 px-3 py-1.5 text-gold shadow-lg shadow-black/60 ring-1 ring-gold/20 backdrop-blur-sm transition hover:bg-leather/85 hover:text-gold"
           >
             <ChevronLeft className="size-4" />
-            <span className="font-subheading text-[10px] uppercase tracking-[0.18em] sm:text-xs">
+            <span className="font-subheading text-sm font-bold uppercase tracking-[0.18em]">
               Bookshelf
             </span>
           </button>
@@ -135,10 +135,10 @@ export function ConversationList({
             <button
               onClick={() => setCreateOpen(true)}
               aria-label="New conversation"
-              className="absolute right-[3%] top-[4%] z-10 flex items-center gap-1 text-gold/80 transition hover:text-gold"
+              className="absolute right-[3%] top-[4%] z-10 flex items-center gap-1.5 rounded-md bg-leather/70 px-3 py-1.5 text-gold shadow-lg shadow-black/60 ring-1 ring-gold/20 backdrop-blur-sm transition hover:bg-leather/85 hover:text-gold"
             >
               <Plus className="size-4" />
-              <span className="font-subheading text-[10px] uppercase tracking-[0.18em] sm:text-xs">
+              <span className="font-subheading text-sm font-bold uppercase tracking-[0.18em]">
                 New
               </span>
             </button>
@@ -146,7 +146,7 @@ export function ConversationList({
 
           {/* Parchment content overlay */}
           <div
-            className="absolute flex flex-col gap-3 text-leather"
+            className="absolute flex flex-col gap-3 font-medium text-leather"
             style={{ left: "16%", right: "16%", top: "14%", bottom: "16%" }}
           >
             {/* Header row */}
@@ -209,10 +209,10 @@ export function ConversationList({
                             "border-leather/40 bg-leather/10"
                         )}
                       >
-                        <div className="line-clamp-1 font-heading text-xs text-leather sm:text-sm">
+                        <div className="line-clamp-1 font-heading text-sm text-leather">
                           {c.title ?? "Untitled"}
                         </div>
-                        <div className="mt-0.5 line-clamp-1 text-[10px] text-leather/60 sm:text-xs">
+                        <div className="mt-0.5 line-clamp-1 text-xs font-medium text-leather/75">
                           {c.participants.map((p) => p.name).join(", ")}
                         </div>
                       </button>
@@ -270,13 +270,13 @@ function ConversationDetail({
             <Badge
               key={i}
               variant="outline"
-              className="border-leather/30 text-[9px] text-leather/80"
+              className="border-leather/40 text-[11px] font-semibold text-leather"
             >
               {p.name}
             </Badge>
           ))}
           {conversation.gm_only && (
-            <Badge variant="secondary" className="text-[9px]">
+            <Badge variant="secondary" className="text-[11px] font-semibold">
               <EyeOff className="mr-1 size-3" />
               GM Only
             </Badge>
@@ -284,29 +284,29 @@ function ConversationDetail({
         </div>
       </div>
 
-      <div className="space-y-1.5 border-l-2 border-leather/30 pl-3">
+      <div className="space-y-1.5 border-l-2 border-leather/40 pl-3">
         {turns.map((turn, i) => (
-          <div key={i} className="flex items-start gap-2 text-xs sm:text-sm">
+          <div key={i} className="flex items-start gap-2 text-sm sm:text-base">
             <Badge
               variant="outline"
-              className="mt-0.5 shrink-0 border-leather/30 text-[9px] text-leather/70"
+              className="mt-0.5 shrink-0 border-leather/40 text-[11px] font-semibold text-leather"
             >
               {turn.tone}
             </Badge>
             <p>
-              <span className="font-medium text-leather">{turn.speaker}:</span>{" "}
-              <span className="text-leather/80">{turn.text}</span>
+              <span className="font-semibold text-leather">{turn.speaker}:</span>{" "}
+              <span className="text-leather">{turn.text}</span>
             </p>
           </div>
         ))}
       </div>
 
       {isGm && conversation.gm_notes && (
-        <div className="border-t border-leather/20 pt-2">
-          <div className="mb-1 font-heading text-[10px] uppercase tracking-[0.12em] text-leather/60">
+        <div className="border-t border-leather/30 pt-2">
+          <div className="mb-1 font-heading text-xs uppercase tracking-[0.12em] text-leather/70">
             GM Notes
           </div>
-          <p className="text-[11px] italic text-leather/80 sm:text-xs">
+          <p className="text-sm italic text-leather">
             {conversation.gm_notes}
           </p>
         </div>

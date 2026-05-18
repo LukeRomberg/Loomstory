@@ -116,10 +116,10 @@ export function LocationList({
           <button
             onClick={() => router.push(`/campaign/${campaignId}`)}
             aria-label="Back to bookshelf"
-            className="absolute left-[3%] top-[4%] z-10 flex items-center gap-1 text-gold/75 transition hover:text-gold"
+            className="absolute left-[3%] top-[4%] z-10 flex items-center gap-1.5 rounded-md bg-leather/70 px-3 py-1.5 text-gold shadow-lg shadow-black/60 ring-1 ring-gold/20 backdrop-blur-sm transition hover:bg-leather/85 hover:text-gold"
           >
             <ChevronLeft className="size-4" />
-            <span className="font-subheading text-[10px] uppercase tracking-[0.18em] sm:text-xs">
+            <span className="font-subheading text-sm font-bold uppercase tracking-[0.18em]">
               Bookshelf
             </span>
           </button>
@@ -129,10 +129,10 @@ export function LocationList({
             <button
               onClick={() => setCreateOpen(true)}
               aria-label="New location"
-              className="absolute right-[3%] top-[4%] z-10 flex items-center gap-1 text-gold/80 transition hover:text-gold"
+              className="absolute right-[3%] top-[4%] z-10 flex items-center gap-1.5 rounded-md bg-leather/70 px-3 py-1.5 text-gold shadow-lg shadow-black/60 ring-1 ring-gold/20 backdrop-blur-sm transition hover:bg-leather/85 hover:text-gold"
             >
               <Plus className="size-4" />
-              <span className="font-subheading text-[10px] uppercase tracking-[0.18em] sm:text-xs">
+              <span className="font-subheading text-sm font-bold uppercase tracking-[0.18em]">
                 New
               </span>
             </button>
@@ -140,8 +140,8 @@ export function LocationList({
 
           {/* Parchment content overlay */}
           <div
-            className="absolute flex flex-col gap-3 text-leather"
-            style={{ left: "21%", right: "21%", top: "13%", bottom: "10%" }}
+            className="absolute flex flex-col gap-3 font-medium text-leather"
+            style={{ left: "18%", right: "18%", top: "13%", bottom: "10%" }}
           >
             {/* Header row */}
             <div className="flex shrink-0 items-center gap-3">
@@ -183,15 +183,15 @@ export function LocationList({
                         )}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <div className="line-clamp-1 font-heading text-xs text-leather sm:text-sm">
+                          <div className="line-clamp-1 font-heading text-sm text-leather">
                             {loc.name}
                           </div>
                           {loc.gm_only && (
-                            <EyeOff className="size-3 shrink-0 text-leather/50" />
+                            <EyeOff className="size-3.5 shrink-0 text-leather/70" />
                           )}
                         </div>
                         {loc.type && (
-                          <div className="mt-0.5 text-[10px] uppercase tracking-[0.1em] text-leather/55 sm:text-[11px]">
+                          <div className="mt-0.5 text-xs font-semibold uppercase tracking-[0.1em] text-leather/70">
                             {loc.type}
                           </div>
                         )}
@@ -286,13 +286,13 @@ function LocationDetail({
           {location.type && (
             <Badge
               variant="outline"
-              className="border-leather/30 text-[9px] text-leather/80"
+              className="border-leather/40 text-[11px] font-semibold text-leather"
             >
               {location.type}
             </Badge>
           )}
           {location.gm_only && (
-            <Badge variant="secondary" className="text-[9px]">
+            <Badge variant="secondary" className="text-[11px] font-semibold">
               <EyeOff className="mr-1 size-3" />
               GM Only
             </Badge>
@@ -301,23 +301,23 @@ function LocationDetail({
       </div>
 
       {location.aliases && location.aliases.length > 0 && (
-        <div className="text-[11px] italic text-leather/70 sm:text-xs">
+        <div className="text-sm italic text-leather">
           Also known as: {location.aliases.join(", ")}
         </div>
       )}
 
       {location.description && (
-        <p className="whitespace-pre-line text-xs text-leather/85 sm:text-sm">
+        <p className="whitespace-pre-line text-sm text-leather sm:text-base">
           {location.description}
         </p>
       )}
 
       <button
         onClick={onOpenFull}
-        className="mt-2 inline-flex items-center gap-1 font-subheading text-[10px] uppercase tracking-[0.15em] text-leather/70 transition hover:text-leather"
+        className="mt-2 inline-flex items-center gap-1 font-subheading text-xs font-semibold uppercase tracking-[0.15em] text-leather/85 transition hover:text-leather"
       >
         Open full details
-        <ChevronRight className="size-3" />
+        <ChevronRight className="size-3.5" />
       </button>
     </div>
   );

@@ -82,14 +82,16 @@ export function CampaignDashboard({
         <button
           onClick={() => router.push("/dashboard")}
           aria-label="Back to library"
-          className="absolute left-4 top-4 z-[46] flex items-center gap-1.5 rounded-md px-3 py-2 font-subheading text-xs uppercase tracking-[0.18em] text-gold/80 transition hover:bg-leather/60 hover:text-gold"
+          className="absolute left-4 top-4 z-[46] flex items-center gap-1.5 rounded-md bg-leather/70 px-3 py-1.5 text-gold shadow-lg shadow-black/60 ring-1 ring-gold/20 backdrop-blur-sm transition hover:bg-leather/85 hover:text-gold"
         >
           <ChevronLeft className="size-4" />
-          Library
+          <span className="font-subheading text-sm font-bold uppercase tracking-[0.18em]">
+            Library
+          </span>
         </button>
 
         {/* Overlay: campaign name plate */}
-        <div className="pointer-events-none absolute left-1/2 top-5 z-[46] -translate-x-1/2 font-heading text-sm uppercase tracking-[0.22em] text-gold/85 sm:text-base">
+        <div className="pointer-events-none absolute left-1/2 top-4 z-[46] -translate-x-1/2 rounded-md bg-leather/70 px-4 py-1.5 font-heading text-base font-bold uppercase tracking-[0.22em] text-gold shadow-lg shadow-black/60 ring-1 ring-gold/20 backdrop-blur-sm sm:text-lg">
           {campaign.name}
         </div>
 
@@ -98,7 +100,7 @@ export function CampaignDashboard({
           <button
             onClick={() => setSettingsOpen(true)}
             aria-label="Campaign settings"
-            className="absolute right-4 top-4 z-[46] rounded-md p-2 text-gold/80 transition hover:bg-leather/60 hover:text-gold"
+            className="absolute right-4 top-4 z-[46] rounded-md bg-leather/70 p-2 text-gold shadow-lg shadow-black/60 ring-1 ring-gold/20 backdrop-blur-sm transition hover:bg-leather/85 hover:text-gold"
           >
             <Settings className="size-5" />
           </button>
