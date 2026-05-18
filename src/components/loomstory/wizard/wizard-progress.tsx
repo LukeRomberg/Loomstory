@@ -51,12 +51,12 @@ export function WizardProgress({ steps, currentStep, maxReachedIndex, onStepClic
           const isVisited = i <= reachedIndex && !isCurrent;
           const isClickable = isVisited && onStepClick != null;
           const labelClass = cn(
-            "text-[9px] font-heading uppercase tracking-wider whitespace-nowrap transition-colors",
+            "text-sm font-heading font-bold uppercase tracking-wider whitespace-nowrap transition-colors",
             isCurrent
               ? "text-gold"
               : isDone
-                ? "text-muted-foreground/60"
-                : "text-muted-foreground/30",
+                ? "text-gold/70"
+                : "text-gold/40",
             isClickable && "cursor-pointer hover:text-gold"
           );
           return (
@@ -64,12 +64,12 @@ export function WizardProgress({ steps, currentStep, maxReachedIndex, onStepClic
               <div className="flex flex-col items-center gap-1 shrink-0">
                 <div
                   className={cn(
-                    "size-2 rounded-full transition-all duration-300",
+                    "size-3 rounded-full transition-all duration-300",
                     isDone
                       ? "bg-gold/70"
                       : isCurrent
                         ? "bg-gold ring-2 ring-gold/30"
-                        : "bg-rune"
+                        : "bg-gold/30"
                   )}
                 />
                 {isClickable ? (

@@ -827,6 +827,67 @@ export function CharacterWizard({
 
   if (!open) return null;
 
+  // Per-step right-page detail. Each picker step renders its selection's
+  // details here as we migrate them from the cramped CardPicker grid.
+  let rightPage: React.ReactNode = null;
+  if (currentStepKey === "class_pick") {
+    if (selectedClass) {
+      const Icon = classTheme?.icon;
+      rightPage = (
+        <div className="flex h-full flex-col gap-3 overflow-y-auto pr-1 text-leather scrollbar-none">
+          <div className="flex items-center gap-2">
+            {Icon && <Icon className="size-6 text-leather" />}
+            <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
+              {selectedClass.name}
+            </h3>
+          </div>
+          {classTheme?.domains && classTheme.domains.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {classTheme.domains.map((d) => (
+                <span
+                  key={d}
+                  className="rounded border border-leather/40 px-2 py-0.5 text-[11px] font-semibold uppercase text-leather"
+                >
+                  {d}
+                </span>
+              ))}
+            </div>
+          )}
+          {selectedClass.hp_die && (
+            <p className="text-sm text-leather">
+              <span className="font-semibold">Hit Die:</span> {selectedClass.hp_die}
+            </p>
+          )}
+          {selectedClassFeatures.length > 0 && (
+            <div>
+              <h4 className="mb-1.5 font-heading text-sm font-bold uppercase tracking-[0.1em] text-leather/85">
+                Starting Features
+              </h4>
+              <ul className="space-y-2">
+                {selectedClassFeatures.map((f) => (
+                  <li key={f.id} className="text-sm">
+                    <div className="font-semibold text-leather">{f.name}</div>
+                    {f.description && (
+                      <div className="text-leather/80 whitespace-pre-line">
+                        {f.description}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      );
+    } else {
+      rightPage = (
+        <div className="flex h-full items-center justify-center text-center text-sm italic text-leather/60">
+          Pick a class to see its details.
+        </div>
+      );
+    }
+  }
+
   return (
     <CharacterCreationShell
       onClose={handleClose}
@@ -843,7 +904,7 @@ export function CharacterWizard({
           }}
         />
       }
-      rightPage={null}
+      rightPage={rightPage}
       sheetPage={null}
       leftPage={<>
       {/* Show-tips toggle: right-aligned just above the progress bar so it
@@ -876,10 +937,6 @@ export function CharacterWizard({
               const isChange =
                 wizardState.classId !== null && wizardState.classId !== id;
               setWizardState((prev) => {
-                // Same-class re-pick preserves all downstream selections;
-                // a class CHANGE clears everything class-scoped (subclass,
-                // class-specific item, domain cards) to avoid silently
-                // saving stale ids from the previous class's pickers.
                 return {
                   ...prev,
                   classId: id,
@@ -892,8 +949,6 @@ export function CharacterWizard({
                   }),
                 };
               });
-              // On a class change, collapse the forward-jump high-water mark
-              // so the player has to walk subclass again before fast-jumping.
               if (isChange) setMaxStepReached(stepIndex);
               goForward();
             }}

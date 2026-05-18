@@ -16,7 +16,7 @@ export function StepHeading({ title, subtitle, helpText, onHelpClick }: StepHead
   return (
     <div className="text-right mb-2 shrink-0">
       <div className="flex items-baseline justify-end gap-2">
-        <h2 className="font-heading text-xl text-gold leading-none">{title}</h2>
+        <h2 className="font-heading text-xl font-bold text-leather leading-none">{title}</h2>
         {showHelpButton && (
           <button
             type="button"
@@ -24,7 +24,7 @@ export function StepHeading({ title, subtitle, helpText, onHelpClick }: StepHead
             aria-label="Show help"
             className={cn(
               "size-5 rounded-full border text-xs flex items-center justify-center shrink-0 transition-colors cursor-pointer",
-              "border-muted-foreground/30 text-muted-foreground/50 hover:border-gold/60 hover:text-gold"
+              "border-leather/40 text-leather/70 hover:border-leather hover:text-leather"
             )}
           >
             ?
@@ -32,7 +32,7 @@ export function StepHeading({ title, subtitle, helpText, onHelpClick }: StepHead
         )}
       </div>
       {subtitle && (
-        <p className="text-muted-foreground font-lore text-xs mt-1 max-w-md ml-auto">
+        <p className="text-leather/75 font-lore font-medium text-sm mt-1 max-w-md ml-auto">
           {subtitle}
         </p>
       )}
