@@ -54,12 +54,12 @@ export function CharacterCreationShell({
         {/* Close (cancel character creation) */}
         <button
           onClick={onClose}
-          aria-label="Cancel character creation"
+          aria-label="Close character creation"
           className="absolute right-[3%] top-[4%] z-10 flex items-center gap-1.5 rounded-md bg-leather/70 px-3 py-1.5 text-gold shadow-lg shadow-black/60 ring-1 ring-gold/20 backdrop-blur-sm transition hover:bg-leather/85 hover:text-gold"
         >
           <X className="size-4" />
           <span className="font-subheading text-sm font-bold uppercase tracking-[0.18em]">
-            Cancel
+            Close
           </span>
         </button>
 

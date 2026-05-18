@@ -46,7 +46,7 @@ describe("CharacterCreationShell", () => {
         onClose={onClose}
       />
     );
-    await user.click(screen.getByLabelText(/cancel character creation/i));
+    await user.click(screen.getByLabelText(/close character creation/i));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

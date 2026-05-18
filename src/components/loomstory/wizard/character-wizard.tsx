@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { WizardModal } from "./wizard-modal";
+import { CharacterCreationShell } from "./character-creation-shell";
 import { WizardProgress } from "./wizard-progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StepHeader } from "./step-header";
@@ -824,8 +825,27 @@ export function CharacterWizard({
 
   // ─── Render ───────────────────────────────────────────────
 
+  if (!open) return null;
+
   return (
-    <WizardModal open={open} onClose={handleClose} title="Create Character">
+    <CharacterCreationShell
+      onClose={handleClose}
+      topBar={
+        <WizardProgress
+          steps={progressSteps}
+          currentStep={currentStepKey}
+          maxReachedIndex={maxStepReached}
+          onStepClick={(key) => {
+            const idx = visibleSteps.indexOf(key);
+            if (idx >= 0 && idx !== stepIndex && idx <= maxStepReached) {
+              setStepIndex(idx);
+            }
+          }}
+        />
+      }
+      rightPage={null}
+      sheetPage={null}
+      leftPage={<>
       {/* Show-tips toggle: right-aligned just above the progress bar so it
           doesn't overlap the last step labels. Unchecking suppresses the
           auto-opening help popup but leaves the `?` button working. */}
@@ -837,20 +857,6 @@ export function CharacterWizard({
         />
         <span className="font-heading uppercase tracking-wider">Show tips</span>
       </label>
-
-      <WizardProgress
-        steps={progressSteps}
-        currentStep={currentStepKey}
-        maxReachedIndex={maxStepReached}
-        onStepClick={(key) => {
-          const idx = visibleSteps.indexOf(key);
-          // Any visited step is fair game (forward or backward), but not the
-          // current step itself and not steps the player has never reached.
-          if (idx >= 0 && idx !== stepIndex && idx <= maxStepReached) {
-            setStepIndex(idx);
-          }
-        }}
-      />
 
       {/* ── Class pick step ── */}
       {currentStepKey === "class_pick" && currentStep && (
@@ -1281,6 +1287,7 @@ export function CharacterWizard({
           helpText={currentStep.helpText}
         />
       )}
-    </WizardModal>
+      </>}
+    />
   );
 }
