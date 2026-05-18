@@ -18,12 +18,11 @@ export function LoadingScreen({
     <div role="status" aria-label={label} className={containerClass}>
       <div className="animate-candle-flicker">
         <Image
-          src="/brand/loomstory-monogram.svg"
+          src="/brand/loomstory-monogram.png"
           alt=""
           width={96}
           height={96}
           priority
-          unoptimized
           className="h-20 w-auto"
         />
       </div>

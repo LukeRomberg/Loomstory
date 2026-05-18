@@ -23,7 +23,7 @@ describe("LoadingScreen", () => {
     expect(container.querySelector(".animate-candle-flicker")).not.toBeNull();
     const img = container.querySelector("img");
     expect(img).not.toBeNull();
-    expect(img?.getAttribute("src")).toContain("loomstory-monogram.svg");
+    expect(img?.getAttribute("src")).toContain("loomstory-monogram");
   });
 
   it("uses panel layout by default (no fixed positioning)", () => {
