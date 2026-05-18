@@ -17,7 +17,7 @@ export default async function LocationsPage({ params }: { params: Promise<{ id: 
         .from("campaigns").select("id, name").eq("id", id).is("deleted_at", null).single(),
       supabase
         .from("locations")
-        .select("id, name, aliases, description, type, gm_only")
+        .select("id, name, aliases, description, type, gm_notes, player_notes, gm_only")
         .eq("campaign_id", id).is("deleted_at", null).order("name"),
     ]);
 

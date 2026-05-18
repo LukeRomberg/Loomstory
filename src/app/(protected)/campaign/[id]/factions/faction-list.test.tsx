@@ -5,20 +5,47 @@ import { FactionList } from "./faction-list";
 import { mockFaction } from "@/test/mocks";
 
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
+let searchParams = new URLSearchParams();
 vi.mock("@/hooks/use-transition-router", () => ({
-  useTransitionRouter: () => ({ push: mockPush, refresh: vi.fn() }),
+  useTransitionRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    refresh: vi.fn(),
+  }),
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    refresh: vi.fn(),
+  }),
+  useSearchParams: () => searchParams,
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
+    auth: {
+      getUser: vi
+        .fn()
+        .mockResolvedValue({ data: { user: { id: "user-1" } } }),
+    },
+    rpc: vi.fn().mockResolvedValue({ error: null }),
     from: () => ({
       insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({ error: null }),
       select: vi.fn().mockReturnThis(),
-      single: vi
-        .fn()
-        .mockResolvedValue({ data: { id: "new-fac", name: "New Faction" }, error: null }),
+      single: vi.fn().mockResolvedValue({
+        data: { id: "new-fac", name: "New Faction" },
+        error: null,
+      }),
     }),
   }),
+}));
+
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn(), loading: vi.fn() },
 }));
 
 const defaultProps = {
@@ -30,7 +57,10 @@ const defaultProps = {
 };
 
 describe("FactionList", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    searchParams = new URLSearchParams();
+  });
 
   it("renders the page heading", () => {
     render(<FactionList {...defaultProps} />);
@@ -44,7 +74,17 @@ describe("FactionList", () => {
 
   it("renders the faction name (master + detail when auto-selected)", () => {
     render(<FactionList {...defaultProps} />);
-    expect(screen.getAllByText(mockFaction.name).length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByText(mockFaction.name).length
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders selected faction's description in the detail pane", () => {
+    render(<FactionList {...defaultProps} />);
+    // description appears in the master list subtitle and again in the detail
+    expect(
+      screen.getAllByText(/shadowy guild/).length
+    ).toBeGreaterThanOrEqual(1);
   });
 
   it("shows empty state when no factions", () => {
@@ -67,12 +107,13 @@ describe("FactionList", () => {
     expect(screen.getByLabelText(/back to bookshelf/i)).toBeInTheDocument();
   });
 
-  it("navigates to detail page when Open full details is clicked", async () => {
-    const user = userEvent.setup();
+  it("shows inline Edit affordance for GMs", () => {
     render(<FactionList {...defaultProps} />);
-    await user.click(screen.getByText(/open full details/i));
-    expect(mockPush).toHaveBeenCalledWith(
-      expect.stringMatching(/^\/campaign\/campaign-1\/factions\//)
-    );
+    expect(screen.getAllByText(/edit/i).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("hides inline Edit affordance for players", () => {
+    render(<FactionList {...defaultProps} role="player" />);
+    expect(screen.queryByText(/^edit$/i)).not.toBeInTheDocument();
   });
 });

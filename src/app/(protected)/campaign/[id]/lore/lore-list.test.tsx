@@ -5,18 +5,36 @@ import { LoreList } from "./lore-list";
 import { mockLoreEntries } from "@/test/mocks";
 
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
+let searchParams = new URLSearchParams();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush, refresh: vi.fn() }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace, refresh: vi.fn() }),
+  useSearchParams: () => searchParams,
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
+    auth: {
+      getUser: vi
+        .fn()
+        .mockResolvedValue({ data: { user: { id: "user-1" } } }),
+    },
+    rpc: vi.fn().mockResolvedValue({ error: null }),
     from: () => ({
       insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({ error: null }),
       select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: { id: "new-lore" }, error: null }),
+      single: vi.fn().mockResolvedValue({
+        data: { id: "new-lore", title: "New" },
+        error: null,
+      }),
     }),
   }),
+}));
+
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn(), loading: vi.fn() },
 }));
 
 const defaultProps = {
@@ -28,7 +46,10 @@ const defaultProps = {
 };
 
 describe("LoreList", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    searchParams = new URLSearchParams();
+  });
 
   it("renders the page heading", () => {
     render(<LoreList {...defaultProps} />);
@@ -42,7 +63,6 @@ describe("LoreList", () => {
 
   it("renders lore entry titles", () => {
     render(<LoreList {...defaultProps} />);
-    // First entry auto-selects so its title appears in both master list and detail
     expect(
       screen.getAllByText("The Founding of Ironhold").length
     ).toBeGreaterThanOrEqual(1);
@@ -56,14 +76,12 @@ describe("LoreList", () => {
 
   it("renders tags on the selected entry", () => {
     render(<LoreList {...defaultProps} />);
-    // First entry is auto-selected — its tags render in detail badges (plus possibly master list preview)
     expect(screen.getAllByText(/history/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows GM Only badge in the detail pane when a gm_only entry is selected", async () => {
     const user = userEvent.setup();
     render(<LoreList {...defaultProps} />);
-    // Select the second entry (mock has gm_only: true)
     await user.click(screen.getByText("The Veil's True Identity"));
     expect(screen.getByText(/gm only/i)).toBeInTheDocument();
   });
@@ -104,19 +122,21 @@ describe("LoreList", () => {
     const user = userEvent.setup();
     render(<LoreList {...defaultProps} />);
     await user.type(screen.getByPlaceholderText(/search/i), "Veil");
-    expect(screen.queryByText("The Founding of Ironhold")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("The Founding of Ironhold")
+    ).not.toBeInTheDocument();
     expect(
       screen.getAllByText("The Veil's True Identity").length
     ).toBeGreaterThanOrEqual(1);
   });
 
-  it("navigates to full detail page when Open full details is clicked", async () => {
-    const user = userEvent.setup();
+  it("shows inline Edit affordance for GMs", () => {
     render(<LoreList {...defaultProps} />);
-    await user.click(screen.getByText(/open full details/i));
-    // First entry is auto-selected (mock entry id)
-    expect(mockPush).toHaveBeenCalledWith(
-      expect.stringMatching(/^\/campaign\/campaign-1\/lore\//)
-    );
+    expect(screen.getAllByText(/edit/i).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("hides inline Edit affordance for players", () => {
+    render(<LoreList {...defaultProps} role="player" />);
+    expect(screen.queryByText(/^edit$/i)).not.toBeInTheDocument();
   });
 });

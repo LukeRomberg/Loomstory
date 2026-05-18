@@ -5,32 +5,57 @@ import { LocationList } from "./location-list";
 import { mockLocation } from "@/test/mocks";
 
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
+let searchParams = new URLSearchParams();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush, refresh: vi.fn() }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace, refresh: vi.fn() }),
+  useSearchParams: () => searchParams,
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
+    auth: {
+      getUser: vi
+        .fn()
+        .mockResolvedValue({ data: { user: { id: "user-1" } } }),
+    },
+    rpc: vi.fn().mockResolvedValue({ error: null }),
     from: () => ({
       insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({ error: null }),
       select: vi.fn().mockReturnThis(),
-      single: vi
-        .fn()
-        .mockResolvedValue({ data: { id: "new-loc", name: "New Loc" }, error: null }),
+      single: vi.fn().mockResolvedValue({
+        data: { id: "new-loc", name: "New Loc" },
+        error: null,
+      }),
     }),
   }),
 }));
 
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn(), loading: vi.fn() },
+}));
+
+const fullLocation = {
+  ...mockLocation,
+  gm_notes: null,
+  player_notes: null,
+};
+
 const defaultProps = {
   campaignId: "campaign-1",
   campaignName: "Test Campaign",
-  locations: [mockLocation],
+  locations: [fullLocation],
   role: "gm",
   userId: "user-1",
 };
 
 describe("LocationList", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    searchParams = new URLSearchParams();
+  });
 
   it("renders the page heading", () => {
     render(<LocationList {...defaultProps} />);
@@ -39,7 +64,6 @@ describe("LocationList", () => {
 
   it("renders location name (in master list + selected detail)", () => {
     render(<LocationList {...defaultProps} />);
-    // First location auto-selects so name shows in both master list and detail
     expect(screen.getAllByText("Ironhold").length).toBeGreaterThanOrEqual(1);
   });
 
@@ -58,15 +82,6 @@ describe("LocationList", () => {
     expect(screen.getByText(/no locations yet/i)).toBeInTheDocument();
   });
 
-  it("navigates to full detail page when Open full details is clicked", async () => {
-    const user = userEvent.setup();
-    render(<LocationList {...defaultProps} />);
-    await user.click(screen.getByText(/open full details/i));
-    expect(mockPush).toHaveBeenCalledWith(
-      "/campaign/campaign-1/locations/location-1"
-    );
-  });
-
   it("shows new-location action for GMs", () => {
     render(<LocationList {...defaultProps} />);
     expect(screen.getByLabelText(/new location/i)).toBeInTheDocument();
@@ -80,5 +95,33 @@ describe("LocationList", () => {
   it("renders a back link to the bookshelf", () => {
     render(<LocationList {...defaultProps} />);
     expect(screen.getByLabelText(/back to bookshelf/i)).toBeInTheDocument();
+  });
+
+  it("shows inline Edit affordance for GMs", () => {
+    render(<LocationList {...defaultProps} />);
+    expect(screen.getAllByText(/edit/i).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("hides inline Edit affordance for players", () => {
+    render(<LocationList {...defaultProps} role="player" />);
+    expect(screen.queryByText(/^edit$/i)).not.toBeInTheDocument();
+  });
+
+  it("updates URL ?selected when switching selection", async () => {
+    const second = {
+      ...fullLocation,
+      id: "location-2",
+      name: "Thornwall",
+      description: "A border town near the cursed forest",
+      type: "town",
+    };
+    const user = userEvent.setup();
+    render(
+      <LocationList {...defaultProps} locations={[fullLocation, second]} />
+    );
+    await user.click(screen.getByText("Thornwall"));
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.stringMatching(/[?&]selected=location-2(&|$)/)
+    );
   });
 });

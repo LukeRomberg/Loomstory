@@ -56,7 +56,11 @@ export function WikilinkText({
     if (entity?.resolved) {
       const route = ENTITY_ROUTES[entity.entityType] ?? entity.entityType;
       const usesSelectedParam =
-        entity.entityType === "npc" || entity.entityType === "event";
+        entity.entityType === "npc" ||
+        entity.entityType === "event" ||
+        entity.entityType === "location" ||
+        entity.entityType === "faction" ||
+        entity.entityType === "lore_entry";
       const href = usesSelectedParam
         ? `/campaign/${campaignId}/${route}?selected=${entity.entityId}`
         : `/campaign/${campaignId}/${route}/${entity.entityId}`;

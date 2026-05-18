@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useTransitionRouter } from "@/hooks/use-transition-router";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -17,8 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, EyeOff, Plus } from "lucide-react";
+import {
+  MasterList,
+  MasterListItem,
+} from "@/components/shared/master-list";
+import { LoreDetail } from "./lore-detail";
+import { ChevronLeft, Plus } from "lucide-react";
 
 interface LoreEntry {
   id: string;
@@ -44,11 +48,13 @@ export function LoreList({
   userId,
 }: LoreListProps) {
   const router = useTransitionRouter();
+  const searchParams = useSearchParams();
   const isGm = role === "gm";
-  const [loreEntries] = useState(initial);
+  const [loreEntries, setLoreEntries] = useState(initial);
   const [search, setSearch] = useState("");
+  const urlSelected = searchParams.get("selected");
   const [selectedId, setSelectedId] = useState<string | null>(
-    initial[0]?.id ?? null
+    urlSelected ?? initial[0]?.id ?? null
   );
   const [createOpen, setCreateOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -65,7 +71,23 @@ export function LoreList({
     );
   }, [loreEntries, search]);
 
-  const selected = filtered.find((e) => e.id === selectedId) ?? filtered[0] ?? null;
+  const selected =
+    filtered.find((e) => e.id === selectedId) ?? filtered[0] ?? null;
+
+  const selectEntry = useCallback(
+    (id: string) => {
+      setSelectedId(id);
+      router.replace(`/campaign/${campaignId}/lore?selected=${id}`);
+    },
+    [campaignId, router]
+  );
+
+  const handleDeleted = useCallback(() => {
+    if (!selected) return;
+    const remaining = loreEntries.filter((e) => e.id !== selected.id);
+    setLoreEntries(remaining);
+    setSelectedId(remaining[0]?.id ?? null);
+  }, [loreEntries, selected]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -87,11 +109,20 @@ export function LoreList({
       setCreating(false);
       return;
     }
+    const created: LoreEntry = {
+      id: data.id,
+      title: data.title,
+      content: null,
+      tags: null,
+      gm_only: true,
+      ...data,
+    };
+    setLoreEntries((prev) => [...prev, created]);
+    selectEntry(created.id);
     setCreateOpen(false);
     setTitle("");
     setCreating(false);
     toast.success("Lore entry created");
-    router.refresh();
   }
 
   return (
@@ -140,61 +171,33 @@ export function LoreList({
             className="absolute flex flex-col gap-3 font-medium text-leather"
             style={{ left: "19%", right: "50%", top: "9%", bottom: "10%" }}
           >
-            {/* Header */}
-            <div className="flex shrink-0 items-center gap-2">
-              <h2 className="mr-auto font-heading text-base uppercase tracking-[0.15em] text-leather sm:text-lg">
-                Lore{" "}
-                <span className="ml-1 font-sans text-xs font-normal text-leather/65 sm:text-sm">
-                  ({loreEntries.length})
-                </span>
-              </h2>
-              <Input
-                placeholder="Search…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-8 w-40 border-leather/30 bg-parchment/30 text-xs text-leather placeholder:text-leather/40"
-              />
-            </div>
-
-            {/* List */}
-            <div className="scrollbar-none flex-1 overflow-y-auto pr-1">
-              {filtered.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-center text-xs italic text-leather/60">
-                  {loreEntries.length === 0
-                    ? "No lore entries yet."
-                    : "No matches."}
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {filtered.map((entry) => (
-                    <button
-                      key={entry.id}
-                      onClick={() => setSelectedId(entry.id)}
-                      className={cn(
-                        "w-full rounded border border-leather/15 px-3 py-2 text-left transition",
-                        "hover:bg-leather/5",
-                        selected?.id === entry.id &&
-                          "border-leather/40 bg-leather/10"
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="line-clamp-1 font-heading text-sm text-leather">
-                          {entry.title}
-                        </div>
-                        {entry.gm_only && (
-                          <EyeOff className="size-3.5 shrink-0 text-leather/70" />
-                        )}
-                      </div>
-                      {entry.tags && entry.tags.length > 0 && (
-                        <div className="mt-0.5 line-clamp-1 text-xs font-medium text-leather/70">
-                          {entry.tags.slice(0, 4).join(" · ")}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <MasterList
+              title="Lore"
+              count={loreEntries.length}
+              search={search}
+              onSearchChange={setSearch}
+              isEmpty={filtered.length === 0}
+              emptyMessage={
+                loreEntries.length === 0
+                  ? "No lore entries yet."
+                  : "No matches."
+              }
+            >
+              {filtered.map((entry) => (
+                <MasterListItem
+                  key={entry.id}
+                  selected={selected?.id === entry.id}
+                  onClick={() => selectEntry(entry.id)}
+                  title={entry.title}
+                  hidden={entry.gm_only}
+                  subtitle={
+                    entry.tags && entry.tags.length > 0
+                      ? entry.tags.slice(0, 4).join(" · ")
+                      : undefined
+                  }
+                />
+              ))}
+            </MasterList>
           </div>
 
           {/* RIGHT page — detail */}
@@ -204,10 +207,10 @@ export function LoreList({
           >
             {selected ? (
               <LoreDetail
+                key={selected.id}
                 entry={selected}
-                onOpenFull={() =>
-                  router.push(`/campaign/${campaignId}/lore/${selected.id}`)
-                }
+                role={role}
+                onDeleted={handleDeleted}
               />
             ) : (
               <div className="flex h-full items-center justify-center text-xs italic text-leather/60">
@@ -227,7 +230,7 @@ export function LoreList({
                   New Lore Entry
                 </DialogTitle>
                 <DialogDescription>
-                  Create a lore entry and fill in details later.
+                  Create a lore entry and fill in details inline.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -263,58 +266,5 @@ export function LoreList({
         </Dialog>
       )}
     </>
-  );
-}
-
-function LoreDetail({
-  entry,
-  onOpenFull,
-}: {
-  entry: LoreEntry;
-  onOpenFull: () => void;
-}) {
-  return (
-    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto pr-1">
-      <div>
-        <h3 className="font-heading text-base uppercase tracking-[0.12em] text-leather sm:text-lg">
-          {entry.title}
-        </h3>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          {entry.gm_only && (
-            <Badge variant="secondary" className="text-[11px] font-semibold">
-              <EyeOff className="mr-1 size-3" />
-              GM Only
-            </Badge>
-          )}
-          {entry.tags?.map((tag) => (
-            <Badge
-              key={tag}
-              variant="outline"
-              className="border-leather/40 text-[11px] font-semibold text-leather"
-            >
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      </div>
-
-      {entry.content ? (
-        <p className="whitespace-pre-line text-sm text-leather sm:text-base">
-          {entry.content}
-        </p>
-      ) : (
-        <p className="text-xs italic text-leather/60">
-          No content yet.
-        </p>
-      )}
-
-      <button
-        onClick={onOpenFull}
-        className="mt-2 inline-flex items-center gap-1 font-subheading text-xs font-semibold uppercase tracking-[0.15em] text-leather/85 transition hover:text-leather"
-      >
-        Open full details
-        <ChevronRight className="size-3.5" />
-      </button>
-    </div>
   );
 }

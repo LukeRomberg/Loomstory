@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useTransitionRouter } from "@/hooks/use-transition-router";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -17,8 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, EyeOff, Plus } from "lucide-react";
+import {
+  MasterList,
+  MasterListItem,
+} from "@/components/shared/master-list";
+import { LocationDetail } from "./location-detail";
+import { ChevronLeft, Plus } from "lucide-react";
 
 interface Location {
   id: string;
@@ -26,6 +30,8 @@ interface Location {
   aliases: string[] | null;
   description: string | null;
   type: string | null;
+  gm_notes: string | null;
+  player_notes: string | null;
   gm_only: boolean;
 }
 
@@ -45,11 +51,13 @@ export function LocationList({
   userId,
 }: LocationListProps) {
   const router = useTransitionRouter();
+  const searchParams = useSearchParams();
   const isGm = role === "gm";
-  const [locations] = useState(initial);
+  const [locations, setLocations] = useState(initial);
   const [search, setSearch] = useState("");
+  const urlSelected = searchParams.get("selected");
   const [selectedId, setSelectedId] = useState<string | null>(
-    initial[0]?.id ?? null
+    urlSelected ?? initial[0]?.id ?? null
   );
   const [createOpen, setCreateOpen] = useState(false);
   const [name, setName] = useState("");
@@ -69,7 +77,23 @@ export function LocationList({
     });
   }, [locations, search]);
 
-  const selected = filtered.find((l) => l.id === selectedId) ?? filtered[0] ?? null;
+  const selected =
+    filtered.find((l) => l.id === selectedId) ?? filtered[0] ?? null;
+
+  const selectLocation = useCallback(
+    (id: string) => {
+      setSelectedId(id);
+      router.replace(`/campaign/${campaignId}/locations?selected=${id}`);
+    },
+    [campaignId, router]
+  );
+
+  const handleDeleted = useCallback(() => {
+    if (!selected) return;
+    const remaining = locations.filter((l) => l.id !== selected.id);
+    setLocations(remaining);
+    setSelectedId(remaining[0]?.id ?? null);
+  }, [locations, selected]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -91,10 +115,23 @@ export function LocationList({
       setCreating(false);
       return;
     }
+    const created: Location = {
+      id: data.id,
+      name: data.name,
+      aliases: null,
+      description: null,
+      type: null,
+      gm_notes: null,
+      player_notes: null,
+      gm_only: true,
+      ...data,
+    };
+    setLocations((prev) => [...prev, created]);
+    selectLocation(created.id);
     setCreateOpen(false);
     setName("");
     setCreating(false);
-    router.push(`/campaign/${campaignId}/locations/${data.id}`);
+    toast.success("Location created");
   }
 
   return (
@@ -140,84 +177,50 @@ export function LocationList({
 
           {/* Parchment content overlay */}
           <div
-            className="absolute flex flex-col gap-3 font-medium text-leather"
+            className="absolute flex gap-3 font-medium text-leather"
             style={{ left: "18%", right: "18%", top: "13%", bottom: "10%" }}
           >
-            {/* Header row */}
-            <div className="flex shrink-0 items-center gap-3">
-              <h2 className="mr-auto font-heading text-base uppercase tracking-[0.15em] text-leather sm:text-lg">
-                Locations{" "}
-                <span className="ml-1 font-sans text-xs font-normal text-leather/60 sm:text-sm">
-                  ({locations.length})
-                </span>
-              </h2>
-              <Input
-                placeholder="Search…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-8 w-48 border-leather/30 bg-parchment/30 text-xs text-leather placeholder:text-leather/40"
-              />
+            {/* Master list */}
+            <div className="flex w-2/5 flex-col gap-3 pr-2">
+              <MasterList
+                title="Locations"
+                count={locations.length}
+                search={search}
+                onSearchChange={setSearch}
+                isEmpty={filtered.length === 0}
+                emptyMessage={
+                  locations.length === 0 ? "No locations yet." : "No matches."
+                }
+              >
+                {filtered.map((loc) => (
+                  <MasterListItem
+                    key={loc.id}
+                    selected={selected?.id === loc.id}
+                    onClick={() => selectLocation(loc.id)}
+                    title={loc.name}
+                    hidden={loc.gm_only}
+                    subtitle={loc.type ?? undefined}
+                  />
+                ))}
+              </MasterList>
             </div>
 
-            {/* Master-detail body */}
-            <div className="flex min-h-0 flex-1 gap-3">
-              {/* Master list */}
-              <div className="scrollbar-none w-2/5 overflow-y-auto pr-2">
-                {filtered.length === 0 ? (
-                  <div className="flex h-full items-center justify-center text-center text-xs italic text-leather/60">
-                    {locations.length === 0
-                      ? "No locations yet."
-                      : "No matches."}
-                  </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {filtered.map((loc) => (
-                      <button
-                        key={loc.id}
-                        onClick={() => setSelectedId(loc.id)}
-                        className={cn(
-                          "w-full rounded border border-leather/15 px-3 py-2 text-left transition",
-                          "hover:bg-leather/5",
-                          selected?.id === loc.id &&
-                            "border-leather/40 bg-leather/10"
-                        )}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="line-clamp-1 font-heading text-sm text-leather">
-                            {loc.name}
-                          </div>
-                          {loc.gm_only && (
-                            <EyeOff className="size-3.5 shrink-0 text-leather/70" />
-                          )}
-                        </div>
-                        {loc.type && (
-                          <div className="mt-0.5 text-xs font-semibold uppercase tracking-[0.1em] text-leather/70">
-                            {loc.type}
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Detail */}
-              <div className="scrollbar-none flex-1 overflow-y-auto border-l border-leather/15 pl-3">
-                {selected ? (
-                  <LocationDetail
-                    location={selected}
-                    onOpenFull={() =>
-                      router.push(
-                        `/campaign/${campaignId}/locations/${selected.id}`
-                      )
-                    }
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-xs italic text-leather/60">
-                    Select a location to view.
-                  </div>
-                )}
-              </div>
+            {/* Detail */}
+            <div className="flex-1 border-l border-leather/15 pl-3">
+              {selected ? (
+                <LocationDetail
+                  key={selected.id}
+                  campaignId={campaignId}
+                  location={selected}
+                  role={role}
+                  userId={userId}
+                  onDeleted={handleDeleted}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-xs italic text-leather/60">
+                  Select a location to view.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -230,7 +233,7 @@ export function LocationList({
               <DialogHeader>
                 <DialogTitle className="font-heading">New Location</DialogTitle>
                 <DialogDescription>
-                  Create a location and fill in details on the next page.
+                  Create a location and fill in details inline.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -266,59 +269,5 @@ export function LocationList({
         </Dialog>
       )}
     </>
-  );
-}
-
-function LocationDetail({
-  location,
-  onOpenFull,
-}: {
-  location: Location;
-  onOpenFull: () => void;
-}) {
-  return (
-    <div className="space-y-3 pb-3 pr-1">
-      <div>
-        <h3 className="font-heading text-sm uppercase tracking-[0.12em] text-leather sm:text-base">
-          {location.name}
-        </h3>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          {location.type && (
-            <Badge
-              variant="outline"
-              className="border-leather/40 text-[11px] font-semibold text-leather"
-            >
-              {location.type}
-            </Badge>
-          )}
-          {location.gm_only && (
-            <Badge variant="secondary" className="text-[11px] font-semibold">
-              <EyeOff className="mr-1 size-3" />
-              GM Only
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {location.aliases && location.aliases.length > 0 && (
-        <div className="text-sm italic text-leather">
-          Also known as: {location.aliases.join(", ")}
-        </div>
-      )}
-
-      {location.description && (
-        <p className="whitespace-pre-line text-sm text-leather sm:text-base">
-          {location.description}
-        </p>
-      )}
-
-      <button
-        onClick={onOpenFull}
-        className="mt-2 inline-flex items-center gap-1 font-subheading text-xs font-semibold uppercase tracking-[0.15em] text-leather/85 transition hover:text-leather"
-      >
-        Open full details
-        <ChevronRight className="size-3.5" />
-      </button>
-    </div>
   );
 }

@@ -17,7 +17,7 @@ export default async function FactionsPage({ params }: { params: Promise<{ id: s
         .from("campaigns").select("id, name").eq("id", id).is("deleted_at", null).single(),
       supabase
         .from("factions")
-        .select("id, name, description, goals, gm_only")
+        .select("id, name, description, goals, gm_notes, player_notes, gm_only")
         .eq("campaign_id", id).is("deleted_at", null).order("name"),
     ]);
 
