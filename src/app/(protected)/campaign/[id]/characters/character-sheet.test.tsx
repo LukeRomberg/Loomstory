@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { CharacterSheet } from "./character-sheet";
 
 const mockPush = vi.fn();
@@ -106,7 +105,6 @@ const mockStats = [
 const defaultProps = {
   character: mockCharacter,
   campaignId: "campaign-1",
-  campaignName: "Test Campaign",
   role: "gm",
   userId: "user-1",
   template: mockTemplate,
@@ -154,13 +152,6 @@ describe("CharacterSheet", () => {
   it("renders core fields from character row", () => {
     render(<CharacterSheet {...defaultProps} />);
     expect(screen.getByDisplayValue("25")).toBeInTheDocument();
-  });
-
-  // ─── Navigation ───────────────────────────────────────────
-
-  it("has a back button to characters list", () => {
-    render(<CharacterSheet {...defaultProps} />);
-    expect(screen.getByText(/test campaign/i)).toBeInTheDocument();
   });
 
   // ─── GM Notes ─────────────────────────────────────────────

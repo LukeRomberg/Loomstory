@@ -9,10 +9,28 @@ vi.mock("@/lib/character/wizard-registry", () => ({
   getWizardConfig: () => ({ steps: [] }),
 }));
 
+vi.mock("./character-sheet-loader", () => ({
+  CharacterSheetLoader: () => null,
+}));
+
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 const mockRefresh = vi.fn();
+let searchParams = new URLSearchParams();
 vi.mock("@/hooks/use-transition-router", () => ({
-  useTransitionRouter: () => ({ push: mockPush, refresh: mockRefresh }),
+  useTransitionRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    refresh: mockRefresh,
+  }),
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    refresh: mockRefresh,
+  }),
+  useSearchParams: () => searchParams,
 }));
 
 import { CharacterList } from "./character-list";
@@ -40,7 +58,10 @@ const defaultProps = {
 };
 
 describe("CharacterList", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    searchParams = new URLSearchParams();
+  });
 
   it("renders the page heading", () => {
     render(<CharacterList {...defaultProps} />);
@@ -52,11 +73,14 @@ describe("CharacterList", () => {
     expect(screen.getByText("(1)")).toBeInTheDocument();
   });
 
-  it("renders the character name (master + detail)", () => {
+  it("renders the character name in the master list", () => {
     render(<CharacterList {...defaultProps} />);
-    expect(
-      screen.getAllByText("Lyra Brightblade").length
-    ).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Lyra Brightblade")).toBeInTheDocument();
+  });
+
+  it("renders level badge in the master list", () => {
+    render(<CharacterList {...defaultProps} />);
+    expect(screen.getByText(/lv 3/i)).toBeInTheDocument();
   });
 
   it("shows empty state when no characters", () => {

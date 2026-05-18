@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useTransitionRouter } from "@/hooks/use-transition-router";
+import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,13 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  BookCard,
+  BookCardContent,
+  BookCardHeader,
+  BookCardTitle,
+} from "@/components/shared/book-card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { SectionHeader } from "@/components/loomstory/section-header";
-import { ChevronLeft, Save, Heart } from "lucide-react";
+import { Save, Heart } from "lucide-react";
 import type { Section, Field, StorageBinding } from "@/types/system-template";
 
 // ─── Types ──────────────────────────────────────────────────
@@ -63,7 +66,6 @@ interface NoteRow {
 interface CharacterSheetProps {
   character: CharacterData;
   campaignId: string;
-  campaignName: string;
   role: string;
   userId: string;
   template: Section[];
@@ -107,8 +109,7 @@ function setNestedValue(obj: Record<string, unknown>, path: string, value: unkno
 
 export function CharacterSheet({
   character: initialCharacter,
-  campaignId,
-  campaignName,
+  campaignId: _campaignId,
   role,
   userId,
   template,
@@ -116,7 +117,6 @@ export function CharacterSheet({
   resources: initialResources,
   notes: initialNotes,
 }: CharacterSheetProps) {
-  const router = useTransitionRouter();
   const isGm = role === "gm";
   const isOwner = initialCharacter.user_id === userId;
   const canEdit = isGm || isOwner;
@@ -500,32 +500,38 @@ export function CharacterSheet({
   const hpPercent = character.hp_max ? ((character.hp_current ?? 0) / character.hp_max) * 100 : 0;
 
   return (
-    <div className="max-w-4xl">
-      {/* Back nav */}
-      <button
-        onClick={() => router.push(`/campaign/${campaignId}/characters`)}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
-      >
-        <ChevronLeft className="size-4" />
-        {campaignName}
-      </button>
-
+    <div className="scrollbar-none flex h-full flex-col gap-4 overflow-y-auto pr-1 text-leather">
       {/* Character Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-heading font-semibold">{character.name}</h2>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className="text-xs">Level {character.level}</Badge>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-heading text-lg font-semibold uppercase tracking-[0.12em] text-leather sm:text-xl">
+            {character.name}
+          </h2>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <Badge
+              variant="outline"
+              className="border-leather/40 bg-leather/10 text-[11px] font-semibold text-leather"
+            >
+              Level {character.level}
+            </Badge>
             {character.hp_max != null && (
               <div className="flex items-center gap-1 text-sm">
-                <Heart className={`size-3.5 ${hpPercent > 50 ? "text-emerald-500" : hpPercent > 25 ? "text-amber-500" : "text-destructive"}`} />
-                <span className="font-mono text-xs">{character.hp_current}/{character.hp_max}</span>
+                <Heart
+                  className={`size-3.5 ${hpPercent > 50 ? "text-emerald-700" : hpPercent > 25 ? "text-amber-700" : "text-red-700"}`}
+                />
+                <span className="font-mono text-xs text-leather">
+                  {character.hp_current}/{character.hp_max}
+                </span>
               </div>
             )}
           </div>
         </div>
         {canEdit && (
-          <Button onClick={handleSave} disabled={saving} className="gold-glow font-heading">
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="gold-glow font-heading"
+          >
             <Save className="size-4 mr-1.5" />
             {saving ? "Saving..." : "Save"}
           </Button>
@@ -534,54 +540,64 @@ export function CharacterSheet({
 
       {/* Template-driven sections */}
       {template.length > 0 ? (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {template
             .sort((a, b) => a.order - b.order)
             .map((section) => (
-            <Card key={section.key} className="grain">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-heading">{section.label}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className={
-                  section.layout === "grid"
-                    ? `grid gap-4 ${section.columns === 6 ? "grid-cols-3 sm:grid-cols-6" : section.columns === 4 ? "grid-cols-2 sm:grid-cols-4" : section.columns === 3 ? "grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`
-                    : "space-y-3"
-                }>
-                  {section.fields
-                    .sort((a, b) => a.order - b.order)
-                    .map((field) => renderField(field))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+              <BookCard key={section.key}>
+                <BookCardHeader className="pb-1">
+                  <BookCardTitle>{section.label}</BookCardTitle>
+                </BookCardHeader>
+                <BookCardContent className="[&_label]:text-leather/80">
+                  <div
+                    className={
+                      section.layout === "grid"
+                        ? `grid gap-4 ${
+                            section.columns === 6
+                              ? "grid-cols-3 sm:grid-cols-6"
+                              : section.columns === 4
+                                ? "grid-cols-2 sm:grid-cols-4"
+                                : section.columns === 3
+                                  ? "grid-cols-3"
+                                  : "grid-cols-1 sm:grid-cols-2"
+                          }`
+                        : "space-y-3"
+                    }
+                  >
+                    {section.fields
+                      .sort((a, b) => a.order - b.order)
+                      .map((field) => renderField(field))}
+                  </div>
+                </BookCardContent>
+              </BookCard>
+            ))}
         </div>
       ) : (
-        <Card className="grain">
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground font-lore">
+        <BookCard>
+          <BookCardContent className="py-8 text-center">
+            <p className="font-lore text-leather/70">
               No character sheet template available for this system.
               Fill in the basic fields above.
             </p>
-          </CardContent>
-        </Card>
+          </BookCardContent>
+        </BookCard>
       )}
 
       {/* GM Notes (always at bottom, GM only) */}
       {isGm && (
-        <Card className="grain mt-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-heading">GM Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <BookCard className="mt-2">
+          <BookCardHeader className="pb-1">
+            <BookCardTitle>GM Notes</BookCardTitle>
+          </BookCardHeader>
+          <BookCardContent>
             <Textarea
               value={gmNotes}
               onChange={(e) => setGmNotes(e.target.value)}
               placeholder="Private notes about this character..."
               rows={4}
             />
-          </CardContent>
-        </Card>
+          </BookCardContent>
+        </BookCard>
       )}
     </div>
   );

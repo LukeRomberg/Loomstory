@@ -786,7 +786,7 @@ export function CharacterWizard({
 
       toast.success("Character created");
       onClose();
-      router.push(`/campaign/${campaignId}/characters/${characterId}`);
+      router.push(`/campaign/${campaignId}/characters?selected=${characterId}`);
     } catch (err) {
       toast.error("Failed to create character", {
         description: err instanceof Error ? err.message : "Unknown error",

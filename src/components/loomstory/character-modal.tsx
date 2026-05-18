@@ -160,7 +160,7 @@ function CharacterQuickView({ char, campaignId }: { char: Character; campaignId:
       )}
 
       <button
-        onClick={() => router.push(`/campaign/${campaignId}/characters/${char.id}`)}
+        onClick={() => router.push(`/campaign/${campaignId}/characters?selected=${char.id}`)}
         className="text-sm text-gold hover:underline"
       >
         Open full character sheet →
