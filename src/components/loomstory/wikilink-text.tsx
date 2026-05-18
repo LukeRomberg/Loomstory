@@ -55,10 +55,11 @@ export function WikilinkText({
 
     if (entity?.resolved) {
       const route = ENTITY_ROUTES[entity.entityType] ?? entity.entityType;
-      const href =
-        entity.entityType === "npc"
-          ? `/campaign/${campaignId}/${route}?selected=${entity.entityId}`
-          : `/campaign/${campaignId}/${route}/${entity.entityId}`;
+      const usesSelectedParam =
+        entity.entityType === "npc" || entity.entityType === "event";
+      const href = usesSelectedParam
+        ? `/campaign/${campaignId}/${route}?selected=${entity.entityId}`
+        : `/campaign/${campaignId}/${route}/${entity.entityId}`;
       parts.push(
         <span
           key={`link-${i}`}

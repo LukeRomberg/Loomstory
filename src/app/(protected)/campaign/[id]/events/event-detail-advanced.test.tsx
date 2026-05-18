@@ -47,7 +47,6 @@ const childEvent = {
 
 const defaultProps = {
   campaignId: "campaign-1",
-  campaignName: "Test Campaign",
   event: mockEvent,
   role: "gm",
 };
@@ -94,7 +93,9 @@ describe("EventDetail — Entity Tags (EVT-09)", () => {
     const user = userEvent.setup();
     render(<EventDetail {...defaultProps} event={eventWithTags} />);
     await user.click(screen.getByText("Gareth the Bold"));
-    expect(mockPush).toHaveBeenCalledWith("/campaign/campaign-1/npcs/npc-1");
+    expect(mockPush).toHaveBeenCalledWith(
+      "/campaign/campaign-1/npcs?selected=npc-1"
+    );
   });
 
   it("shows 'no entities tagged' when tags are empty", () => {

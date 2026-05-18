@@ -11,11 +11,16 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
+    rpc: vi.fn().mockResolvedValue({ error: null }),
     from: () => ({
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockResolvedValue({ error: null }),
     }),
-    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "user-1" } } }) },
+    auth: {
+      getUser: vi
+        .fn()
+        .mockResolvedValue({ data: { user: { id: "user-1" } } }),
+    },
   }),
 }));
 
@@ -25,7 +30,6 @@ vi.mock("sonner", () => ({
 
 const defaultProps = {
   campaignId: "campaign-1",
-  campaignName: "Test Campaign",
   event: mockEvent,
   role: "gm",
 };
@@ -62,11 +66,6 @@ describe("EventDetail — Display", () => {
     render(<EventDetail {...defaultProps} />);
     expect(screen.getByText(/morning/i)).toBeInTheDocument();
   });
-
-  it("has back button to events list", () => {
-    render(<EventDetail {...defaultProps} />);
-    expect(screen.getByText(/events/i)).toBeInTheDocument();
-  });
 });
 
 describe("EventDetail — Edit (EVT-04)", () => {
@@ -74,18 +73,18 @@ describe("EventDetail — Edit (EVT-04)", () => {
 
   it("shows edit button for GMs", () => {
     render(<EventDetail {...defaultProps} />);
-    expect(screen.getByText(/edit/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/edit/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it("hides edit button for players", () => {
     render(<EventDetail {...defaultProps} role="player" />);
-    expect(screen.queryByText(/edit/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^edit$/i)).not.toBeInTheDocument();
   });
 
   it("enters edit mode with form fields", async () => {
     const user = userEvent.setup();
     render(<EventDetail {...defaultProps} />);
-    await user.click(screen.getByText(/edit/i));
+    await user.click(screen.getAllByText(/edit/i)[0]);
     expect(screen.getByLabelText(/content/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/summary/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/weight/i)).toBeInTheDocument();
@@ -94,7 +93,7 @@ describe("EventDetail — Edit (EVT-04)", () => {
   it("shows save and cancel in edit mode", async () => {
     const user = userEvent.setup();
     render(<EventDetail {...defaultProps} />);
-    await user.click(screen.getByText(/edit/i));
+    await user.click(screen.getAllByText(/edit/i)[0]);
     expect(screen.getByText(/save/i)).toBeInTheDocument();
     expect(screen.getByText(/cancel/i)).toBeInTheDocument();
   });
@@ -111,7 +110,6 @@ describe("EventDetail — Resolve (EVT-05)", () => {
   it("hides resolve button when already resolved", () => {
     const resolved = { ...mockEvent, resolved: true };
     render(<EventDetail {...defaultProps} event={resolved} />);
-    // Should show "Resolved" badge instead of button
     expect(screen.queryByText(/^resolve$/i)).not.toBeInTheDocument();
     expect(screen.getByText(/resolved/i)).toBeInTheDocument();
   });
@@ -138,15 +136,36 @@ describe("EventDetail — Trigger Condition (EVT-06)", () => {
   });
 
   it("shows trigger condition when present", () => {
-    const withTrigger = { ...mockEvent, trigger_condition: "When the full moon rises" };
+    const withTrigger = {
+      ...mockEvent,
+      trigger_condition: "When the full moon rises",
+    };
     render(<EventDetail {...defaultProps} event={withTrigger} />);
-    expect(screen.getByText(/when the full moon rises/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/when the full moon rises/i)
+    ).toBeInTheDocument();
   });
 
   it("can edit trigger condition in edit mode", async () => {
     const user = userEvent.setup();
     render(<EventDetail {...defaultProps} />);
-    await user.click(screen.getByText(/edit/i));
+    await user.click(screen.getAllByText(/edit/i)[0]);
     expect(screen.getByLabelText(/trigger/i)).toBeInTheDocument();
+  });
+});
+
+describe("EventDetail — Delete callback", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("calls onDeleted after successful delete", async () => {
+    const onDeleted = vi.fn();
+    const user = userEvent.setup();
+    render(<EventDetail {...defaultProps} onDeleted={onDeleted} />);
+    const trashBtn = screen
+      .getAllByRole("button")
+      .find((b) => b.querySelector('[class*="text-red"]'));
+    await user.click(trashBtn!);
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+    expect(onDeleted).toHaveBeenCalled();
   });
 });

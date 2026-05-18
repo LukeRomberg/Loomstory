@@ -9,33 +9,67 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  BookCard,
+  BookCardContent,
+  BookCardHeader,
+  BookCardTitle,
+} from "@/components/shared/book-card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { SectionHeader } from "@/components/loomstory/section-header";
 import {
-  ChevronLeft, Pencil, Trash2, CheckCircle, AlertTriangle, X,
+  Pencil,
+  Trash2,
+  CheckCircle,
+  AlertTriangle,
+  ChevronLeft,
 } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 
 const TIME_LABELS: Record<number, string> = {
-  0: "Midnight", 600: "Dawn", 900: "Morning", 1200: "Midday",
-  1500: "Afternoon", 1800: "Evening", 2100: "Night",
+  0: "Midnight",
+  600: "Dawn",
+  900: "Morning",
+  1200: "Midday",
+  1500: "Afternoon",
+  1800: "Evening",
+  2100: "Night",
 };
 
 const EVENT_TYPES = [
-  "general", "scene", "decision", "discovery", "conversation",
-  "promise", "todo", "upcoming", "milestone", "mood", "quote",
+  "general",
+  "scene",
+  "decision",
+  "discovery",
+  "conversation",
+  "promise",
+  "todo",
+  "upcoming",
+  "milestone",
+  "mood",
+  "quote",
 ];
 
 const TIME_OPTIONS = [
-  { value: "600", label: "Dawn" }, { value: "900", label: "Morning" },
-  { value: "1200", label: "Midday" }, { value: "1500", label: "Afternoon" },
-  { value: "1800", label: "Evening" }, { value: "2100", label: "Night" },
+  { value: "600", label: "Dawn" },
+  { value: "900", label: "Morning" },
+  { value: "1200", label: "Midday" },
+  { value: "1500", label: "Afternoon" },
+  { value: "1800", label: "Evening" },
+  { value: "2100", label: "Night" },
   { value: "0", label: "Midnight" },
 ];
 
@@ -74,16 +108,16 @@ const ENTITY_ROUTES: Record<string, string> = {
 
 interface EventDetailProps {
   campaignId: string;
-  campaignName: string;
   event: CampaignEvent;
   role: string;
+  onDeleted?: () => void;
 }
 
 export function EventDetail({
   campaignId,
-  campaignName,
   event: initialEvent,
   role,
+  onDeleted,
 }: EventDetailProps) {
   const router = useTransitionRouter();
   const isGm = role === "gm";
@@ -98,9 +132,15 @@ export function EventDetail({
   const [summary, setSummary] = useState(event.summary ?? "");
   const [eventType, setEventType] = useState(event.event_type);
   const [weight, setWeight] = useState(String(event.weight));
-  const [narrativeDay, setNarrativeDay] = useState(event.narrative_day != null ? String(event.narrative_day) : "");
-  const [narrativeTime, setNarrativeTime] = useState(event.narrative_time != null ? String(event.narrative_time) : "");
-  const [triggerCondition, setTriggerCondition] = useState(event.trigger_condition ?? "");
+  const [narrativeDay, setNarrativeDay] = useState(
+    event.narrative_day != null ? String(event.narrative_day) : ""
+  );
+  const [narrativeTime, setNarrativeTime] = useState(
+    event.narrative_time != null ? String(event.narrative_time) : ""
+  );
+  const [triggerCondition, setTriggerCondition] = useState(
+    event.trigger_condition ?? ""
+  );
 
   function getTimeLabel(time: number | null): string | null {
     if (time == null) return null;
@@ -110,7 +150,9 @@ export function EventDetail({
   async function handleSave() {
     setSaving(true);
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const { error } = await supabase
       .from("campaign_events")
       .update({
@@ -146,7 +188,9 @@ export function EventDetail({
 
   async function handleResolve() {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const { error } = await supabase
       .from("campaign_events")
       .update({
@@ -167,8 +211,10 @@ export function EventDetail({
   async function handleDelete() {
     setDeleting(true);
     const supabase = createClient();
-    const { error } = await supabase
-      .rpc("soft_delete_entity", { p_entity_type: "event", p_entity_id: event.id });
+    const { error } = await supabase.rpc("soft_delete_entity", {
+      p_entity_type: "event",
+      p_entity_id: event.id,
+    });
 
     if (error) {
       toast.error("Failed to delete", { description: error.message });
@@ -176,8 +222,9 @@ export function EventDetail({
       return;
     }
     toast.success("Event archived");
-    router.push(`/campaign/${campaignId}/events`);
-    router.refresh();
+    setDeleteOpen(false);
+    setDeleting(false);
+    onDeleted?.();
   }
 
   function cancelEdit() {
@@ -186,63 +233,125 @@ export function EventDetail({
     setSummary(event.summary ?? "");
     setEventType(event.event_type);
     setWeight(String(event.weight));
-    setNarrativeDay(event.narrative_day != null ? String(event.narrative_day) : "");
-    setNarrativeTime(event.narrative_time != null ? String(event.narrative_time) : "");
+    setNarrativeDay(
+      event.narrative_day != null ? String(event.narrative_day) : ""
+    );
+    setNarrativeTime(
+      event.narrative_time != null ? String(event.narrative_time) : ""
+    );
     setTriggerCondition(event.trigger_condition ?? "");
   }
 
+  function navigateToEntity(entityType: string, entityId: string) {
+    const route = ENTITY_ROUTES[entityType] ?? entityType;
+    if (entityType === "npc") {
+      router.push(`/campaign/${campaignId}/${route}?selected=${entityId}`);
+    } else {
+      router.push(`/campaign/${campaignId}/${route}/${entityId}`);
+    }
+  }
+
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="scrollbar-none flex h-full flex-col gap-4 overflow-y-auto pr-1 text-leather">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <button
-            onClick={() => router.push(`/campaign/${campaignId}/events`)}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-            {campaignName} — Events
-          </button>
-          <h2 className="text-2xl font-heading font-semibold">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-heading text-lg font-semibold uppercase tracking-[0.12em] text-leather sm:text-xl">
             {event.summary ?? "Event"}
           </h2>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className="text-xs capitalize">{event.event_type}</Badge>
-            <Badge variant="secondary" className="text-xs">w{event.weight}</Badge>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <Badge
+              variant="outline"
+              className="border-leather/40 text-[11px] font-semibold uppercase capitalize text-leather"
+            >
+              {event.event_type}
+            </Badge>
+            <Badge
+              variant="outline"
+              className="border-leather/40 bg-leather/10 text-[11px] font-semibold text-leather"
+            >
+              w{event.weight}
+            </Badge>
             {event.resolved && (
-              <Badge variant="default" className="text-xs">
-                <CheckCircle className="size-3 mr-1" />Resolved
+              <Badge
+                variant="outline"
+                className="border-leather/40 bg-leather/10 text-[11px] font-semibold text-leather"
+              >
+                <CheckCircle className="mr-1 size-3" />
+                Resolved
               </Badge>
             )}
             {event.narrative_day != null && (
-              <span className="text-xs text-muted-foreground font-mono">Day {event.narrative_day}</span>
+              <span className="font-mono text-xs text-leather/70">
+                Day {event.narrative_day}
+              </span>
             )}
             {event.narrative_time != null && (
-              <span className="text-xs text-muted-foreground">{getTimeLabel(event.narrative_time) ?? event.narrative_time}</span>
+              <span className="text-xs text-leather/70">
+                {getTimeLabel(event.narrative_time) ?? event.narrative_time}
+              </span>
+            )}
+            {event.gm_only && (
+              <Badge
+                variant="outline"
+                className="border-leather/40 bg-leather/10 text-[11px] font-semibold text-leather"
+              >
+                GM Only
+              </Badge>
             )}
           </div>
         </div>
         {isGm && (
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1 text-leather">
             {!event.resolved && (
-              <Button variant="outline" size="sm" onClick={handleResolve}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResolve}
+                className="border-leather/40 bg-transparent text-leather hover:bg-leather/10 hover:text-leather"
+              >
                 <CheckCircle className="size-4 mr-1" />
                 Resolve
               </Button>
             )}
-            <Button variant="ghost" size="icon-sm" onClick={() => setEditing(!editing)}>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setEditing(!editing)}
+              className="text-leather hover:bg-leather/10 hover:text-leather"
+            >
               <Pencil className="size-4" />
             </Button>
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-              <DialogTrigger render={<Button variant="ghost" size="icon-sm"><Trash2 className="size-4 text-red-400" /></Button>} />
+              <DialogTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="hover:bg-leather/10"
+                  >
+                    <Trash2 className="size-4 text-red-700" />
+                  </Button>
+                }
+              />
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Delete this event?</DialogTitle>
-                  <DialogDescription>This will archive the event. All data is preserved.</DialogDescription>
+                  <DialogDescription>
+                    This will archive the event. All data is preserved.
+                  </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button variant="ghost" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-                  <Button variant="destructive" onClick={handleDelete} disabled={deleting}>{deleting ? "Deleting..." : "Delete"}</Button>
+                  <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? "Deleting..." : "Delete"}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -252,131 +361,229 @@ export function EventDetail({
 
       {/* Edit Mode */}
       {editing && isGm ? (
-        <Card className="grain">
-          <CardHeader>
-            <CardTitle className="font-heading">Edit Event</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <BookCard>
+          <BookCardHeader>
+            <BookCardTitle>Edit Event</BookCardTitle>
+          </BookCardHeader>
+          <BookCardContent className="space-y-4 [&_label]:text-leather">
             <div className="space-y-2">
               <Label htmlFor="edit-content">Content</Label>
-              <Textarea id="edit-content" value={content} onChange={(e) => setContent(e.target.value)} rows={3} />
+              <Textarea
+                id="edit-content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={3}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-summary">Summary</Label>
-              <Input id="edit-summary" value={summary} onChange={(e) => setSummary(e.target.value)} />
+              <Input
+                id="edit-summary"
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={eventType} onValueChange={(v) => setEventType(v ?? "general")}>
-                  <SelectTrigger><SelectValue>{eventType}</SelectValue></SelectTrigger>
+                <Select
+                  value={eventType}
+                  onValueChange={(v) => setEventType(v ?? "general")}
+                >
+                  <SelectTrigger>
+                    <SelectValue>{eventType}</SelectValue>
+                  </SelectTrigger>
                   <SelectContent>
-                    {EVENT_TYPES.map((t) => (<SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>))}
+                    {EVENT_TYPES.map((t) => (
+                      <SelectItem key={t} value={t} className="capitalize">
+                        {t}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-weight">Weight (1-7)</Label>
-                <Input id="edit-weight" type="number" min={1} max={7} value={weight} onChange={(e) => setWeight(e.target.value)} />
+                <Input
+                  id="edit-weight"
+                  type="number"
+                  min={1}
+                  max={7}
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-day">Narrative Day</Label>
-                <Input id="edit-day" type="number" value={narrativeDay} onChange={(e) => setNarrativeDay(e.target.value)} />
+                <Input
+                  id="edit-day"
+                  type="number"
+                  value={narrativeDay}
+                  onChange={(e) => setNarrativeDay(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Time of Day</Label>
-                <Select value={narrativeTime} onValueChange={(v) => setNarrativeTime(v ?? "")}>
-                  <SelectTrigger><SelectValue placeholder="Select time...">{narrativeTime ? TIME_OPTIONS.find((t) => t.value === narrativeTime)?.label : undefined}</SelectValue></SelectTrigger>
+                <Select
+                  value={narrativeTime}
+                  onValueChange={(v) => setNarrativeTime(v ?? "")}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select time...">
+                      {narrativeTime
+                        ? TIME_OPTIONS.find((t) => t.value === narrativeTime)
+                            ?.label
+                        : undefined}
+                    </SelectValue>
+                  </SelectTrigger>
                   <SelectContent>
-                    {TIME_OPTIONS.map((t) => (<SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>))}
+                    {TIME_OPTIONS.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-trigger">Trigger Condition</Label>
-              <Input id="edit-trigger" value={triggerCondition} onChange={(e) => setTriggerCondition(e.target.value)} placeholder="When/if this should surface..." />
+              <Input
+                id="edit-trigger"
+                value={triggerCondition}
+                onChange={(e) => setTriggerCondition(e.target.value)}
+                placeholder="When/if this should surface..."
+              />
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleSave} disabled={saving} className="gold-glow">{saving ? "Saving..." : "Save"}</Button>
-              <Button variant="ghost" onClick={cancelEdit}>Cancel</Button>
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="gold-glow"
+              >
+                {saving ? "Saving..." : "Save"}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={cancelEdit}
+                className="text-leather hover:bg-leather/10 hover:text-leather"
+              >
+                Cancel
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          </BookCardContent>
+        </BookCard>
       ) : (
         /* Read Mode */
-        <>
+        <div className="space-y-5">
           {/* Parent link */}
           {event.parent_id && (
-            <Card className="grain gold-glow cursor-pointer" onClick={() => router.push(`/campaign/${campaignId}/events/${event.parent_id}`)}>
-              <CardContent className="py-2 flex items-center gap-2 text-sm text-muted-foreground">
+            <BookCard
+              className="cursor-pointer"
+              onClick={() =>
+                router.push(
+                  `/campaign/${campaignId}/events?selected=${event.parent_id}`
+                )
+              }
+            >
+              <BookCardContent className="flex items-center gap-2 py-2 text-sm text-leather/70">
                 <ChevronLeft className="size-3" />
                 <span>Parent Event</span>
-              </CardContent>
-            </Card>
+              </BookCardContent>
+            </BookCard>
           )}
 
-          <Card className="grain">
-            <CardContent className="py-4">
-              <p className="text-sm font-lore">{event.content}</p>
-            </CardContent>
-          </Card>
+          <BookCard>
+            <BookCardContent className="py-3">
+              <p className="whitespace-pre-line text-sm font-lore text-leather">
+                {event.content}
+              </p>
+            </BookCardContent>
+          </BookCard>
 
           {event.trigger_condition && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <AlertTriangle className="size-4 text-gold shrink-0" />
+            <div className="flex items-center gap-2 text-sm text-leather/70">
+              <AlertTriangle className="size-4 shrink-0 text-gold" />
               <span className="italic">Trigger: {event.trigger_condition}</span>
             </div>
           )}
 
           {/* Entity Tags */}
           <div>
-            <SectionHeader>Tagged Entities</SectionHeader>
+            <div className="text-xs font-heading uppercase tracking-wider text-leather/70 mb-2">
+              Tagged Entities
+            </div>
             {event.entity_tags && event.entity_tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {event.entity_tags.map((tag, i) => (
-                  <Card
+                  <BookCard
                     key={i}
-                    className="grain gold-glow cursor-pointer inline-flex"
-                    onClick={() => router.push(`/campaign/${campaignId}/${ENTITY_ROUTES[tag.entity_type] ?? tag.entity_type}/${tag.entity_id}`)}
+                    className="cursor-pointer inline-flex"
+                    onClick={() => navigateToEntity(tag.entity_type, tag.entity_id)}
                   >
-                    <CardContent className="py-1.5 px-3 flex items-center gap-1.5">
-                      <Badge variant="outline" className="text-[10px]">{tag.entity_type}</Badge>
-                      <span className="text-sm font-medium">{tag.entity_name}</span>
-                      <Badge variant="secondary" className="text-[10px]">{tag.role}</Badge>
-                    </CardContent>
-                  </Card>
+                    <BookCardContent className="py-1.5 px-3 flex items-center gap-1.5">
+                      <Badge
+                        variant="outline"
+                        className="border-leather/40 text-[10px] text-leather"
+                      >
+                        {tag.entity_type}
+                      </Badge>
+                      <span className="text-sm font-medium text-leather">
+                        {tag.entity_name}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="border-leather/40 bg-leather/10 text-[10px] text-leather"
+                      >
+                        {tag.role}
+                      </Badge>
+                    </BookCardContent>
+                  </BookCard>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground italic">No entities tagged to this event.</p>
+              <p className="text-sm italic text-leather/70">
+                No entities tagged to this event.
+              </p>
             )}
           </div>
 
           {/* Children / Sub-events */}
           {event.children_count != null && event.children_count > 0 && (
             <div>
-              <SectionHeader>{event.children_count} sub-event{event.children_count !== 1 ? "s" : ""}</SectionHeader>
+              <div className="text-xs font-heading uppercase tracking-wider text-leather/70 mb-2">
+                {event.children_count} sub-event
+                {event.children_count !== 1 ? "s" : ""}
+              </div>
             </div>
           )}
 
           {/* Actions */}
           {isGm && (
-            <div className="flex items-center gap-2 pt-2">
-              <Button variant="outline" onClick={() => setEditing(true)}>
+            <div className="flex items-center gap-2 pt-1">
+              <Button
+                variant="outline"
+                onClick={() => setEditing(true)}
+                className="border-leather/40 bg-transparent text-leather hover:bg-leather/10 hover:text-leather"
+              >
                 <Pencil className="size-4 mr-1.5" />
                 Edit
               </Button>
-              {(event.children_count != null && event.children_count > 0) || event.parent_id == null ? (
-                <Button variant="outline" size="sm">
+              {(event.children_count != null && event.children_count > 0) ||
+              event.parent_id == null ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-leather/40 bg-transparent text-leather hover:bg-leather/10 hover:text-leather"
+                >
                   Add Sub-Event
                 </Button>
               ) : null}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

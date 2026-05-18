@@ -12,6 +12,7 @@ interface MasterListProps {
   onSearchChange: (value: string) => void;
   isEmpty?: boolean;
   emptyMessage?: string;
+  headerExtras?: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -24,6 +25,7 @@ export function MasterList({
   onSearchChange,
   isEmpty,
   emptyMessage,
+  headerExtras,
   children,
 }: MasterListProps) {
   return (
@@ -39,8 +41,9 @@ export function MasterList({
           placeholder="Search…"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="h-8 w-40 border-leather/30 bg-parchment/30 text-xs text-leather placeholder:text-leather/40"
+          className="h-8 w-32 border-leather/30 bg-parchment/30 text-xs text-leather placeholder:text-leather/40"
         />
+        {headerExtras}
       </div>
 
       <div className="scrollbar-none flex-1 overflow-y-auto pr-1">
