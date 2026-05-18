@@ -113,16 +113,20 @@ export function EntityDetailTabs({
   }, [activeTab, relationsData, historyData, versionsData, fetchRelations, fetchHistory, fetchVersions]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-leather">
       {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b border-border pb-1">
+      <div className="flex items-center gap-1 border-b border-leather/30 pb-1">
         {TABS.map((tab) => (
           <Button
             key={tab.key}
-            variant={activeTab === tab.key ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
             onClick={() => setActiveTab(tab.key)}
-            className="font-heading"
+            className={cn(
+              "font-heading text-leather hover:bg-leather/10 hover:text-leather",
+              activeTab === tab.key &&
+                "bg-leather/15 text-leather hover:bg-leather/15"
+            )}
           >
             <tab.icon className="size-4 mr-1.5" />
             {tab.label}

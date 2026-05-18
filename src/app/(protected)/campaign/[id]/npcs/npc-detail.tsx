@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { SectionHeader } from "@/components/loomstory/section-header";
 import { EntityDetailTabs } from "@/components/loomstory/entity-detail-tabs";
 import { Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 
@@ -181,7 +180,10 @@ export function NpcDetail({
               {npc.status}
             </Badge>
             {npc.gm_only && (
-              <Badge variant="secondary" className="text-[11px] font-semibold">
+              <Badge
+                variant="outline"
+                className="border-leather/40 bg-leather/10 text-leather text-[11px] font-semibold"
+              >
                 <EyeOff className="mr-1 size-3" />
                 GM Only
               </Badge>
@@ -194,7 +196,7 @@ export function NpcDetail({
           </div>
         </div>
         {isGm && (
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1 text-leather">
             <Button
               variant="ghost"
               size="icon-sm"
@@ -202,6 +204,7 @@ export function NpcDetail({
               title={
                 npc.gm_only ? "Make visible to players" : "Hide from players"
               }
+              className="text-leather hover:bg-leather/10 hover:text-leather"
             >
               {npc.gm_only ? (
                 <Eye className="size-4" />
@@ -213,14 +216,19 @@ export function NpcDetail({
               variant="ghost"
               size="icon-sm"
               onClick={() => setEditing(!editing)}
+              className="text-leather hover:bg-leather/10 hover:text-leather"
             >
               <Pencil className="size-4" />
             </Button>
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
               <DialogTrigger
                 render={
-                  <Button variant="ghost" size="icon-sm">
-                    <Trash2 className="size-4 text-red-400" />
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="hover:bg-leather/10"
+                  >
+                    <Trash2 className="size-4 text-red-700" />
                   </Button>
                 }
               />
@@ -261,11 +269,11 @@ export function NpcDetail({
         userId={userId ?? ""}
         overviewContent={
           editing && isGm ? (
-            <Card className="grain">
+            <Card className="grain bg-parchment/40 border-leather/30 !text-leather">
               <CardHeader>
-                <CardTitle className="font-heading">Edit NPC</CardTitle>
+                <CardTitle className="font-heading text-leather">Edit NPC</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 [&_label]:text-leather">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
                   <Input
@@ -347,7 +355,11 @@ export function NpcDetail({
                   >
                     {saving ? "Saving..." : "Save"}
                   </Button>
-                  <Button variant="ghost" onClick={cancelEdit}>
+                  <Button
+                    variant="ghost"
+                    onClick={cancelEdit}
+                    className="text-leather hover:bg-leather/10 hover:text-leather"
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -356,14 +368,14 @@ export function NpcDetail({
           ) : (
             <div className="space-y-5">
               {npc.description && (
-                <Card className="grain">
+                <Card className="grain bg-parchment/40 border-leather/30 !text-leather">
                   <CardHeader>
-                    <CardTitle className="font-heading text-sm">
+                    <CardTitle className="font-heading text-sm text-leather">
                       Description
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm font-lore">{npc.description}</p>
+                    <p className="text-sm font-lore text-leather">{npc.description}</p>
                   </CardContent>
                 </Card>
               )}
@@ -373,8 +385,8 @@ export function NpcDetail({
                   {npc.tags.map((tag) => (
                     <Badge
                       key={tag}
-                      variant="secondary"
-                      className="text-xs"
+                      variant="outline"
+                      className="border-leather/40 bg-leather/10 text-leather text-xs"
                     >
                       {tag}
                     </Badge>
@@ -384,12 +396,14 @@ export function NpcDetail({
 
               {isGm && npc.gm_notes && (
                 <>
-                  <Separator />
+                  <Separator className="bg-leather/20" />
                   <div>
-                    <SectionHeader>GM Notes</SectionHeader>
-                    <Card className="grain">
+                    <div className="text-xs font-heading uppercase tracking-wider text-leather/70 mb-2">
+                      GM Notes
+                    </div>
+                    <Card className="grain bg-parchment/40 border-leather/30 !text-leather">
                       <CardContent className="py-3">
-                        <p className="text-sm">{npc.gm_notes}</p>
+                        <p className="text-sm text-leather">{npc.gm_notes}</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -398,12 +412,14 @@ export function NpcDetail({
 
               {npc.player_notes && (
                 <>
-                  <Separator />
+                  <Separator className="bg-leather/20" />
                   <div>
-                    <SectionHeader>Player Notes</SectionHeader>
-                    <Card className="grain">
+                    <div className="text-xs font-heading uppercase tracking-wider text-leather/70 mb-2">
+                      Player Notes
+                    </div>
+                    <Card className="grain bg-parchment/40 border-leather/30 !text-leather">
                       <CardContent className="py-3">
-                        <p className="text-sm">{npc.player_notes}</p>
+                        <p className="text-sm text-leather">{npc.player_notes}</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -415,6 +431,7 @@ export function NpcDetail({
                   <Button
                     variant="outline"
                     onClick={() => setEditing(true)}
+                    className="border-leather/40 bg-transparent text-leather hover:bg-leather/10 hover:text-leather"
                   >
                     <Pencil className="size-4 mr-1.5" />
                     Edit
