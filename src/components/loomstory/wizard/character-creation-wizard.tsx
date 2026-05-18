@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { cn } from "@/lib/utils";
 import { CharacterCreationShell } from "./character-creation-shell";
+import { CharacterSheetPreview } from "./character-sheet-preview";
 import { WizardProgress } from "./wizard-progress";
 import { Button } from "@/components/ui/button";
 import { useStepData } from "@/lib/character/use-step-data";
@@ -191,7 +192,29 @@ export function CharacterCreationWizard({
       }
       leftPage={leftPage}
       rightPage={rightPage}
-      sheetPage={null /* Phase 2: <CharacterSheetPreview ... /> */}
+      sheetPage={
+        <CharacterSheetPreview
+          wizardState={wizardState}
+          selectedClass={selectedClass}
+          selectedSubclass={null}
+          ancestryFeatures={[]}
+          communityFeatures={[]}
+          classFeatures={selectedClassFeatures}
+          subclassFeatures={[]}
+          domainCards={[]}
+          primaryWeapon={null}
+          secondaryWeapon={null}
+          armor={null}
+          potion={null}
+          classTheme={classTheme}
+          onNameChange={(name) =>
+            setWizardState((prev) => ({ ...prev, name }))
+          }
+          onCreate={() => {
+            /* Review-step CTA — populated once the Review step is ported. */
+          }}
+        />
+      }
       footer={
         <>
           <Button

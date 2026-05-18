@@ -21,9 +21,9 @@ interface CharacterCreationShellProps {
 
 // Locked zone positions (percentages of the 1672×941 character-creation.png).
 const TOP_BAR_INSET = { left: "4%", right: "4%", top: "3%", bottom: "88%" };
-const LEFT_PAGE_INSET = { left: "12%", right: "69%", top: "18%", bottom: "17%" };
-const RIGHT_PAGE_INSET = { left: "33%", right: "46%", top: "19%", bottom: "16%" };
-const SHEET_PAGE_INSET = { left: "64%", right: "12%", top: "18%", bottom: "16%" };
+const LEFT_PAGE_INSET = { left: "13%", right: "67%", top: "15%", bottom: "17%" };
+const RIGHT_PAGE_INSET = { left: "37%", right: "43%", top: "15%", bottom: "17%" };
+const SHEET_PAGE_INSET = { left: "66%", right: "11%", top: "16%", bottom: "16%" };
 const FOOTER_INSET = { left: "30%", right: "30%", top: "90%", bottom: "3%" };
 
 export function CharacterCreationShell({
