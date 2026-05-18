@@ -16,7 +16,7 @@ interface OpenBookViewProps {
   debugBorder?: boolean;
 }
 
-// Initial parchment-overlay positions for open-book.png (1536×1024, 3:2).
+// Initial parchment-overlay positions for open-book.png (1672×941, 16:9).
 // Tune via debugBorder once real content is rendered, then lock in.
 const LEFT_INSET = { left: "9%", right: "52%", top: "10%", bottom: "10%" };
 const RIGHT_INSET = { left: "52%", right: "9%", top: "10%", bottom: "10%" };
@@ -38,8 +38,8 @@ export function OpenBookView({
     <>
       <div className="fixed inset-0 z-[45] flex items-center justify-center overflow-hidden bg-leather">
         <div
-          className="relative w-[min(100vw,calc(100vh*3/2))]"
-          style={{ aspectRatio: "3 / 2" }}
+          className="relative w-[min(100vw,calc(100vh*16/9))]"
+          style={{ aspectRatio: "16 / 9" }}
         >
           <Image
             src="/textures/open-book.png"
