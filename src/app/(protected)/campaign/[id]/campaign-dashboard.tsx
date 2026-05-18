@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Settings } from "lucide-react";
 import { SettingsModal } from "@/components/loomstory/settings-modal";
-import { NpcModal } from "@/components/loomstory/npc-modal";
 import { FactionModal } from "@/components/loomstory/faction-modal";
 import { ItemModal } from "@/components/loomstory/item-modal";
 import { PlotThreadModal } from "@/components/loomstory/plot-thread-modal";
@@ -34,7 +33,6 @@ export function CampaignDashboard({
   const router = useRouter();
   const isGm = role === "gm";
 
-  const [npcModalOpen, setNpcModalOpen] = useState(false);
   const [factionModalOpen, setFactionModalOpen] = useState(false);
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [plotThreadModalOpen, setPlotThreadModalOpen] = useState(false);
@@ -43,7 +41,6 @@ export function CampaignDashboard({
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const modalSetters: Record<string, () => void> = {
-    npcs: () => setNpcModalOpen(true),
     factions: () => setFactionModalOpen(true),
     events: () => setEventModalOpen(true),
     "plot-threads": () => setPlotThreadModalOpen(true),
@@ -62,7 +59,8 @@ export function CampaignDashboard({
               section.slug === "sessions" ||
               section.slug === "conversations" ||
               section.slug === "locations" ||
-              section.slug === "lore"
+              section.slug === "lore" ||
+              section.slug === "npcs"
             ) {
               return {
                 slug: section.slug,
@@ -106,7 +104,6 @@ export function CampaignDashboard({
       </div>
 
       {/* Modals — render at z-50, sit above the bookshelf */}
-      <NpcModal campaignId={campaign.id} userId={userId} role={role} open={npcModalOpen} onOpenChange={setNpcModalOpen} />
       <FactionModal campaignId={campaign.id} userId={userId} role={role} open={factionModalOpen} onOpenChange={setFactionModalOpen} />
       <ItemModal campaignId={campaign.id} userId={userId} role={role} open={itemModalOpen} onOpenChange={setItemModalOpen} />
       <PlotThreadModal campaignId={campaign.id} userId={userId} role={role} open={plotThreadModalOpen} onOpenChange={setPlotThreadModalOpen} />

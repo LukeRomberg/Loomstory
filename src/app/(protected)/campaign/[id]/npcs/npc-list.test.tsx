@@ -14,7 +14,9 @@ vi.mock("@/lib/supabase/client", () => ({
     from: () => ({
       insert: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: { id: "new-npc", name: "New NPC" }, error: null }),
+      single: vi
+        .fn()
+        .mockResolvedValue({ data: { id: "new-npc", name: "New NPC" }, error: null }),
     }),
   }),
 }));
@@ -30,37 +32,36 @@ const defaultProps = {
 describe("NpcList", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // ─── Rendering ────────────────────────────────────────────
-
   it("renders the page heading", () => {
     render(<NpcList {...defaultProps} />);
-    expect(screen.getByText("NPCs")).toBeInTheDocument();
+    expect(screen.getByText(/npcs/i)).toBeInTheDocument();
   });
 
-  it("renders NPC count", () => {
+  it("renders the count in the heading", () => {
     render(<NpcList {...defaultProps} />);
-    expect(screen.getByText(/1 npc/i)).toBeInTheDocument();
+    expect(screen.getByText("(1)")).toBeInTheDocument();
   });
 
-  it("renders NPC cards with name", () => {
+  it("renders the NPC name", () => {
     render(<NpcList {...defaultProps} />);
-    expect(screen.getByText("Gareth the Bold")).toBeInTheDocument();
+    // First NPC auto-selects, so name appears in both master + detail
+    expect(screen.getAllByText("Gareth the Bold").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders NPC status badge", () => {
+  it("renders the NPC status", () => {
     render(<NpcList {...defaultProps} />);
-    expect(screen.getByText("alive")).toBeInTheDocument();
+    expect(screen.getAllByText(/alive/i).length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders NPC description", () => {
+  it("renders selected NPC's description in the detail pane", () => {
     render(<NpcList {...defaultProps} />);
     expect(screen.getByText(/tall, scarred warrior/)).toBeInTheDocument();
   });
 
-  it("renders NPC tags as badges", () => {
+  it("renders selected NPC's tags as badges", () => {
     render(<NpcList {...defaultProps} />);
-    expect(screen.getByText("ally")).toBeInTheDocument();
-    expect(screen.getByText("warrior")).toBeInTheDocument();
+    expect(screen.getAllByText("ally").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("warrior").length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows empty state when no NPCs", () => {
@@ -68,43 +69,40 @@ describe("NpcList", () => {
     expect(screen.getByText(/no npcs yet/i)).toBeInTheDocument();
   });
 
-  it("shows gm_only indicator for hidden NPCs", () => {
+  it("shows GM Only badge when a gm_only NPC is selected", () => {
     const hiddenNpc = { ...mockNpc, gm_only: true };
     render(<NpcList {...defaultProps} npcs={[hiddenNpc]} />);
     expect(screen.getByText(/gm only/i)).toBeInTheDocument();
   });
 
-  // ─── Navigation ───────────────────────────────────────────
-
-  it("has a back button to campaign page", () => {
+  it("renders a back link to the bookshelf", () => {
     render(<NpcList {...defaultProps} />);
-    expect(screen.getByText(/test campaign/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/back to bookshelf/i)).toBeInTheDocument();
   });
 
-  it("opens quick view on card click", async () => {
+  it("navigates to full detail page when Open full details is clicked", async () => {
     const user = userEvent.setup();
     render(<NpcList {...defaultProps} />);
-    await user.click(screen.getByText("Gareth the Bold"));
-    // Quick view dialog should show entity details
-    expect(screen.getAllByText("Gareth the Bold").length).toBeGreaterThanOrEqual(2); // card + dialog
+    await user.click(screen.getByText(/open full details/i));
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringMatching(/^\/campaign\/campaign-1\/npcs\//)
+    );
   });
 
-  // ─── Create ───────────────────────────────────────────────
-
-  it("shows create button for GMs", () => {
+  it("shows the new-NPC overlay for GMs", () => {
     render(<NpcList {...defaultProps} />);
-    expect(screen.getByText(/new npc/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/new npc/i)).toBeInTheDocument();
   });
 
-  it("hides create button for players", () => {
+  it("hides the new-NPC overlay for players", () => {
     render(<NpcList {...defaultProps} role="player" />);
-    expect(screen.queryByText(/new npc/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/new npc/i)).not.toBeInTheDocument();
   });
 
-  it("opens create dialog when button is clicked", async () => {
+  it("opens the create dialog when New is clicked", async () => {
     const user = userEvent.setup();
     render(<NpcList {...defaultProps} />);
-    await user.click(screen.getByText(/new npc/i));
+    await user.click(screen.getByLabelText(/new npc/i));
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
   });
 });

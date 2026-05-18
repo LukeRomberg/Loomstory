@@ -138,7 +138,7 @@ export function LoreList({
           {/* LEFT page — master list */}
           <div
             className="absolute flex flex-col gap-3 font-medium text-leather"
-            style={{ left: "18%", right: "50%", top: "9%", bottom: "10%" }}
+            style={{ left: "19%", right: "50%", top: "9%", bottom: "10%" }}
           >
             {/* Header */}
             <div className="flex shrink-0 items-center gap-2">
@@ -200,7 +200,7 @@ export function LoreList({
           {/* RIGHT page — detail */}
           <div
             className="absolute flex flex-col gap-3 font-medium text-leather"
-            style={{ left: "51%", right: "14%", top: "9%", bottom: "10%" }}
+            style={{ left: "52%", right: "14%", top: "9%", bottom: "10%" }}
           >
             {selected ? (
               <LoreDetail
