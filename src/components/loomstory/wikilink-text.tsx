@@ -55,6 +55,10 @@ export function WikilinkText({
 
     if (entity?.resolved) {
       const route = ENTITY_ROUTES[entity.entityType] ?? entity.entityType;
+      const href =
+        entity.entityType === "npc"
+          ? `/campaign/${campaignId}/${route}?selected=${entity.entityId}`
+          : `/campaign/${campaignId}/${route}/${entity.entityId}`;
       parts.push(
         <span
           key={`link-${i}`}
@@ -62,9 +66,7 @@ export function WikilinkText({
           title={`${entity.entityType}: ${entity.name}`}
           data-entity-type={entity.entityType}
           data-entity-id={entity.entityId}
-          onClick={() =>
-            router.push(`/campaign/${campaignId}/${route}/${entity.entityId}`)
-          }
+          onClick={() => router.push(href)}
           role="link"
         >
           {link.displayText}

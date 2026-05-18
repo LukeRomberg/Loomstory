@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useTransitionRouter } from "@/hooks/use-transition-router";
-import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +18,8 @@ import {
 } from "@/components/ui/dialog";
 import { OpenBookView } from "@/components/shared/open-book-view";
 import { cn } from "@/lib/utils";
-import { ChevronRight, EyeOff } from "lucide-react";
+import { EyeOff } from "lucide-react";
+import { NpcDetail } from "./npc-detail";
 
 interface Npc {
   id: string;
@@ -30,6 +30,9 @@ interface Npc {
   tags: string[] | null;
   gm_only: boolean;
   portrait_url: string | null;
+  gm_notes: string | null;
+  player_notes: string | null;
+  last_location_id: string | null;
 }
 
 interface NpcListProps {
@@ -48,11 +51,13 @@ export function NpcList({
   userId,
 }: NpcListProps) {
   const router = useTransitionRouter();
+  const searchParams = useSearchParams();
   const isGm = role === "gm";
-  const [npcs] = useState(initialNpcs);
+  const [npcs, setNpcs] = useState(initialNpcs);
   const [search, setSearch] = useState("");
+  const urlSelected = searchParams.get("selected");
   const [selectedId, setSelectedId] = useState<string | null>(
-    initialNpcs[0]?.id ?? null
+    urlSelected ?? initialNpcs[0]?.id ?? null
   );
   const [createOpen, setCreateOpen] = useState(false);
   const [name, setName] = useState("");
@@ -71,7 +76,23 @@ export function NpcList({
     );
   }, [npcs, search]);
 
-  const selected = filtered.find((n) => n.id === selectedId) ?? filtered[0] ?? null;
+  const selected =
+    npcs.find((n) => n.id === selectedId) ?? filtered[0] ?? null;
+
+  const selectNpc = useCallback(
+    (id: string) => {
+      setSelectedId(id);
+      router.replace(`/campaign/${campaignId}/npcs?selected=${id}`);
+    },
+    [campaignId, router]
+  );
+
+  const handleDeleted = useCallback(() => {
+    if (!selected) return;
+    const remaining = npcs.filter((n) => n.id !== selected.id);
+    setNpcs(remaining);
+    setSelectedId(remaining[0]?.id ?? null);
+  }, [npcs, selected]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -95,10 +116,26 @@ export function NpcList({
       return;
     }
 
+    const created: Npc = {
+      id: data.id,
+      name: data.name,
+      aliases: null,
+      description: null,
+      status: "alive",
+      tags: null,
+      gm_only: true,
+      portrait_url: null,
+      gm_notes: null,
+      player_notes: null,
+      last_location_id: null,
+      ...data,
+    };
+    setNpcs((prev) => [...prev, created]);
+    selectNpc(created.id);
     setCreateOpen(false);
     setName("");
     setCreating(false);
-    router.push(`/campaign/${campaignId}/npcs/${data.id}`);
+    toast.success("NPC created");
   }
 
   const leftPage = (
@@ -128,7 +165,7 @@ export function NpcList({
             {filtered.map((npc) => (
               <button
                 key={npc.id}
-                onClick={() => setSelectedId(npc.id)}
+                onClick={() => selectNpc(npc.id)}
                 className={cn(
                   "w-full rounded border border-leather/15 px-3 py-2 text-left transition",
                   "hover:bg-leather/5",
@@ -162,10 +199,12 @@ export function NpcList({
 
   const rightPage = selected ? (
     <NpcDetail
+      key={selected.id}
+      campaignId={campaignId}
       npc={selected}
-      onOpenFull={() =>
-        router.push(`/campaign/${campaignId}/npcs/${selected.id}`)
-      }
+      role={role}
+      userId={userId}
+      onDeleted={handleDeleted}
     />
   ) : (
     <div className="flex h-full items-center justify-center text-xs italic text-leather/60">
@@ -188,7 +227,7 @@ export function NpcList({
               <DialogHeader>
                 <DialogTitle className="font-heading">New NPC</DialogTitle>
                 <DialogDescription>
-                  Create an NPC and fill in details on the next page.
+                  Create an NPC and fill in details inline.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -224,79 +263,5 @@ export function NpcList({
         </Dialog>
       )}
     </OpenBookView>
-  );
-}
-
-function NpcDetail({
-  npc,
-  onOpenFull,
-}: {
-  npc: Npc;
-  onOpenFull: () => void;
-}) {
-  return (
-    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto pr-1">
-      <div className="flex items-start gap-3">
-        {npc.portrait_url && (
-          <Image
-            src={npc.portrait_url}
-            alt=""
-            width={72}
-            height={72}
-            className="shrink-0 rounded-md border border-leather/40 object-cover shadow"
-          />
-        )}
-        <div className="min-w-0 flex-1">
-          <h3 className="font-heading text-base uppercase tracking-[0.12em] text-leather sm:text-lg">
-            {npc.name}
-          </h3>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            <Badge
-              variant="outline"
-              className="border-leather/40 text-[11px] font-semibold uppercase text-leather"
-            >
-              {npc.status}
-            </Badge>
-            {npc.gm_only && (
-              <Badge variant="secondary" className="text-[11px] font-semibold">
-                <EyeOff className="mr-1 size-3" />
-                GM Only
-              </Badge>
-            )}
-            {npc.tags?.map((tag) => (
-              <Badge
-                key={tag}
-                variant="outline"
-                className="border-leather/40 text-[11px] font-semibold text-leather"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {npc.aliases && npc.aliases.length > 0 && (
-        <div className="text-sm italic text-leather">
-          Also known as: {npc.aliases.join(", ")}
-        </div>
-      )}
-
-      {npc.description ? (
-        <p className="whitespace-pre-line text-sm text-leather sm:text-base">
-          {npc.description}
-        </p>
-      ) : (
-        <p className="text-xs italic text-leather/60">No description yet.</p>
-      )}
-
-      <button
-        onClick={onOpenFull}
-        className="mt-2 inline-flex items-center gap-1 font-subheading text-xs font-semibold uppercase tracking-[0.15em] text-leather/85 transition hover:text-leather"
-      >
-        Open full details
-        <ChevronRight className="size-3.5" />
-      </button>
-    </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,15 +10,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "@/components/loomstory/section-header";
 import { EntityDetailTabs } from "@/components/loomstory/entity-detail-tabs";
-import { ChevronLeft, Pencil, Trash2, Eye, EyeOff, X } from "lucide-react";
+import { Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 
 interface Npc {
   id: string;
@@ -37,14 +46,19 @@ interface Npc {
 
 interface NpcDetailProps {
   campaignId: string;
-  campaignName: string;
   npc: Npc;
   role: string;
   userId?: string;
+  onDeleted?: () => void;
 }
 
-export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, userId }: NpcDetailProps) {
-  const router = useTransitionRouter();
+export function NpcDetail({
+  campaignId,
+  npc: initialNpc,
+  role,
+  userId,
+  onDeleted,
+}: NpcDetailProps) {
   const isGm = role === "gm";
   const [npc, setNpc] = useState(initialNpc);
   const [editing, setEditing] = useState(false);
@@ -64,7 +78,9 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, use
   async function handleSave() {
     setSaving(true);
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const { error } = await supabase
       .from("npcs")
       .update({
@@ -83,7 +99,12 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, use
       toast.error("Failed to save", { description: error.message });
     } else {
       setNpc((prev) => ({
-        ...prev, name, description: description || null, status, gm_notes: gmNotes || null, player_notes: playerNotes || null,
+        ...prev,
+        name,
+        description: description || null,
+        status,
+        gm_notes: gmNotes || null,
+        player_notes: playerNotes || null,
         aliases: aliases.split(",").map((a) => a.trim()).filter(Boolean),
         tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
       }));
@@ -96,8 +117,10 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, use
   async function handleDelete() {
     setDeleting(true);
     const supabase = createClient();
-    const { error } = await supabase
-      .rpc("soft_delete_entity", { p_entity_type: "npc", p_entity_id: npc.id });
+    const { error } = await supabase.rpc("soft_delete_entity", {
+      p_entity_type: "npc",
+      p_entity_id: npc.id,
+    });
 
     if (error) {
       toast.error("Failed to delete", { description: error.message });
@@ -105,13 +128,16 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, use
       return;
     }
     toast.success("NPC archived");
-    router.push(`/campaign/${campaignId}/npcs`);
-    router.refresh();
+    setDeleteOpen(false);
+    setDeleting(false);
+    onDeleted?.();
   }
 
   async function handleToggleVisibility() {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const newValue = !npc.gm_only;
     const { error } = await supabase
       .from("npcs")
@@ -119,7 +145,9 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, use
       .eq("id", npc.id);
 
     if (error) {
-      toast.error("Failed to update visibility", { description: error.message });
+      toast.error("Failed to update visibility", {
+        description: error.message,
+      });
       return;
     }
     setNpc((prev) => ({ ...prev, gm_only: newValue }));
@@ -138,48 +166,85 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, use
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="scrollbar-none flex h-full flex-col gap-4 overflow-y-auto pr-1 text-leather">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <button
-            onClick={() => router.push(`/campaign/${campaignId}/npcs`)}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-            {campaignName} — NPCs
-          </button>
-          <h2 className="text-2xl font-heading font-semibold">{npc.name}</h2>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className="text-xs">{npc.status}</Badge>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-heading text-lg font-semibold uppercase tracking-[0.12em] text-leather sm:text-xl">
+            {npc.name}
+          </h2>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <Badge
+              variant="outline"
+              className="border-leather/40 text-[11px] font-semibold uppercase text-leather"
+            >
+              {npc.status}
+            </Badge>
             {npc.gm_only && (
-              <Badge variant="secondary" className="text-xs"><EyeOff className="size-3 mr-1" />GM Only</Badge>
+              <Badge variant="secondary" className="text-[11px] font-semibold">
+                <EyeOff className="mr-1 size-3" />
+                GM Only
+              </Badge>
             )}
             {npc.aliases && npc.aliases.length > 0 && (
-              <span className="text-xs text-muted-foreground italic">
+              <span className="text-xs italic text-leather/70">
                 aka {npc.aliases.join(", ")}
               </span>
             )}
           </div>
         </div>
         {isGm && (
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon-sm" onClick={handleToggleVisibility} title={npc.gm_only ? "Make visible to players" : "Hide from players"}>
-              {npc.gm_only ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleToggleVisibility}
+              title={
+                npc.gm_only ? "Make visible to players" : "Hide from players"
+              }
+            >
+              {npc.gm_only ? (
+                <Eye className="size-4" />
+              ) : (
+                <EyeOff className="size-4" />
+              )}
             </Button>
-            <Button variant="ghost" size="icon-sm" onClick={() => setEditing(!editing)}>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setEditing(!editing)}
+            >
               <Pencil className="size-4" />
             </Button>
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-              <DialogTrigger render={<Button variant="ghost" size="icon-sm"><Trash2 className="size-4 text-red-400" /></Button>} />
+              <DialogTrigger
+                render={
+                  <Button variant="ghost" size="icon-sm">
+                    <Trash2 className="size-4 text-red-400" />
+                  </Button>
+                }
+              />
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Delete &quot;{npc.name}&quot;?</DialogTitle>
-                  <DialogDescription>This will archive the NPC. All data is preserved.</DialogDescription>
+                  <DialogDescription>
+                    This will archive the NPC. All data is preserved.
+                  </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button variant="ghost" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-                  <Button variant="destructive" onClick={handleDelete} disabled={deleting}>{deleting ? "Deleting..." : "Delete"}</Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setDeleteOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? "Deleting..." : "Delete"}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -203,60 +268,116 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, use
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="aliases">Aliases</Label>
-                  <Input id="aliases" value={aliases} onChange={(e) => setAliases(e.target.value)} placeholder="nickname, title..." />
+                  <Input
+                    id="aliases"
+                    value={aliases}
+                    onChange={(e) => setAliases(e.target.value)}
+                    placeholder="nickname, title..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select value={status} onValueChange={(v) => setStatus(v ?? "alive")}>
+                  <Select
+                    value={status}
+                    onValueChange={(v) => setStatus(v ?? "alive")}
+                  >
                     <SelectTrigger id="status">
                       <SelectValue>{status}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {["alive", "dead", "unknown", "missing"].map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="tags">Tags</Label>
-                  <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="ally, merchant..." />
+                  <Input
+                    id="tags"
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                    placeholder="ally, merchant..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gm-notes">GM Notes</Label>
-                  <Textarea id="gm-notes" value={gmNotes} onChange={(e) => setGmNotes(e.target.value)} rows={3} placeholder="Hidden info..." />
+                  <Textarea
+                    id="gm-notes"
+                    value={gmNotes}
+                    onChange={(e) => setGmNotes(e.target.value)}
+                    rows={3}
+                    placeholder="Hidden info..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="player-notes">Player Notes</Label>
-                  <Textarea id="player-notes" value={playerNotes} onChange={(e) => setPlayerNotes(e.target.value)} rows={3} placeholder="What the party knows..." />
+                  <Textarea
+                    id="player-notes"
+                    value={playerNotes}
+                    onChange={(e) => setPlayerNotes(e.target.value)}
+                    rows={3}
+                    placeholder="What the party knows..."
+                  />
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={handleSave} disabled={saving} className="gold-glow">{saving ? "Saving..." : "Save"}</Button>
-                  <Button variant="ghost" onClick={cancelEdit}>Cancel</Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="gold-glow"
+                  >
+                    {saving ? "Saving..." : "Save"}
+                  </Button>
+                  <Button variant="ghost" onClick={cancelEdit}>
+                    Cancel
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {npc.description && (
                 <Card className="grain">
-                  <CardHeader><CardTitle className="font-heading text-sm">Description</CardTitle></CardHeader>
-                  <CardContent><p className="text-sm font-lore">{npc.description}</p></CardContent>
+                  <CardHeader>
+                    <CardTitle className="font-heading text-sm">
+                      Description
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm font-lore">{npc.description}</p>
+                  </CardContent>
                 </Card>
               )}
 
               {npc.tags && npc.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {npc.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                    <Badge
+                      key={tag}
+                      variant="secondary"
+                      className="text-xs"
+                    >
+                      {tag}
+                    </Badge>
                   ))}
                 </div>
               )}
@@ -267,7 +388,9 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, use
                   <div>
                     <SectionHeader>GM Notes</SectionHeader>
                     <Card className="grain">
-                      <CardContent className="py-3"><p className="text-sm">{npc.gm_notes}</p></CardContent>
+                      <CardContent className="py-3">
+                        <p className="text-sm">{npc.gm_notes}</p>
+                      </CardContent>
                     </Card>
                   </div>
                 </>
@@ -279,15 +402,20 @@ export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, use
                   <div>
                     <SectionHeader>Player Notes</SectionHeader>
                     <Card className="grain">
-                      <CardContent className="py-3"><p className="text-sm">{npc.player_notes}</p></CardContent>
+                      <CardContent className="py-3">
+                        <p className="text-sm">{npc.player_notes}</p>
+                      </CardContent>
                     </Card>
                   </div>
                 </>
               )}
 
               {isGm && (
-                <div className="pt-2">
-                  <Button variant="outline" onClick={() => setEditing(true)}>
+                <div className="pt-1">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditing(true)}
+                  >
                     <Pencil className="size-4 mr-1.5" />
                     Edit
                   </Button>

@@ -42,7 +42,9 @@ describe("WikilinkText — Rendering (WIKI-03)", () => {
     const user = userEvent.setup();
     render(<WikilinkText {...defaultProps} />);
     await user.click(screen.getByText("Gareth the Bold"));
-    expect(mockPush).toHaveBeenCalledWith("/campaign/campaign-1/npcs/npc-1");
+    expect(mockPush).toHaveBeenCalledWith(
+      "/campaign/campaign-1/npcs?selected=npc-1"
+    );
   });
 
   it("renders unresolved wikilinks in a distinct style", () => {

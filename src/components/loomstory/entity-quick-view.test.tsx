@@ -70,7 +70,9 @@ describe("EntityQuickView", () => {
     const user = userEvent.setup();
     render(<EntityQuickView {...defaultProps} />);
     await user.click(screen.getByText(/view details/i));
-    expect(mockPush).toHaveBeenCalledWith("/campaign/campaign-1/npcs/npc-1");
+    expect(mockPush).toHaveBeenCalledWith(
+      "/campaign/campaign-1/npcs?selected=npc-1"
+    );
   });
 
   // ─── Close ────────────────────────────────────────────────

@@ -52,7 +52,10 @@ export function EntityQuickView({
 }: EntityQuickViewProps) {
   const router = useTransitionRouter();
   const isGm = role === "gm";
-  const detailPath = `/campaign/${campaignId}/${ENTITY_ROUTES[entityType]}/${entity.id}`;
+  const detailPath =
+    entityType === "npc"
+      ? `/campaign/${campaignId}/${ENTITY_ROUTES[entityType]}?selected=${entity.id}`
+      : `/campaign/${campaignId}/${ENTITY_ROUTES[entityType]}/${entity.id}`;
 
   if (!open) return null;
 

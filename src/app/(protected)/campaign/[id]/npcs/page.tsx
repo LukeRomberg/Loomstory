@@ -22,7 +22,7 @@ export default async function NpcsPage({
         .eq("id", id).is("deleted_at", null).single(),
       supabase
         .from("npcs")
-        .select("id, name, aliases, description, status, tags, gm_only, portrait_url")
+        .select("id, name, aliases, description, status, tags, gm_only, portrait_url, gm_notes, player_notes, last_location_id")
         .eq("campaign_id", id).is("deleted_at", null).order("name"),
     ]);
 
