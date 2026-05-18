@@ -1,15 +1,11 @@
-/**
- * PORTAL-01 — Player Session Visibility
- *
- * Tests that players only see published sessions, while GMs see all sessions.
- */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { SessionList } from "./session-list";
-import { mockSession } from "@/test/mocks";
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+const mockPush = vi.fn();
+const mockRefresh = vi.fn();
+vi.mock("@/hooks/use-transition-router", () => ({
+  useTransitionRouter: () => ({ push: mockPush, refresh: mockRefresh }),
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
@@ -22,36 +18,19 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
-const publishedSession = {
-  ...mockSession,
-  id: "session-pub",
-  title: "The Battle of Ironhold",
-  status: "published",
-  created_at: "2026-03-20T00:00:00Z",
-};
-
-const draftSession = {
-  ...mockSession,
-  id: "session-draft",
-  title: "GM Draft Notes",
+const mockSession = {
+  id: "session-1",
+  title: "The Siege of Ironhold",
+  date_played: "2026-05-18",
+  session_number: 1,
   status: "draft",
-  created_at: "2026-03-21T00:00:00Z",
+  created_at: "2026-05-18T00:00:00Z",
 };
-
-const processingSession = {
-  ...mockSession,
-  id: "session-proc",
-  title: "Processing Session",
-  status: "processing",
-  created_at: "2026-03-22T00:00:00Z",
-};
-
-const allSessions = [publishedSession, draftSession, processingSession];
 
 const defaultProps = {
   campaignId: "campaign-1",
   campaignName: "Test Campaign",
-  sessions: allSessions,
+  sessions: [mockSession],
   role: "gm",
   userId: "user-1",
 };
@@ -59,61 +38,61 @@ const defaultProps = {
 describe("SessionList", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // ─── GM sees all sessions ─────────────────────────────
-
-  it("GM sees all sessions regardless of status", () => {
+  it("renders the page heading", () => {
     render(<SessionList {...defaultProps} />);
-    expect(screen.getByText("The Battle of Ironhold")).toBeInTheDocument();
-    expect(screen.getByText("GM Draft Notes")).toBeInTheDocument();
-    expect(screen.getByText("Processing Session")).toBeInTheDocument();
+    expect(screen.getByText(/sessions/i)).toBeInTheDocument();
   });
 
-  it("GM sees session status badges", () => {
+  it("renders the count in the heading", () => {
     render(<SessionList {...defaultProps} />);
-    expect(screen.getByText("published")).toBeInTheDocument();
-    expect(screen.getByText("draft")).toBeInTheDocument();
-    expect(screen.getByText("processing")).toBeInTheDocument();
+    expect(screen.getByText("(1)")).toBeInTheDocument();
   });
 
-  it("GM can create new sessions", () => {
+  it("renders the session title (master + detail)", () => {
     render(<SessionList {...defaultProps} />);
-    expect(screen.getByText(/new session/i)).toBeInTheDocument();
+    expect(
+      screen.getAllByText("The Siege of Ironhold").length
+    ).toBeGreaterThanOrEqual(1);
   });
 
-  // ─── Player only sees published sessions ──────────────
-
-  it("player only sees published sessions", () => {
-    render(<SessionList {...defaultProps} role="player" />);
-    expect(screen.getByText("The Battle of Ironhold")).toBeInTheDocument();
-    expect(screen.queryByText("GM Draft Notes")).not.toBeInTheDocument();
-    expect(screen.queryByText("Processing Session")).not.toBeInTheDocument();
-  });
-
-  it("player cannot create new sessions", () => {
-    render(<SessionList {...defaultProps} role="player" />);
-    expect(screen.queryByText(/new session/i)).not.toBeInTheDocument();
-  });
-
-  it("player sees empty state when no published sessions exist", () => {
-    const unpublishedOnly = [draftSession, processingSession];
-    render(<SessionList {...defaultProps} role="player" sessions={unpublishedOnly} />);
-    expect(screen.getByText(/no sessions/i)).toBeInTheDocument();
-  });
-
-  // ─── General rendering ────────────────────────────────
-
-  it("renders page heading", () => {
+  it("renders the session number with a # prefix", () => {
     render(<SessionList {...defaultProps} />);
-    expect(screen.getByText("Sessions")).toBeInTheDocument();
+    expect(screen.getAllByText("#1").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders back link to campaign", () => {
-    render(<SessionList {...defaultProps} />);
-    expect(screen.getByText(/test campaign/i)).toBeInTheDocument();
-  });
-
-  it("shows empty state when no sessions at all", () => {
+  it("shows empty state when no sessions", () => {
     render(<SessionList {...defaultProps} sessions={[]} />);
-    expect(screen.getByText(/no sessions/i)).toBeInTheDocument();
+    expect(screen.getByText(/no sessions yet/i)).toBeInTheDocument();
+  });
+
+  it("hides draft sessions from players", () => {
+    render(<SessionList {...defaultProps} role="player" />);
+    // The single mock session is draft, so the count is 0 from a player POV
+    expect(screen.getByText("(0)")).toBeInTheDocument();
+  });
+
+  it("shows the new-session overlay for GMs", () => {
+    render(<SessionList {...defaultProps} />);
+    expect(screen.getByLabelText(/new session/i)).toBeInTheDocument();
+  });
+
+  it("hides the new-session overlay for players", () => {
+    render(<SessionList {...defaultProps} role="player" />);
+    expect(screen.queryByLabelText(/new session/i)).not.toBeInTheDocument();
+  });
+
+  it("renders a back link to the bookshelf", () => {
+    render(<SessionList {...defaultProps} />);
+    expect(screen.getByLabelText(/back to bookshelf/i)).toBeInTheDocument();
+  });
+
+  it("navigates to the session detail when Open session is clicked", async () => {
+    const userEvent = (await import("@testing-library/user-event")).default;
+    const user = userEvent.setup();
+    render(<SessionList {...defaultProps} />);
+    await user.click(screen.getByText(/open session/i));
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringMatching(/^\/campaign\/campaign-1\/session\//)
+    );
   });
 });
