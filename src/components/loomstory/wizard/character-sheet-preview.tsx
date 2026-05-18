@@ -155,7 +155,10 @@ export function CharacterSheetPreview({
       {/* ─── BANNER ─────────────────────────────────────────── */}
       <div
         data-testid="preview-banner"
-        className="rounded-lg border-2 border-leather/40 bg-transparent p-4"
+        className={cn(
+          "rounded-lg border-2 bg-transparent p-4",
+          classTheme?.borderColor ?? "border-leather/40"
+        )}
       >
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {ClassIcon ? (
@@ -210,8 +213,16 @@ export function CharacterSheetPreview({
         <div className="space-y-4">
           <SectionCard title="Combat" testId="preview-combat" theme={classTheme}>
             <div className="grid grid-cols-2 gap-4 mb-3">
-              <StatTile label="Evasion" value={evasion != null ? String(evasion) : "—"} />
-              <StatTile label="Armor" value={armorScore != null ? String(armorScore) : "—"} />
+              <StatTile
+                label="Evasion"
+                value={evasion != null ? String(evasion) : "—"}
+                theme={classTheme}
+              />
+              <StatTile
+                label="Armor"
+                value={armorScore != null ? String(armorScore) : "—"}
+                theme={classTheme}
+              />
             </div>
             <PipRow label="HP" count={hpSlots} testIdPrefix="hp-pip" />
             <PipRow label="Stress" count={STRESS_MAX} testIdPrefix="stress-pip" muted />
@@ -433,6 +444,7 @@ export function CharacterSheetPreview({
 function SectionCard({
   title,
   testId,
+  theme,
   children,
 }: {
   title: string;
@@ -443,7 +455,10 @@ function SectionCard({
   return (
     <div
       data-testid={testId}
-      className="rounded-lg border border-leather/40 bg-transparent p-3"
+      className={cn(
+        "rounded-lg border bg-transparent p-3",
+        theme?.borderColor ?? "border-leather/40"
+      )}
     >
       <div className="text-[10px] font-heading font-bold uppercase tracking-[0.18em] text-leather mb-2">
         {title}
@@ -453,9 +468,22 @@ function SectionCard({
   );
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatTile({
+  label,
+  value,
+  theme,
+}: {
+  label: string;
+  value: string;
+  theme?: ClassTheme;
+}) {
   return (
-    <div className="rounded border border-leather/30 bg-transparent px-2 py-1.5 text-center">
+    <div
+      className={cn(
+        "rounded border bg-transparent px-2 py-1.5 text-center",
+        theme?.borderColor ?? "border-leather/30"
+      )}
+    >
       <div className="text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70">
         {label}
       </div>
@@ -499,13 +527,19 @@ function PipRow({
 function TraitTile({
   label,
   value,
+  theme,
 }: {
   label: string;
   value: number | undefined;
   theme?: ClassTheme;
 }) {
   return (
-    <div className="rounded border border-leather/30 bg-transparent px-2 py-1.5 text-center">
+    <div
+      className={cn(
+        "rounded border bg-transparent px-2 py-1.5 text-center",
+        theme?.borderColor ?? "border-leather/30"
+      )}
+    >
       <div className="text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70 mb-0.5">
         {label}
       </div>
@@ -542,13 +576,19 @@ function WeaponRow({
 function FeatureBlock({
   name,
   description,
+  theme,
 }: {
   name: string;
   description: string;
   theme?: ClassTheme;
 }) {
   return (
-    <div className="rounded border border-leather/25 bg-transparent px-2 py-1.5">
+    <div
+      className={cn(
+        "rounded border bg-transparent px-2 py-1.5",
+        theme?.borderColor ?? "border-leather/25"
+      )}
+    >
       <div className="font-heading font-bold text-sm text-leather mb-0.5">
         {name}
       </div>
@@ -561,6 +601,7 @@ function FeatureBlock({
 
 function DomainCardDisplay({
   card,
+  theme,
 }: {
   card: CompendiumAbility;
   theme?: ClassTheme;
@@ -568,7 +609,12 @@ function DomainCardDisplay({
   const data = card.data as Record<string, unknown>;
   const domain = data?.domain as string | undefined;
   return (
-    <div className="rounded border border-leather/30 bg-transparent p-2">
+    <div
+      className={cn(
+        "rounded border bg-transparent p-2",
+        theme?.borderColor ?? "border-leather/30"
+      )}
+    >
       <div className="flex items-baseline justify-between mb-1">
         <div className="font-heading font-bold text-sm text-leather">
           {card.name}

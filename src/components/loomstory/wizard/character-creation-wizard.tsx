@@ -14,6 +14,7 @@ import type {
   WizardState,
   CompendiumClass,
   CompendiumAbility,
+  ClassTheme,
 } from "@/lib/character/wizard-types";
 import { createEmptyWizardState } from "@/lib/character/wizard-types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -131,6 +132,7 @@ export function CharacterCreationWizard({
         classes={classes}
         loading={classesLoading}
         selectedId={wizardState.classId}
+        classThemes={wizardConfig.classThemes}
         onSelect={(id) => {
           const cls = classes.find((c) => c.id === id);
           const isChange =
@@ -249,6 +251,7 @@ function ClassListPicker({
   classes,
   loading,
   selectedId,
+  classThemes,
   onSelect,
   title,
   subtitle,
@@ -256,6 +259,7 @@ function ClassListPicker({
   classes: CompendiumClass[];
   loading: boolean;
   selectedId: string | null;
+  classThemes?: Record<string, ClassTheme>;
   onSelect: (id: string) => void;
   title: string;
   subtitle: string | null;
@@ -278,21 +282,28 @@ function ClassListPicker({
         ) : classes.length === 0 ? (
           <p className="text-sm italic text-leather/60">No classes available.</p>
         ) : (
-          classes.map((c) => (
-            <button
-              key={c.id}
-              aria-label={`Choose ${c.name}`}
-              onClick={() => onSelect(c.id)}
-              className={cn(
-                "w-full rounded border px-3 py-2 text-left font-heading text-sm transition",
-                selectedId === c.id
-                  ? "border-leather/50 bg-leather/10 font-bold text-leather"
-                  : "border-leather/15 text-leather/85 hover:bg-leather/5 hover:text-leather"
-              )}
-            >
-              {c.name}
-            </button>
-          ))
+          classes.map((c) => {
+            const theme = classThemes?.[c.name];
+            const isSelected = selectedId === c.id;
+            return (
+              <button
+                key={c.id}
+                aria-label={`Choose ${c.name}`}
+                onClick={() => onSelect(c.id)}
+                className={cn(
+                  "w-full rounded border-2 px-3 py-2 text-left font-heading text-sm transition",
+                  isSelected
+                    ? cn(
+                        "bg-leather/10 font-bold text-leather",
+                        theme?.borderColor ?? "border-leather/50"
+                      )
+                    : "border-leather/15 text-leather/85 hover:bg-leather/5 hover:text-leather"
+                )}
+              >
+                {c.name}
+              </button>
+            );
+          })
         )}
       </div>
     </>
@@ -306,11 +317,16 @@ function ClassDetailPanel({
 }: {
   klass: CompendiumClass;
   features: CompendiumAbility[];
-  theme?: { icon?: React.ComponentType<{ className?: string }>; domains?: string[] };
+  theme?: ClassTheme;
 }) {
   const Icon = theme?.icon;
   return (
-    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto pr-1 text-leather">
+    <div
+      className={cn(
+        "scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 bg-transparent p-3 pr-2 text-leather",
+        theme?.borderColor ?? "border-leather/40"
+      )}
+    >
       <div className="flex items-center gap-2">
         {Icon && <Icon className="size-6 text-leather" />}
         <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
@@ -322,7 +338,10 @@ function ClassDetailPanel({
           {theme.domains.map((d) => (
             <span
               key={d}
-              className="rounded border border-leather/40 px-2 py-0.5 text-[11px] font-semibold uppercase text-leather"
+              className={cn(
+                "rounded border px-2 py-0.5 text-[11px] font-semibold uppercase text-leather",
+                theme?.borderColor ?? "border-leather/40"
+              )}
             >
               {d}
             </span>
