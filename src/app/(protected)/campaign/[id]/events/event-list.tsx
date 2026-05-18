@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -78,7 +78,7 @@ export function EventList({
   role,
   userId,
 }: EventListProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
   const [sessionFilter, setSessionFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");

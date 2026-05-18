@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ export function SettingsModal({
   open,
   onOpenChange,
 }: SettingsModalProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const [loading, setLoading] = useState(true);
 
   // General settings state

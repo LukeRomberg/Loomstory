@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,7 @@ export function CampaignSettings({
   campaign,
   systems,
 }: CampaignSettingsProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const [name, setName] = useState(campaign.name);
   const [description, setDescription] = useState(campaign.description ?? "");
   const [systemId, setSystemId] = useState(campaign.system_id ?? "");

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -116,7 +116,7 @@ export function CharacterSheet({
   resources: initialResources,
   notes: initialNotes,
 }: CharacterSheetProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
   const isOwner = initialCharacter.user_id === userId;
   const canEdit = isGm || isOwner;

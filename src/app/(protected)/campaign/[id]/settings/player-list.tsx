@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ export function PlayerList({
   members: initialMembers,
   currentUserId,
 }: PlayerListProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const [members, setMembers] = useState<Member[]>(initialMembers);
   const [removeTarget, setRemoveTarget] = useState<Member | null>(null);
   const [removing, setRemoving] = useState(false);

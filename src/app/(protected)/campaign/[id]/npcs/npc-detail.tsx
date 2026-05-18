@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ interface NpcDetailProps {
 }
 
 export function NpcDetail({ campaignId, campaignName, npc: initialNpc, role, userId }: NpcDetailProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
   const [npc, setNpc] = useState(initialNpc);
   const [editing, setEditing] = useState(false);

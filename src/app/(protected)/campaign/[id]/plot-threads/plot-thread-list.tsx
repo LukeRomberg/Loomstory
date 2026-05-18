@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 export function PlotThreadList({ campaignId, campaignName, plotThreads: initial, role, userId }: PlotThreadListProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
   const [plotThreads] = useState(initial);
   const [statusFilter, setStatusFilter] = useState("all");

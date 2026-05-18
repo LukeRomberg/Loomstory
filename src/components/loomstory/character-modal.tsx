@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,7 @@ export function CharacterModal({
   open,
   onOpenChange,
 }: CharacterModalProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -136,7 +136,7 @@ export function CharacterModal({
 // ─── Quick View (sidebar detail) ──────────────────────────
 
 function CharacterQuickView({ char, campaignId }: { char: Character; campaignId: string }) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const hpPercent = char.hp_max ? ((char.hp_current ?? 0) / char.hp_max) * 100 : 0;
   const classLabel = (char.data?.class as string) ?? (char.data?.playbook as string) ?? null;
   const raceLabel = (char.data?.race as string) ?? (char.data?.ancestry as string) ?? null;

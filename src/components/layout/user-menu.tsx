@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,7 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ displayName, avatarUrl }: UserMenuProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
 
   async function handleSignOut() {
     const supabase = createClient();

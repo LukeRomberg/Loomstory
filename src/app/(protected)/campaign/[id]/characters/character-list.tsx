@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +47,7 @@ export function CharacterList({
   systemId,
   systemSlug,
 }: CharacterListProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const [characters] = useState(initialCharacters);
   const [wizardOpen, setWizardOpen] = useState(false);
 

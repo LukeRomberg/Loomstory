@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,7 +50,7 @@ export function EntityQuickView({
   open,
   onClose,
 }: EntityQuickViewProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
   const detailPath = `/campaign/${campaignId}/${ENTITY_ROUTES[entityType]}/${entity.id}`;
 

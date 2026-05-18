@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +75,7 @@ export function RelationsPanel({
   userId,
   onEntityClick,
 }: RelationsPanelProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
   const [relations, setRelations] = useState(initialRelations);
   const [addOpen, setAddOpen] = useState(false);

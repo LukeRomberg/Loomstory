@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ interface AcceptInviteProps {
 }
 
 export function AcceptInvite({ invite, userId }: AcceptInviteProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -454,7 +454,7 @@ export function CharacterWizard({
   userId,
   wizardConfig,
 }: CharacterWizardProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
 
   // State
   const [wizardState, setWizardState] = useState<WizardState>(createEmptyWizardState());

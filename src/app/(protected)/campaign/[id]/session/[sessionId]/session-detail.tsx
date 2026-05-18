@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,7 @@ export function SessionDetail({
   role,
   userId,
 }: SessionDetailProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
 
   const [session, setSession] = useState(initialSession);
@@ -425,7 +425,7 @@ function SessionHeader({
   onDelete: () => void;
   onResetMeta: () => void;
 }) {
-  const router = useRouter();
+  const router = useTransitionRouter();
 
   return (
     <div className="flex items-start justify-between">

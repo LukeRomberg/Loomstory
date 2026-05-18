@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { ChevronLeft } from "lucide-react";
 
 interface BreadcrumbProps {
@@ -10,7 +10,7 @@ interface BreadcrumbProps {
 }
 
 export function Breadcrumb({ href, label, suffix }: BreadcrumbProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
 
   return (
     <button

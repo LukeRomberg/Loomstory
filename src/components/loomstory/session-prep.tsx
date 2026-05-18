@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -139,7 +139,7 @@ export function SessionPrep({
   role,
   sessions,
 }: SessionPrepProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
 
   const [activeTool, setActiveTool] = useState<string | null>(null);

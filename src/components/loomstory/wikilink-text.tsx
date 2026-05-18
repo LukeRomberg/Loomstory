@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { parseWikilinks, type ResolvedEntity } from "@/lib/wikilinks";
 
 const ENTITY_ROUTES: Record<string, string> = {
@@ -29,7 +29,7 @@ export function WikilinkText({
   campaignId,
   resolvedEntities,
 }: WikilinkTextProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
 
   if (!text) return null;
 

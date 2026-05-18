@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionHeader } from "@/components/loomstory/section-header";
@@ -48,7 +48,7 @@ interface EntityHistoryProps {
 }
 
 export function EntityHistory({ campaignId, history }: EntityHistoryProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isEmpty =
     history.events.length === 0 &&
     history.conversations.length === 0 &&

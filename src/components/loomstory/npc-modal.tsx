@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +57,7 @@ export function NpcModal({
   open,
   onOpenChange,
 }: NpcModalProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isGm = role === "gm";
   const [npcs, setNpcs] = useState<Npc[]>([]);
   const [loading, setLoading] = useState(false);

@@ -3,6 +3,7 @@ import { Cinzel_Decorative, Cinzel, Lora, JetBrains_Mono } from "next/font/googl
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { GlobalNavigationOverlay } from "@/components/shared/global-navigation-overlay";
 import "./globals.css";
 
 const cinzelDecorative = Cinzel_Decorative({
@@ -63,6 +64,7 @@ export default function RootLayout({
         )}
       >
         <TooltipProvider>{children}</TooltipProvider>
+        <GlobalNavigationOverlay />
         <Toaster position="bottom-right" />
       </body>
     </html>
