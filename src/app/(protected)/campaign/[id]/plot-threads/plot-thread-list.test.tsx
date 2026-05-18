@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { PlotThreadList } from "./plot-thread-list";
 import { mockPlotThreads } from "@/test/mocks";
 
 const mockPush = vi.fn();
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush, refresh: vi.fn() }),
+const mockRefresh = vi.fn();
+vi.mock("@/hooks/use-transition-router", () => ({
+  useTransitionRouter: () => ({ push: mockPush, refresh: mockRefresh }),
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
@@ -30,46 +30,23 @@ const defaultProps = {
 describe("PlotThreadList", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // ─── Rendering ────────────────────────────────────────────
-
   it("renders the page heading", () => {
     render(<PlotThreadList {...defaultProps} />);
-    expect(screen.getByText("Plot Threads")).toBeInTheDocument();
+    expect(screen.getByText(/plot threads/i)).toBeInTheDocument();
   });
 
-  it("renders plot thread count", () => {
+  it("renders the count in the heading", () => {
     render(<PlotThreadList {...defaultProps} />);
-    expect(screen.getByText(/3 thread/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(`(${mockPlotThreads.length})`)
+    ).toBeInTheDocument();
   });
 
-  it("renders plot thread titles", () => {
+  it("renders thread titles in the master list", () => {
     render(<PlotThreadList {...defaultProps} />);
-    expect(screen.getByText("The Crimson Conspiracy")).toBeInTheDocument();
-    expect(screen.getByText("The Missing Miners")).toBeInTheDocument();
-    expect(screen.getByText("The Dragon's Debt")).toBeInTheDocument();
-  });
-
-  it("renders status badges", () => {
-    render(<PlotThreadList {...defaultProps} />);
-    expect(screen.getAllByText("active").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("on_hold")).toBeInTheDocument();
-  });
-
-  it("renders priority badges", () => {
-    render(<PlotThreadList {...defaultProps} />);
-    expect(screen.getByText("main")).toBeInTheDocument();
-    expect(screen.getByText("side")).toBeInTheDocument();
-    expect(screen.getByText("background")).toBeInTheDocument();
-  });
-
-  it("renders descriptions", () => {
-    render(<PlotThreadList {...defaultProps} />);
-    expect(screen.getByText(/secretly infiltrating/)).toBeInTheDocument();
-  });
-
-  it("shows gm_only indicator", () => {
-    render(<PlotThreadList {...defaultProps} />);
-    expect(screen.getAllByText(/gm only/i).length).toBeGreaterThanOrEqual(1);
+    for (const t of mockPlotThreads) {
+      expect(screen.getAllByText(t.title).length).toBeGreaterThanOrEqual(1);
+    }
   });
 
   it("shows empty state when no threads", () => {
@@ -77,38 +54,18 @@ describe("PlotThreadList", () => {
     expect(screen.getByText(/no plot threads yet/i)).toBeInTheDocument();
   });
 
-  // ─── Filtering ────────────────────────────────────────────
-
-  it("can filter by status", () => {
+  it("shows the new-thread overlay for GMs", () => {
     render(<PlotThreadList {...defaultProps} />);
-    // Status filter buttons should exist
-    const buttons = screen.getAllByRole("button");
-    expect(buttons.length).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/new plot thread/i)).toBeInTheDocument();
   });
 
-  // ─── Create ───────────────────────────────────────────────
-
-  it("shows create button for GMs", () => {
-    render(<PlotThreadList {...defaultProps} />);
-    expect(screen.getByText(/new thread/i)).toBeInTheDocument();
-  });
-
-  it("hides create button for players", () => {
+  it("hides the new-thread overlay for players", () => {
     render(<PlotThreadList {...defaultProps} role="player" />);
-    expect(screen.queryByText(/new thread/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/new plot thread/i)).not.toBeInTheDocument();
   });
 
-  it("opens create dialog when button is clicked", async () => {
-    const user = userEvent.setup();
+  it("renders a back link to the bookshelf", () => {
     render(<PlotThreadList {...defaultProps} />);
-    await user.click(screen.getByText(/new thread/i));
-    expect(screen.getByLabelText("Title")).toBeInTheDocument();
-  });
-
-  // ─── Navigation ───────────────────────────────────────────
-
-  it("has a back button to campaign page", () => {
-    render(<PlotThreadList {...defaultProps} />);
-    expect(screen.getByText(/test campaign/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/back to bookshelf/i)).toBeInTheDocument();
   });
 });

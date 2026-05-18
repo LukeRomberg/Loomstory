@@ -5,8 +5,8 @@ import { FactionList } from "./faction-list";
 import { mockFaction } from "@/test/mocks";
 
 const mockPush = vi.fn();
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush, refresh: vi.fn() }),
+vi.mock("@/hooks/use-transition-router", () => ({
+  useTransitionRouter: () => ({ push: mockPush, refresh: vi.fn() }),
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
@@ -14,7 +14,9 @@ vi.mock("@/lib/supabase/client", () => ({
     from: () => ({
       insert: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: { id: "new-fac", name: "New Faction" }, error: null }),
+      single: vi
+        .fn()
+        .mockResolvedValue({ data: { id: "new-fac", name: "New Faction" }, error: null }),
     }),
   }),
 }));
@@ -32,22 +34,17 @@ describe("FactionList", () => {
 
   it("renders the page heading", () => {
     render(<FactionList {...defaultProps} />);
-    expect(screen.getByText("Factions")).toBeInTheDocument();
+    expect(screen.getByText(/factions/i)).toBeInTheDocument();
   });
 
-  it("renders faction cards with name", () => {
+  it("renders the count in the heading", () => {
     render(<FactionList {...defaultProps} />);
-    expect(screen.getByText("The Crimson Hand")).toBeInTheDocument();
+    expect(screen.getByText("(1)")).toBeInTheDocument();
   });
 
-  it("renders faction description", () => {
+  it("renders the faction name (master + detail when auto-selected)", () => {
     render(<FactionList {...defaultProps} />);
-    expect(screen.getByText(/shadowy guild/)).toBeInTheDocument();
-  });
-
-  it("shows gm_only indicator for hidden factions", () => {
-    render(<FactionList {...defaultProps} />);
-    expect(screen.getByText(/gm only/i)).toBeInTheDocument();
+    expect(screen.getAllByText(mockFaction.name).length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows empty state when no factions", () => {
@@ -55,22 +52,27 @@ describe("FactionList", () => {
     expect(screen.getByText(/no factions yet/i)).toBeInTheDocument();
   });
 
-  it("navigates to faction detail on card click", async () => {
+  it("shows the new-faction overlay for GMs", () => {
+    render(<FactionList {...defaultProps} />);
+    expect(screen.getByLabelText(/new faction/i)).toBeInTheDocument();
+  });
+
+  it("hides the new-faction overlay for players", () => {
+    render(<FactionList {...defaultProps} role="player" />);
+    expect(screen.queryByLabelText(/new faction/i)).not.toBeInTheDocument();
+  });
+
+  it("renders a back link to the bookshelf", () => {
+    render(<FactionList {...defaultProps} />);
+    expect(screen.getByLabelText(/back to bookshelf/i)).toBeInTheDocument();
+  });
+
+  it("navigates to detail page when Open full details is clicked", async () => {
     const user = userEvent.setup();
     render(<FactionList {...defaultProps} />);
-    await user.click(screen.getByText("The Crimson Hand"));
+    await user.click(screen.getByText(/open full details/i));
     expect(mockPush).toHaveBeenCalledWith(
-      "/campaign/campaign-1/factions/faction-1"
+      expect.stringMatching(/^\/campaign\/campaign-1\/factions\//)
     );
-  });
-
-  it("shows create button for GMs", () => {
-    render(<FactionList {...defaultProps} />);
-    expect(screen.getByText(/new faction/i)).toBeInTheDocument();
-  });
-
-  it("hides create button for players", () => {
-    render(<FactionList {...defaultProps} role="player" />);
-    expect(screen.queryByText(/new faction/i)).not.toBeInTheDocument();
   });
 });

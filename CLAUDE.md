@@ -80,6 +80,37 @@ npm run test:coverage # Run tests with coverage report
 - **Always provide a way back** — every sub-page has a `ChevronLeft` back button linking to the parent page.
 - **Breadcrumb pattern**: `← Campaign Name — Sessions` style, using `text-muted-foreground hover:text-foreground` styling.
 
+#### Loading overlay — feed the global candle-flicker on every navigation
+
+A single `<GlobalNavigationOverlay />` is mounted in the root layout and renders the candle-flicker `<LoadingScreen layout="full" />` whenever an in-app navigation is pending. Every nav must feed it, or the click will look frozen.
+
+- **For `router.push` / `router.replace` / `router.refresh` — never import `useRouter` from `next/navigation`.** Use the drop-in replacement instead:
+  ```tsx
+  // ✅
+  import { useTransitionRouter } from "@/hooks/use-transition-router";
+  const router = useTransitionRouter();
+  router.push("/foo");
+
+  // ❌ silent navigation, no overlay
+  import { useRouter } from "next/navigation";
+  ```
+  Same `push` / `replace` / `refresh` API. The hook wraps `push`/`replace` in `useTransition` and registers with the global navigation state. `refresh` is a pass-through (no overlay, by design).
+- **Inside every `<Link>` element, drop `<LinkPendingOverlay />` as a child** so the link's `useLinkStatus` pending state feeds the same overlay. Forgetting it makes the Link navigate silently.
+  ```tsx
+  import { LinkPendingOverlay } from "@/components/shared/link-pending-overlay";
+
+  <Link href="/foo" className="...">
+    <span>Click me</span>
+    <LinkPendingOverlay />
+  </Link>
+  ```
+  `<LinkPendingOverlay />` renders nothing itself — it just registers pending state. For statically-prefetched routes the overlay never appears (resolves instantly); that's correct.
+- **Server-side `redirect()` from `next/navigation`** (form actions, server components) needs nothing — it resolves before render.
+- **The hook itself** (`src/hooks/use-transition-router.ts`) imports `useRouter` legitimately. Don't refactor it.
+- **`back` / `forward` / `prefetch` aren't exposed on the hook** (no current callers). Add them to the hook if you need them — don't reach for `useRouter` directly.
+
+The plumbing lives in [src/lib/navigation-state.ts](src/lib/navigation-state.ts) (ref-counted pub/sub), [src/hooks/use-transition-router.ts](src/hooks/use-transition-router.ts), [src/components/shared/link-pending-overlay.tsx](src/components/shared/link-pending-overlay.tsx), and [src/components/shared/global-navigation-overlay.tsx](src/components/shared/global-navigation-overlay.tsx).
+
 ### Styling Conventions
 - **`gold-glow`** — add to primary action buttons and clickable cards for the gold hover shadow effect.
 - **`grain`** — add to Card components for the parchment texture overlay.
