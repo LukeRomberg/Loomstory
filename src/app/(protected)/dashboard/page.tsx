@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
-import { CampaignList } from "./campaign-list";
+import { CampaignSelectScreen } from "./campaign-select-screen";
 
 export default async function DashboardPage() {
   const { id: userId } = await requireUser();
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <CampaignList
+    <CampaignSelectScreen
       campaigns={campaigns}
       systems={systems ?? []}
       userId={userId}
