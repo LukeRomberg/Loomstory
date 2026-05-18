@@ -138,16 +138,10 @@ export function LocationList({
             </button>
           )}
 
-          {/* Parchment content overlay — debug border (remove when sizing is right) */}
+          {/* Parchment content overlay */}
           <div
             className="absolute flex flex-col gap-3 text-leather"
-            style={{
-              left: "14%",
-              right: "14%",
-              top: "11%",
-              bottom: "14%",
-              border: "2px solid hotpink",
-            }}
+            style={{ left: "21%", right: "21%", top: "13%", bottom: "10%" }}
           >
             {/* Header row */}
             <div className="flex shrink-0 items-center gap-3">
