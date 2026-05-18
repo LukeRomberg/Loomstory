@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { WizardModal } from "./wizard-modal";
-import { CharacterCreationShell } from "./character-creation-shell";
 import { WizardProgress } from "./wizard-progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StepHeader } from "./step-header";
@@ -825,88 +824,8 @@ export function CharacterWizard({
 
   // ─── Render ───────────────────────────────────────────────
 
-  if (!open) return null;
-
-  // Per-step right-page detail. Each picker step renders its selection's
-  // details here as we migrate them from the cramped CardPicker grid.
-  let rightPage: React.ReactNode = null;
-  if (currentStepKey === "class_pick") {
-    if (selectedClass) {
-      const Icon = classTheme?.icon;
-      rightPage = (
-        <div className="flex h-full flex-col gap-3 overflow-y-auto pr-1 text-leather scrollbar-none">
-          <div className="flex items-center gap-2">
-            {Icon && <Icon className="size-6 text-leather" />}
-            <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
-              {selectedClass.name}
-            </h3>
-          </div>
-          {classTheme?.domains && classTheme.domains.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {classTheme.domains.map((d) => (
-                <span
-                  key={d}
-                  className="rounded border border-leather/40 px-2 py-0.5 text-[11px] font-semibold uppercase text-leather"
-                >
-                  {d}
-                </span>
-              ))}
-            </div>
-          )}
-          {selectedClass.hp_die && (
-            <p className="text-sm text-leather">
-              <span className="font-semibold">Hit Die:</span> {selectedClass.hp_die}
-            </p>
-          )}
-          {selectedClassFeatures.length > 0 && (
-            <div>
-              <h4 className="mb-1.5 font-heading text-sm font-bold uppercase tracking-[0.1em] text-leather/85">
-                Starting Features
-              </h4>
-              <ul className="space-y-2">
-                {selectedClassFeatures.map((f) => (
-                  <li key={f.id} className="text-sm">
-                    <div className="font-semibold text-leather">{f.name}</div>
-                    {f.description && (
-                      <div className="text-leather/80 whitespace-pre-line">
-                        {f.description}
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      );
-    } else {
-      rightPage = (
-        <div className="flex h-full items-center justify-center text-center text-sm italic text-leather/60">
-          Pick a class to see its details.
-        </div>
-      );
-    }
-  }
-
   return (
-    <CharacterCreationShell
-      onClose={handleClose}
-      topBar={
-        <WizardProgress
-          steps={progressSteps}
-          currentStep={currentStepKey}
-          maxReachedIndex={maxStepReached}
-          onStepClick={(key) => {
-            const idx = visibleSteps.indexOf(key);
-            if (idx >= 0 && idx !== stepIndex && idx <= maxStepReached) {
-              setStepIndex(idx);
-            }
-          }}
-        />
-      }
-      rightPage={rightPage}
-      sheetPage={null}
-      leftPage={<>
+    <WizardModal open={open} onClose={handleClose} title="Create Character">
       {/* Show-tips toggle: right-aligned just above the progress bar so it
           doesn't overlap the last step labels. Unchecking suppresses the
           auto-opening help popup but leaves the `?` button working. */}
@@ -918,6 +837,18 @@ export function CharacterWizard({
         />
         <span className="font-heading uppercase tracking-wider">Show tips</span>
       </label>
+
+      <WizardProgress
+        steps={progressSteps}
+        currentStep={currentStepKey}
+        maxReachedIndex={maxStepReached}
+        onStepClick={(key) => {
+          const idx = visibleSteps.indexOf(key);
+          if (idx >= 0 && idx !== stepIndex && idx <= maxStepReached) {
+            setStepIndex(idx);
+          }
+        }}
+      />
 
       {/* ── Class pick step ── */}
       {currentStepKey === "class_pick" && currentStep && (
@@ -1342,7 +1273,6 @@ export function CharacterWizard({
           helpText={currentStep.helpText}
         />
       )}
-      </>}
-    />
+    </WizardModal>
   );
 }
