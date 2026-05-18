@@ -78,6 +78,7 @@ export function EntityVersions({ versions }: EntityVersionsProps) {
     return (
       <EmptyState
         icon={Clock}
+        tone="leather"
         message="No version history yet. Edit this entity to start tracking changes."
       />
     );

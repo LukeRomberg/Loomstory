@@ -58,6 +58,7 @@ export function EntityHistory({ campaignId, history }: EntityHistoryProps) {
     return (
       <EmptyState
         icon={Clock}
+        tone="leather"
         message="No history yet. This entity hasn't appeared in any sessions, events, or conversations."
       />
     );

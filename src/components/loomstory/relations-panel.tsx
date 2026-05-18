@@ -325,7 +325,7 @@ export function RelationsPanel({
       </div>
 
       {relations.length === 0 ? (
-        <p className="text-sm text-muted-foreground font-lore">No relationships yet.</p>
+        <p className="text-sm text-leather/70 font-lore">No relationships yet.</p>
       ) : (
         <div className="space-y-2">
           {relations.map((rel) => {
