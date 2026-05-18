@@ -155,55 +155,47 @@ export function CharacterSheetPreview({
       {/* ─── BANNER ─────────────────────────────────────────── */}
       <div
         data-testid="preview-banner"
-        className={cn(
-          "rounded-2xl border-2 p-8 bg-gradient-to-br",
-          classTheme?.gradient ?? "from-zinc-900 to-zinc-800",
-          classTheme?.borderColor ?? "border-gold/60"
-        )}
+        className="rounded-lg border-2 border-leather/40 bg-transparent p-4"
       >
-        <div className="flex items-center justify-center gap-6 mb-4 flex-wrap">
+        <div className="flex items-center justify-center gap-3 flex-wrap">
           {ClassIcon ? (
             <ClassIcon
               data-testid="preview-class-icon"
-              className={cn("size-14 shrink-0", classTheme?.textColor ?? "text-gold")}
+              className="size-8 shrink-0 text-leather"
               aria-hidden
             />
           ) : (
-            <span data-testid="preview-class-icon" aria-hidden className="size-14" />
+            <span data-testid="preview-class-icon" aria-hidden className="size-8" />
           )}
           <input
             type="text"
             value={wizardState.name}
             onChange={(e) => onNameChange(e.target.value)}
-            placeholder="Name your hero!"
+            placeholder="Name your hero…"
             aria-label="Character name"
-            className={cn(
-              "bg-transparent border-b-2 border-gold/50 focus:border-gold focus:outline-none",
-              "text-center font-heading text-3xl text-foreground px-4 py-2",
-              "w-full max-w-md placeholder:text-muted-foreground/50"
-            )}
+            className="flex-1 max-w-xs bg-transparent border-b border-leather/40 focus:border-leather focus:outline-none text-center font-heading text-base text-leather px-2 py-0.5 placeholder:text-leather/40"
           />
           {ancestryImage && ancestryName ? (
             <Image
               data-testid="preview-ancestry-icon"
               src={ancestryImage}
               alt={`${ancestryName} ancestry portrait`}
-              width={112}
-              height={112}
-              className="size-14 shrink-0 rounded-full object-cover ring-2 ring-current"
+              width={64}
+              height={64}
+              className="size-8 shrink-0 rounded-full object-cover ring-1 ring-leather/50"
               priority
             />
           ) : AncestryIcon ? (
             <AncestryIcon
               data-testid="preview-ancestry-icon"
-              className={cn("size-14 shrink-0", classTheme?.textColor ?? "text-gold")}
+              className="size-8 shrink-0 text-leather"
               aria-hidden
             />
           ) : (
-            <span data-testid="preview-ancestry-icon" aria-hidden className="size-14" />
+            <span data-testid="preview-ancestry-icon" aria-hidden className="size-8" />
           )}
         </div>
-        <div className="text-center mt-3 text-xs font-heading tracking-wider text-muted-foreground/80 uppercase">
+        <div className="text-center mt-2 text-[10px] font-heading font-semibold tracking-wider text-leather/75 uppercase">
           {selectedClass && <span>{selectedClass.name}</span>}
           {ancestryName && <span> · {ancestryName}</span>}
           {wizardState.communityName && <span> · {wizardState.communityName}</span>}
@@ -231,14 +223,14 @@ export function CharacterSheetPreview({
                 <span
                   key={`filled-${i}`}
                   data-testid="hope-token-filled"
-                  className="size-4 rotate-45 bg-gold border-2 border-gold"
+                  className="size-3 rotate-45 bg-leather border-2 border-leather"
                 />
               ))}
               {Array.from({ length: HOPE_MAX - STARTING_HOPE }).map((_, i) => (
                 <span
                   key={`empty-${i}`}
                   data-testid="hope-token-empty"
-                  className="size-4 rotate-45 border-2 border-gold/60"
+                  className="size-3 rotate-45 border-2 border-leather/50"
                 />
               ))}
             </div>
@@ -287,8 +279,8 @@ export function CharacterSheetPreview({
                     key={i}
                     className="flex items-baseline justify-between gap-2 text-sm"
                   >
-                    <span className="font-lore">{exp.name}</span>
-                    <span className="font-mono text-gold">+2</span>
+                    <span className="font-lore font-medium text-leather">{exp.name}</span>
+                    <span className="font-mono font-semibold text-leather">+2</span>
                   </li>
                 ))}
               </ul>
@@ -317,11 +309,11 @@ export function CharacterSheetPreview({
               testId="preview-weapons"
               theme={classTheme}
             >
-              <div className="flex items-baseline justify-between mb-3 text-xs uppercase tracking-wider text-muted-foreground">
+              <div className="flex items-baseline justify-between mb-2 text-[10px] font-semibold uppercase tracking-wider text-leather/70">
                 <span>Proficiency</span>
                 <span
                   data-testid="proficiency-value"
-                  className="font-mono text-base text-gold"
+                  className="font-mono text-sm text-leather"
                 >
                   1
                 </span>
@@ -340,10 +332,10 @@ export function CharacterSheetPreview({
               theme={classTheme}
             >
               <div className="space-y-1">
-                <div className="font-heading text-base text-foreground">
+                <div className="font-heading font-bold text-sm text-leather">
                   {armor.name}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs font-medium text-leather/75">
                   Thresholds {armorThresholds ?? "—"} · Score {armorScore ?? "—"}
                 </div>
               </div>
@@ -355,17 +347,17 @@ export function CharacterSheetPreview({
             testId="preview-inventory"
             theme={classTheme}
           >
-            <ul className="space-y-1 text-sm">
+            <ul className="space-y-0.5 text-xs">
               {BASIC_SUPPLIES.map((s) => (
-                <li key={s} className="text-muted-foreground">
+                <li key={s} className="font-medium text-leather/85">
                   · {s}
                 </li>
               ))}
               {potion && (
-                <li className="text-muted-foreground">· {potion.name}</li>
+                <li className="font-medium text-leather/85">· {potion.name}</li>
               )}
               {wizardState.classItemName && (
-                <li className="text-muted-foreground">· {wizardState.classItemName}</li>
+                <li className="font-medium text-leather/85">· {wizardState.classItemName}</li>
               )}
             </ul>
           </SectionCard>
@@ -420,20 +412,15 @@ export function CharacterSheetPreview({
         type="button"
         onClick={onCreate}
         disabled={!nameValid || creating}
-        className={cn(
-          "w-full py-7 text-xl font-heading tracking-wider gold-glow",
-          "bg-gradient-to-br border-2",
-          classTheme?.gradient ?? "from-zinc-900 to-zinc-800",
-          classTheme?.borderColor ?? "border-gold"
-        )}
+        className="w-full border-2 border-leather/60 bg-transparent py-3 font-heading text-sm font-bold uppercase tracking-[0.18em] text-leather hover:bg-leather/10"
       >
         {creating ? (
           "Creating..."
         ) : (
-          <span className="flex items-center justify-center gap-3">
-            <Sparkles className="size-5" aria-hidden />
-            Start Your Adventure!
-            <Sparkles className="size-5" aria-hidden />
+          <span className="flex items-center justify-center gap-2">
+            <Sparkles className="size-4" aria-hidden />
+            Start Your Adventure
+            <Sparkles className="size-4" aria-hidden />
           </span>
         )}
       </Button>
@@ -446,7 +433,6 @@ export function CharacterSheetPreview({
 function SectionCard({
   title,
   testId,
-  theme,
   children,
 }: {
   title: string;
@@ -457,17 +443,9 @@ function SectionCard({
   return (
     <div
       data-testid={testId}
-      className={cn(
-        "rounded-xl border-2 bg-card/40 p-4",
-        theme?.borderColor ? `${theme.borderColor}/30` : "border-rune/40"
-      )}
+      className="rounded-lg border border-leather/40 bg-transparent p-3"
     >
-      <div
-        className={cn(
-          "text-xs font-heading uppercase tracking-[0.25em] mb-3",
-          theme?.textColor ?? "text-gold"
-        )}
-      >
+      <div className="text-[10px] font-heading font-bold uppercase tracking-[0.18em] text-leather mb-2">
         {title}
       </div>
       {children}
@@ -477,11 +455,11 @@ function SectionCard({
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-black/30 px-3 py-2 text-center">
-      <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
+    <div className="rounded border border-leather/30 bg-transparent px-2 py-1.5 text-center">
+      <div className="text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70">
         {label}
       </div>
-      <div className="font-mono text-2xl text-gold">{value}</div>
+      <div className="font-mono text-xl text-leather">{value}</div>
     </div>
   );
 }
@@ -498,8 +476,8 @@ function PipRow({
   muted?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 py-1">
-      <span className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground w-12">
+    <div className="flex items-center gap-2 py-0.5">
+      <span className="text-[10px] font-heading font-semibold uppercase tracking-wider text-leather/70 w-12">
         {label}
       </span>
       <div className="flex gap-1">
@@ -508,8 +486,8 @@ function PipRow({
             key={i}
             data-testid={`${testIdPrefix}-${i}`}
             className={cn(
-              "size-4 rounded-sm border-2",
-              muted ? "border-gold/40" : "border-gold/70"
+              "size-3 rounded-sm border-2",
+              muted ? "border-leather/40" : "border-leather/60"
             )}
           />
         ))}
@@ -521,28 +499,17 @@ function PipRow({
 function TraitTile({
   label,
   value,
-  theme,
 }: {
   label: string;
   value: number | undefined;
   theme?: ClassTheme;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-lg border-2 bg-black/30 px-2 py-2 text-center",
-        theme?.borderColor ? `${theme.borderColor}/40` : "border-rune/40"
-      )}
-    >
-      <div className="text-[9px] font-heading uppercase tracking-wider text-muted-foreground mb-1">
+    <div className="rounded border border-leather/30 bg-transparent px-2 py-1.5 text-center">
+      <div className="text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70 mb-0.5">
         {label}
       </div>
-      <div
-        className={cn(
-          "font-mono text-xl",
-          theme?.textColor ?? "text-gold"
-        )}
-      >
+      <div className="font-mono text-lg text-leather">
         {formatModifier(value)}
       </div>
     </div>
@@ -560,12 +527,12 @@ function WeaponRow({
   const range = props.range as string | undefined;
   const damage = props.damage as string | undefined;
   return (
-    <div className="mb-2 last:mb-0">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+    <div className="mb-1.5 last:mb-0">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-leather/70">
         {label}
       </div>
-      <div className="font-heading text-base text-foreground">{weapon.name}</div>
-      <div className="text-xs text-muted-foreground font-mono">
+      <div className="font-heading font-bold text-sm text-leather">{weapon.name}</div>
+      <div className="text-xs text-leather/75 font-mono font-medium">
         {[damage, range].filter(Boolean).join(" · ")}
       </div>
     </div>
@@ -575,23 +542,17 @@ function WeaponRow({
 function FeatureBlock({
   name,
   description,
-  theme,
 }: {
   name: string;
   description: string;
   theme?: ClassTheme;
 }) {
   return (
-    <div className="rounded-md bg-black/20 px-3 py-2">
-      <div
-        className={cn(
-          "font-heading text-base mb-1",
-          theme?.textColor ?? "text-gold"
-        )}
-      >
+    <div className="rounded border border-leather/25 bg-transparent px-2 py-1.5">
+      <div className="font-heading font-bold text-sm text-leather mb-0.5">
         {name}
       </div>
-      <p className="text-sm leading-snug font-lore text-muted-foreground whitespace-pre-line">
+      <p className="text-xs leading-snug font-lore font-medium text-leather/80 whitespace-pre-line">
         {description}
       </p>
     </div>
@@ -600,7 +561,6 @@ function FeatureBlock({
 
 function DomainCardDisplay({
   card,
-  theme,
 }: {
   card: CompendiumAbility;
   theme?: ClassTheme;
@@ -608,28 +568,18 @@ function DomainCardDisplay({
   const data = card.data as Record<string, unknown>;
   const domain = data?.domain as string | undefined;
   return (
-    <div
-      className={cn(
-        "rounded-lg border-2 bg-black/30 p-3",
-        theme?.borderColor ? `${theme.borderColor}/40` : "border-rune/40"
-      )}
-    >
-      <div className="flex items-baseline justify-between mb-1.5">
-        <div
-          className={cn(
-            "font-heading text-base",
-            theme?.textColor ?? "text-gold"
-          )}
-        >
+    <div className="rounded border border-leather/30 bg-transparent p-2">
+      <div className="flex items-baseline justify-between mb-1">
+        <div className="font-heading font-bold text-sm text-leather">
           {card.name}
         </div>
         {domain && (
-          <span className="text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 bg-black/40 text-muted-foreground">
+          <span className="text-[9px] font-semibold uppercase tracking-wider rounded border border-leather/30 px-1.5 py-0.5 text-leather/75">
             {domain}
           </span>
         )}
       </div>
-      <p className="text-sm leading-snug font-lore text-muted-foreground">
+      <p className="text-xs leading-snug font-lore font-medium text-leather/80">
         {card.description}
       </p>
     </div>

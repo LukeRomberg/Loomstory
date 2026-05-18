@@ -537,17 +537,14 @@ describe("CharacterSheetPreview — Domain cards", () => {
 // ─── Theming ────────────────────────────────────────────────────
 
 describe("CharacterSheetPreview — Theming", () => {
-  it("applies the class gradient to the banner when a theme is provided", () => {
+  it("renders the banner with a transparent leather-bordered frame", () => {
+    // Themed gradients were removed in favor of a clean parchment look —
+    // the banner now uses a single leather border with no gradient fill.
     render(<CharacterSheetPreview {...defaultProps()} />);
     const banner = screen.getByTestId("preview-banner");
-    // Ranger gradient: "from-emerald-950 via-stone-900 to-emerald-950"
-    expect(banner.className).toContain("from-emerald-950");
-  });
-
-  it("falls back to a neutral gradient when no class theme is provided", () => {
-    render(<CharacterSheetPreview {...defaultProps()} classTheme={undefined} />);
-    const banner = screen.getByTestId("preview-banner");
-    expect(banner.className).toContain("from-zinc-900");
+    expect(banner.className).toContain("border-leather");
+    expect(banner.className).not.toContain("from-emerald");
+    expect(banner.className).not.toContain("from-zinc");
   });
 });
 
