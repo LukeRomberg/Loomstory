@@ -75,22 +75,6 @@ function formatModifier(value: number | undefined): string {
   return String(value);
 }
 
-/**
- * Build the auto-generated tagline shown under the BEHOLD banner.
- * Article ("a" vs "an") matches the ancestry's leading sound.
- */
-function buildTagline(
-  ancestry: string | null,
-  cls: string | null,
-  community: string | null
-): string {
-  if (!ancestry || !cls) return "";
-  const article = /^[aeiouAEIOU]/.test(ancestry) ? "an" : "a";
-  return community
-    ? `${article} ${ancestry} ${cls} of the ${community}`
-    : `${article} ${ancestry} ${cls}`;
-}
-
 function featureByCategory(
   features: CompendiumAbility[],
   category: string
@@ -152,12 +136,6 @@ export function CharacterSheetPreview({
     ? DAGGERHEART_ANCESTRY_ICONS[ancestryName]
     : undefined;
 
-  const tagline = buildTagline(
-    wizardState.ancestryName,
-    wizardState.className,
-    wizardState.communityName
-  );
-
   const hopeFeature = featureByCategory(classFeatures, "hope_feature");
   const classFeature = featureByCategory(classFeatures, "class_feature");
   const subclassFoundation = subclassFoundationFeature(
@@ -183,9 +161,6 @@ export function CharacterSheetPreview({
           classTheme?.borderColor ?? "border-gold/60"
         )}
       >
-        <div className="text-center mb-4 text-xs font-heading tracking-[0.4em] text-gold/80 uppercase">
-          ✨ Behold ✨
-        </div>
         <div className="flex items-center justify-center gap-6 mb-4 flex-wrap">
           {ClassIcon ? (
             <ClassIcon
@@ -228,13 +203,10 @@ export function CharacterSheetPreview({
             <span data-testid="preview-ancestry-icon" aria-hidden className="size-14" />
           )}
         </div>
-        {tagline && (
-          <p className="text-center text-lg font-lore italic text-muted-foreground">
-            {tagline}
-          </p>
-        )}
         <div className="text-center mt-3 text-xs font-heading tracking-wider text-muted-foreground/80 uppercase">
           {selectedClass && <span>{selectedClass.name}</span>}
+          {ancestryName && <span> · {ancestryName}</span>}
+          {wizardState.communityName && <span> · {wizardState.communityName}</span>}
           {domains.length > 0 && <span> · {domains.join(" & ")}</span>}
           {selectedSubclass && <span> · {selectedSubclass.name}</span>}
         </div>

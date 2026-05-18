@@ -1030,8 +1030,11 @@ describe("CharacterWizard", () => {
     await user.click(screen.getByRole("button", { name: /add i am your shield/i }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
-    // Preview banner tagline includes both ancestry + community (e.g. "a Katari Warrior of the Wanderborne")
-    expect(screen.getByText(/Katari Warrior of the Wanderborne/i)).toBeInTheDocument();
+    // Preview surfaces ancestry and community somewhere in the sheet
+    // (the BEHOLD tagline used to bundle these into one string; now they
+    // appear separately in the heritage/badges sections).
+    expect(screen.getAllByText(/Katari/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Wanderborne/i).length).toBeGreaterThan(0);
   });
 
   // ─── Equipment phase (weapons + armor + potion + class item) ──

@@ -222,11 +222,6 @@ function defaultProps() {
 // ─── Banner ─────────────────────────────────────────────────────
 
 describe("CharacterSheetPreview — Banner", () => {
-  it("renders the BEHOLD heading", () => {
-    render(<CharacterSheetPreview {...defaultProps()} />);
-    expect(screen.getByText(/BEHOLD/i)).toBeInTheDocument();
-  });
-
   it("renders the class icon inside the banner", () => {
     render(<CharacterSheetPreview {...defaultProps()} />);
     const banner = screen.getByTestId("preview-banner");
@@ -312,21 +307,6 @@ describe("CharacterSheetPreview — Banner", () => {
     const input = screen.getByPlaceholderText(/name your hero/i);
     await user.type(input, "K");
     expect(onNameChange).toHaveBeenCalledWith("K");
-  });
-
-  it("renders the auto-tagline 'a Faerie Ranger of the Wanderborne'", () => {
-    render(<CharacterSheetPreview {...defaultProps()} />);
-    expect(screen.getByText(/a Faerie Ranger of the Wanderborne/i)).toBeInTheDocument();
-  });
-
-  it("uses 'an' instead of 'a' before a vowel-starting ancestry", () => {
-    render(
-      <CharacterSheetPreview
-        {...defaultProps()}
-        wizardState={{ ...mockState, ancestryName: "Orc" }}
-      />
-    );
-    expect(screen.getByText(/an Orc Ranger of the Wanderborne/i)).toBeInTheDocument();
   });
 
   it("renders the class name and domain labels", () => {
