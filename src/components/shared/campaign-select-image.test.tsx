@@ -11,6 +11,15 @@ function makeCampaigns(count: number, role: "gm" | "player" = "gm") {
   }));
 }
 
+function makeCampaign(over: Partial<{ id: string; name: string; role: string; systemName: string }> = {}) {
+  return {
+    id: "a",
+    name: "Alpha",
+    role: "gm" as const,
+    ...over,
+  };
+}
+
 describe("CampaignSelectImage", () => {
   describe("rendering", () => {
     it("renders a hotspot for each campaign on the current page", () => {
@@ -91,6 +100,67 @@ describe("CampaignSelectImage", () => {
         />
       );
       expect(screen.getByText("Alpha")).toBeInTheDocument();
+    });
+  });
+
+  describe("book content", () => {
+    it("renders a decorative emblem on each book", () => {
+      render(
+        <CampaignSelectImage
+          campaigns={[makeCampaign()]}
+          page={0}
+          onPageChange={vi.fn()}
+          onCreateCampaign={vi.fn()}
+        />
+      );
+      expect(screen.getByTestId("book-emblem")).toBeInTheDocument();
+    });
+
+    it("renders the system name when provided", () => {
+      render(
+        <CampaignSelectImage
+          campaigns={[makeCampaign({ systemName: "Daggerheart" })]}
+          page={0}
+          onPageChange={vi.fn()}
+          onCreateCampaign={vi.fn()}
+        />
+      );
+      expect(screen.getByText("Daggerheart")).toBeInTheDocument();
+    });
+
+    it("does not render a system subtitle when systemName is missing", () => {
+      render(
+        <CampaignSelectImage
+          campaigns={[makeCampaign()]}
+          page={0}
+          onPageChange={vi.fn()}
+          onCreateCampaign={vi.fn()}
+        />
+      );
+      expect(screen.queryByTestId("book-system")).not.toBeInTheDocument();
+    });
+
+    it("picks a stable emblem for the same id and different emblems for different ids", () => {
+      const { rerender } = render(
+        <CampaignSelectImage
+          campaigns={[makeCampaign({ id: "x" })]}
+          page={0}
+          onPageChange={vi.fn()}
+          onCreateCampaign={vi.fn()}
+        />
+      );
+      const first = screen.getByTestId("book-emblem").getAttribute("data-emblem");
+      rerender(
+        <CampaignSelectImage
+          campaigns={[makeCampaign({ id: "x" })]}
+          page={0}
+          onPageChange={vi.fn()}
+          onCreateCampaign={vi.fn()}
+        />
+      );
+      expect(
+        screen.getByTestId("book-emblem").getAttribute("data-emblem")
+      ).toBe(first);
     });
   });
 

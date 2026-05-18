@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -55,6 +55,23 @@ export function CampaignSelectScreen({
   const router = useTransitionRouter();
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [page, setPage] = useState(0);
+
+  const systemNameById = useMemo(
+    () => new Map(systems.map((s) => [s.id, s.name])),
+    [systems]
+  );
+  const summaries = useMemo(
+    () =>
+      campaigns.map((c) => ({
+        id: c.id,
+        name: c.name,
+        role: c.role,
+        systemName: c.system_id
+          ? systemNameById.get(c.system_id)
+          : undefined,
+      })),
+    [campaigns, systemNameById]
+  );
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -108,7 +125,7 @@ export function CampaignSelectScreen({
       <div className="fixed inset-0 z-[45] flex items-center justify-center overflow-hidden bg-leather">
         <CampaignSelectImage
           className="w-[min(100vw,calc(100vh*16/9))]"
-          campaigns={campaigns}
+          campaigns={summaries}
           page={page}
           onPageChange={setPage}
           onCreateCampaign={() => setOpen(true)}

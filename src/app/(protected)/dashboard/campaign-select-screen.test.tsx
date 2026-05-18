@@ -69,6 +69,18 @@ describe("CampaignSelectScreen", () => {
       expect(screen.getByLabelText("Campaign 2")).toBeInTheDocument();
     });
 
+    it("maps system_id to a visible system name on each book", () => {
+      const c = { ...makeCampaign(1), system_id: "s1" };
+      render(
+        <CampaignSelectScreen
+          campaigns={[c]}
+          systems={[{ id: "s1", name: "Daggerheart", slug: "daggerheart" }]}
+          userId="u1"
+        />
+      );
+      expect(screen.getByText("Daggerheart")).toBeInTheDocument();
+    });
+
     it("paginates internally to flip between sets of 9", async () => {
       const user = userEvent.setup();
       const many = Array.from({ length: 12 }, (_, i) => makeCampaign(i + 1));

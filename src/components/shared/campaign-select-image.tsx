@@ -2,7 +2,33 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Crown, Plus, User } from "lucide-react";
+import {
+  Anchor,
+  BookOpen,
+  Castle,
+  ChevronLeft,
+  ChevronRight,
+  Compass,
+  Crown,
+  Dices,
+  Eye,
+  Feather,
+  Flame,
+  Gem,
+  Hammer,
+  Moon,
+  Mountain,
+  Plus,
+  ScrollText,
+  Shield,
+  Skull,
+  Snowflake,
+  Sparkles,
+  Star,
+  Sword,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LinkPendingOverlay } from "@/components/shared/link-pending-overlay";
 
@@ -10,6 +36,7 @@ interface CampaignSummary {
   id: string;
   name: string;
   role: string;
+  systemName?: string;
 }
 
 interface CampaignSelectImageProps {
@@ -25,18 +52,50 @@ type Position = { left: string; top: string; width: string; height: string };
 const PAGE_SIZE = 9;
 
 // Hotspots are tuned against /textures/campaign-select.png (16:9).
-// Three cabinets × three shelves of face-out books, left→right, top→bottom.
+// Row-major: top row (1-3), middle row (4-6), bottom row (7-9),
+// each row spanning the three cabinets left → right.
 const HOTSPOTS: Position[] = [
   { left: "19.5%", top: "17%", width: "9%", height: "20%" },
-  { left: "19.5%", top: "41%", width: "9%", height: "20%" },
-  { left: "19.5%", top: "65.5%", width: "9%", height: "20%" },
   { left: "45%", top: "17%", width: "9%", height: "20%" },
-  { left: "45%", top: "41%", width: "9%", height: "20%" },
-  { left: "45%", top: "65.5%", width: "9%", height: "20%" },
   { left: "71.5%", top: "17%", width: "9%", height: "20%" },
+  { left: "19.5%", top: "41%", width: "9%", height: "20%" },
+  { left: "45%", top: "41%", width: "9%", height: "20%" },
   { left: "71.5%", top: "41%", width: "9%", height: "20%" },
+  { left: "19.5%", top: "65.5%", width: "9%", height: "20%" },
+  { left: "45%", top: "65.5%", width: "9%", height: "20%" },
   { left: "71.5%", top: "65.5%", width: "9%", height: "20%" },
 ];
+
+const EMBLEMS: ReadonlyArray<readonly [string, LucideIcon]> = [
+  ["sword", Sword],
+  ["skull", Skull],
+  ["crown", Crown],
+  ["scroll", ScrollText],
+  ["dice", Dices],
+  ["sparkles", Sparkles],
+  ["book", BookOpen],
+  ["flame", Flame],
+  ["moon", Moon],
+  ["star", Star],
+  ["shield", Shield],
+  ["compass", Compass],
+  ["castle", Castle],
+  ["anchor", Anchor],
+  ["feather", Feather],
+  ["gem", Gem],
+  ["hammer", Hammer],
+  ["snowflake", Snowflake],
+  ["eye", Eye],
+  ["mountain", Mountain],
+];
+
+function pickEmblem(id: string): readonly [string, LucideIcon] {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  }
+  return EMBLEMS[Math.abs(hash) % EMBLEMS.length];
+}
 
 export function CampaignSelectImage({
   campaigns,
@@ -67,16 +126,18 @@ export function CampaignSelectImage({
       {pageCampaigns.map((campaign, i) => {
         const pos = HOTSPOTS[i];
         const isGm = campaign.role === "gm";
+        const [emblemKey, Emblem] = pickEmblem(campaign.id);
         return (
           <Link
             key={campaign.id}
             href={`/campaign/${campaign.id}`}
             data-testid="campaign-hotspot"
             aria-label={campaign.name}
-            className="group/book absolute flex flex-col items-center justify-end rounded-sm ring-1 ring-transparent transition-all duration-150 hover:ring-2 hover:ring-gold/70 hover:shadow-[inset_0_0_28px_rgba(200,162,94,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+            className="group/book absolute flex flex-col items-center justify-center gap-1 rounded-sm p-1 ring-1 ring-transparent transition-all duration-150 hover:ring-2 hover:ring-gold/70 hover:shadow-[inset_0_0_28px_rgba(200,162,94,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
             style={pos}
           >
             <LinkPendingOverlay />
+
             <span
               data-testid={`role-badge-${isGm ? "gm" : "player"}`}
               aria-hidden="true"
@@ -88,9 +149,26 @@ export function CampaignSelectImage({
                 <User className="size-3" />
               )}
             </span>
-            <span className="mb-1 max-w-[95%] truncate rounded-sm bg-leather/80 px-1.5 py-0.5 text-center font-heading text-[10px] uppercase tracking-[0.12em] text-gold shadow-md shadow-black/60 ring-1 ring-gold/30">
+
+            <Emblem
+              data-testid="book-emblem"
+              data-emblem={emblemKey}
+              aria-hidden="true"
+              className="size-5 text-gold/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:size-7"
+            />
+
+            <span className="embossed-gold line-clamp-2 max-w-[95%] text-center font-heading text-[9px] font-bold uppercase leading-tight tracking-[0.1em] sm:text-[11px]">
               {campaign.name}
             </span>
+
+            {campaign.systemName && (
+              <span
+                data-testid="book-system"
+                className="max-w-[95%] truncate text-center font-mono text-[7px] uppercase tracking-wider text-gold/60 sm:text-[9px]"
+              >
+                {campaign.systemName}
+              </span>
+            )}
           </Link>
         );
       })}
@@ -122,7 +200,7 @@ export function CampaignSelectImage({
         type="button"
         onClick={onCreateCampaign}
         aria-label="New Campaign"
-        className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-md bg-leather/80 px-3 py-1.5 text-gold shadow-lg shadow-black/60 ring-1 ring-gold/40 backdrop-blur-sm transition hover:bg-leather/95 hover:text-gold hover:ring-gold/70"
+        className="absolute right-3 top-3 flex items-center gap-1.5 rounded-md bg-leather/80 px-3 py-1.5 text-gold shadow-lg shadow-black/60 ring-1 ring-gold/40 backdrop-blur-sm transition hover:bg-leather/95 hover:text-gold hover:ring-gold/70"
       >
         <Plus className="size-4" />
         <span className="font-heading text-xs font-bold uppercase tracking-[0.18em]">
