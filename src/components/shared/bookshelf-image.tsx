@@ -15,32 +15,32 @@ interface BookshelfImageProps {
   className?: string;
 }
 
+type Position = { left: string; top: string; width: string; height: string };
+
 // Hotspot positions are percentages of the 1672×941 source image (16:9).
-// Top shelf: 8 books in a row (NPCs through Characters), with Events as the
-// anchor at 33% and the other books cascading out from there with growing
-// shift (Δ ≈ 2% × position offset from Events).
-// Bottom shelf interactive items: Locations (globe), Sessions (stacked books).
-const HOTSPOTS: Record<
-  string,
-  { left: string; top: string; width: string; height: string }
-> = {
-  npcs: { left: "18%", top: "13%", width: "6.5%", height: "45%" },
+// Most sections are a single rectangle. Sessions is two rectangles stacked
+// (smaller top book over a wider bottom book) so the click region matches
+// the physical shape:
+//      [______]
+//   [__________]
+const HOTSPOTS: Record<string, Position | Position[]> = {
+  npcs: { left: "19%", top: "13%", width: "6%", height: "45%" },
   factions: { left: "25.5%", top: "13%", width: "6.5%", height: "45%" },
   events: { left: "33%", top: "13%", width: "6.5%", height: "45%" },
   conversations: { left: "41.5%", top: "13%", width: "10%", height: "45%" },
   "plot-threads": { left: "53.5%", top: "13%", width: "6.5%", height: "45%" },
   items: { left: "61%", top: "13%", width: "6.5%", height: "45%" },
-  lore: { left: "69.5%", top: "13%", width: "10%", height: "45%" },
-  characters: { left: "81.5%", top: "13%", width: "6.5%", height: "45%" },
-  locations: { left: "6%", top: "61%", width: "12%", height: "26%" },
-  sessions: { left: "18%", top: "80%", width: "16%", height: "13%" },
+  lore: { left: "68.5%", top: "10%", width: "11%", height: "49%" },
+  characters: { left: "81%", top: "10%", width: "6.5%", height: "49%" },
+  locations: { left: "7%", top: "65%", width: "12%", height: "21%" },
+  sessions: [
+    { left: "20%", top: "80%", width: "12%", height: "5%" },
+    { left: "17%", top: "85%", width: "16%", height: "7%" },
+  ],
 };
 
 export function BookshelfImage({ sections, className }: BookshelfImageProps) {
-  const sectionMap = new Map(sections.map((s) => [s.slug, s]));
-  const titleBySlug = new Map(
-    CAMPAIGN_SECTIONS.map((s) => [s.slug, s.title])
-  );
+  const titleBySlug = new Map(CAMPAIGN_SECTIONS.map((s) => [s.slug, s.title]));
 
   return (
     <div
@@ -55,45 +55,61 @@ export function BookshelfImage({ sections, className }: BookshelfImageProps) {
         sizes="(max-width: 768px) 100vw, 1152px"
         className="object-contain"
       />
-      {sections.map((section) => {
+      {sections.flatMap((section) => {
         const pos = HOTSPOTS[section.slug];
+        if (!pos) return [];
+
         const title = titleBySlug.get(section.slug) ?? section.slug;
-        if (!pos) return null;
+        const regions = Array.isArray(pos) ? pos : [pos];
 
-        const hotspotClassName = cn(
-          "absolute cursor-pointer transition-all duration-150 hover:bg-gold/20 hover:shadow-[inset_0_0_24px_rgba(200,162,94,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
-          section.slug === "locations" ? "rounded-full" : "rounded-sm"
-        );
-
-        if (section.href) {
-          return (
-            <Link
-              key={section.slug}
-              href={section.href}
-              aria-label={title}
-              data-testid="bookshelf-hotspot"
-              className={hotspotClassName}
-              style={pos}
-            >
-              <span className="sr-only">{title}</span>
-              <LinkPendingOverlay />
-            </Link>
+        return regions.map((region, i) => {
+          const isPrimary = i === 0;
+          const hotspotClassName = cn(
+            "absolute cursor-pointer transition-all duration-150 hover:bg-gold/20 hover:shadow-[inset_0_0_24px_rgba(200,162,94,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
+            section.slug === "locations" ? "rounded-full" : "rounded-sm"
           );
-        }
 
-        return (
-          <button
-            key={section.slug}
-            type="button"
-            onClick={section.onClick}
-            aria-label={title}
-            data-testid="bookshelf-hotspot"
-            className={hotspotClassName}
-            style={pos}
-          >
-            <span className="sr-only">{title}</span>
-          </button>
-        );
+          const a11yProps = isPrimary
+            ? {
+                "aria-label": title,
+                "data-testid": "bookshelf-hotspot",
+              }
+            : {
+                "aria-hidden": true,
+                tabIndex: -1,
+                "data-testid": "bookshelf-hotspot-segment",
+              };
+
+          const key = `${section.slug}-${i}`;
+
+          if (section.href) {
+            return (
+              <Link
+                key={key}
+                href={section.href}
+                className={hotspotClassName}
+                style={region}
+                {...a11yProps}
+              >
+                {isPrimary && <span className="sr-only">{title}</span>}
+                {isPrimary && <LinkPendingOverlay />}
+              </Link>
+            );
+          }
+
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={section.onClick}
+              className={hotspotClassName}
+              style={region}
+              {...a11yProps}
+            >
+              {isPrimary && <span className="sr-only">{title}</span>}
+            </button>
+          );
+        });
       })}
     </div>
   );
