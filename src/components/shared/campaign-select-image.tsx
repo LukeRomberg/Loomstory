@@ -43,7 +43,7 @@ const HOTSPOTS: Position[] = [
 
 // Game-icons collection — detail-rich fantasy glyphs (https://game-icons.net)
 // served through @iconify/react. Names are stable Iconify identifiers.
-const EMBLEMS: readonly string[] = [
+export const EMBLEMS: readonly string[] = [
   "game-icons:crossed-swords",
   "game-icons:dragon-head",
   "game-icons:wizard-staff",
