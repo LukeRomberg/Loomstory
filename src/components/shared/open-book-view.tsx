@@ -16,10 +16,9 @@ interface OpenBookViewProps {
   debugBorder?: boolean;
 }
 
-// Initial parchment-overlay positions for open-book.png (1672×941, 16:9).
-// Tune via debugBorder once real content is rendered, then lock in.
-const LEFT_INSET = { left: "9%", right: "52%", top: "10%", bottom: "10%" };
-const RIGHT_INSET = { left: "52%", right: "9%", top: "10%", bottom: "10%" };
+// Locked parchment-overlay positions for open-book.png (1672×941, 16:9).
+const LEFT_INSET = { left: "11%", right: "52%", top: "8%", bottom: "8%" };
+const RIGHT_INSET = { left: "52%", right: "12%", top: "8%", bottom: "8%" };
 
 export function OpenBookView({
   leftPage,

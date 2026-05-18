@@ -180,7 +180,6 @@ export function NpcList({
       onBack={() => router.push(`/campaign/${campaignId}`)}
       onNew={isGm ? () => setCreateOpen(true) : undefined}
       newAriaLabel="New NPC"
-      debugBorder
     >
       {isGm && (
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
