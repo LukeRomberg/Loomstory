@@ -917,14 +917,14 @@ function AncestryDetailPanel({
         {name}
       </h3>
       {(portrait || flavor) && (
-        <div className="flex items-start gap-3">
+        <div className="overflow-hidden">
           {portrait && (
-            <span className="relative block size-24 shrink-0 overflow-hidden rounded-md border border-leather/30 bg-parchment/40">
+            <span className="relative float-left mr-3 mb-2 block aspect-square w-1/2 overflow-hidden rounded-md border border-leather/30 bg-parchment/40">
               <Image
                 src={portrait}
                 alt=""
                 fill
-                sizes="96px"
+                sizes="50vw"
                 className="object-cover"
               />
             </span>
