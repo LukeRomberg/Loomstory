@@ -30,3 +30,27 @@ vi.mock("next/headers", () => ({
     get: () => null,
   }),
 }));
+
+// Mock @iconify/react so tests don't trigger its lazy async loader, which
+// schedules a setTimeout that fires after JSDOM tears down `window` and
+// crashes inside React's dispatchSetState.
+const { mockReact } = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return { mockReact: require("react") };
+});
+vi.mock("@iconify/react", () => ({
+  Icon: ({
+    icon,
+    className,
+    ...rest
+  }: {
+    icon: string;
+    className?: string;
+    [key: string]: unknown;
+  }) =>
+    mockReact.createElement("span", {
+      "data-icon": icon,
+      className,
+      ...rest,
+    }),
+}));
