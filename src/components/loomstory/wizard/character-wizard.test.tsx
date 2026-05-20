@@ -919,7 +919,7 @@ describe("CharacterWizard", () => {
 
     // Ancestry cards should now be tinted with Warrior's theme
     const faerieCard = screen.getByText("Faerie").closest("[data-card-id]");
-    expect(faerieCard?.className).toContain("from-red-950");
+    expect(faerieCard?.className).toContain("from-[#8E4618]");
   });
 
   it("ancestry card expanded shows the SRD flavor description", async () => {
@@ -982,7 +982,7 @@ describe("CharacterWizard", () => {
     await user.click(screen.getByRole("button", { name: /choose faerie/i }));
 
     const highborneCard = screen.getByText("Highborne").closest("[data-card-id]");
-    expect(highborneCard?.className).toContain("from-red-950");
+    expect(highborneCard?.className).toContain("from-[#8E4618]");
   });
 
   it("selecting ancestry and community shows them in the review summary", async () => {
@@ -1115,9 +1115,9 @@ describe("CharacterWizard", () => {
     const runesCard = screen.getByText("Hand Runes").closest("[data-card-id]");
     expect(runesCard?.className).toContain("from-violet-950");
 
-    // Physical weapon card keeps the class theme — Druid is from-green-950.
+    // Physical weapon card keeps the class theme — Druid border tint hex.
     const greatswordCard = screen.getByText("Greatsword").closest("[data-card-id]");
-    expect(greatswordCard?.className).toContain("from-green-950");
+    expect(greatswordCard?.className).toContain("from-[#457A3A]");
     expect(greatswordCard?.className).not.toContain("from-violet-950");
 
     // Magic weapon shows a "Magic" badge inside its card (compact view).
@@ -1275,9 +1275,9 @@ describe("CharacterWizard", () => {
     render(<CharacterWizard {...defaultProps} />);
     await walkToEquipmentStart(user);
 
-    // Warrior's theme starts with "from-red-950"
+    // Warrior's gradient tint = the muted burnt-sienna hex
     const greatswordCard = screen.getByText("Greatsword").closest("[data-card-id]");
-    expect(greatswordCard?.className).toContain("from-red-950");
+    expect(greatswordCard?.className).toContain("from-[#8E4618]");
   });
 
   // ─── Experiences step (SRD step 7) ─────────────────────────
