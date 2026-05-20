@@ -1154,6 +1154,31 @@ describe("CharacterCreationWizard — primary weapon step", () => {
     expect(screen.queryByLabelText(/choose round shield/i)).not.toBeInTheDocument();
   });
 
+  it("groups the primary weapon list by hands (One-Handed / Two-Handed)", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToPrimaryWeaponStep(user);
+    expect(screen.getByText("One-Handed")).toBeInTheDocument();
+    expect(screen.getByText("Two-Handed")).toBeInTheDocument();
+    // Broadsword sits inside the One-Handed group; Battleaxe inside Two-Handed.
+    const oneHandedHeader = screen.getByText("One-Handed");
+    const twoHandedHeader = screen.getByText("Two-Handed");
+    const broadsword = screen.getByLabelText(/choose broadsword/i);
+    const battleaxe = screen.getByLabelText(/choose battleaxe/i);
+    // Each weapon button is a descendant of the group that owns its header —
+    // walk up looking for the header text inside the same group container.
+    function inSameGroupAs(button: HTMLElement, header: HTMLElement) {
+      let node: HTMLElement | null = button.parentElement;
+      while (node) {
+        if (node.contains(header)) return true;
+        node = node.parentElement;
+      }
+      return false;
+    }
+    expect(inSameGroupAs(broadsword, oneHandedHeader)).toBe(true);
+    expect(inSameGroupAs(battleaxe, twoHandedHeader)).toBe(true);
+  });
+
   it("hides magic weapons for classes without a spellcast trait", async () => {
     // Warrior has no spellcast_trait, so the magic Hallowed Axe should not appear.
     const user = userEvent.setup();

@@ -1650,6 +1650,51 @@ function WeaponListPicker({
   title: string;
   subtitle: string | null;
 }) {
+  // Group by hands ("One-Handed" / "Two-Handed" / "Other"). When the list only
+  // has one group, suppress the header so the secondary-weapon step (which is
+  // always one-handed) doesn't carry a redundant label.
+  const groups = new Map<string, CompendiumItem[]>();
+  const groupOrder = ["One-Handed", "Two-Handed"] as const;
+  for (const w of weapons) {
+    const props = (w.properties ?? {}) as Record<string, unknown>;
+    const key = (props.type as string | undefined) ?? "Other";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(w);
+  }
+  const orderedKeys = [
+    ...groupOrder.filter((k) => groups.has(k)),
+    ...Array.from(groups.keys()).filter(
+      (k) => !groupOrder.includes(k as (typeof groupOrder)[number])
+    ),
+  ];
+  const showHeaders = orderedKeys.length > 1;
+
+  function renderRow(w: CompendiumItem) {
+    const isSelected = selectedId === w.id;
+    const props = (w.properties ?? {}) as Record<string, unknown>;
+    const isMagic = props.damage_type === "magic";
+    return (
+      <button
+        key={w.id}
+        aria-label={`Choose ${w.name}`}
+        onClick={() => onSelect(w.id)}
+        className={cn(
+          "flex w-full items-center justify-between gap-2 rounded border-2 px-3 py-2 text-left font-heading text-sm transition",
+          isSelected
+            ? "border-leather/50 bg-leather/10 font-bold text-leather"
+            : "border-leather/15 text-leather/85 hover:bg-leather/5 hover:text-leather"
+        )}
+      >
+        <span>{w.name}</span>
+        {isMagic && (
+          <span className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-leather/70">
+            Magic
+          </span>
+        )}
+      </button>
+    );
+  }
+
   return (
     <>
       <div className="shrink-0">
@@ -1662,37 +1707,22 @@ function WeaponListPicker({
           </p>
         )}
       </div>
-      <div className="scrollbar-none mt-3 flex-1 space-y-1.5 overflow-y-auto pr-1">
+      <div className="scrollbar-none mt-3 flex-1 space-y-3 overflow-y-auto pr-1">
         {loading ? (
           <p className="text-sm italic text-leather/60">Loading weapons…</p>
         ) : weapons.length === 0 ? (
           <p className="text-sm italic text-leather/60">No weapons available.</p>
         ) : (
-          weapons.map((w) => {
-            const isSelected = selectedId === w.id;
-            const props = (w.properties ?? {}) as Record<string, unknown>;
-            const isMagic = props.damage_type === "magic";
-            return (
-              <button
-                key={w.id}
-                aria-label={`Choose ${w.name}`}
-                onClick={() => onSelect(w.id)}
-                className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded border-2 px-3 py-2 text-left font-heading text-sm transition",
-                  isSelected
-                    ? "border-leather/50 bg-leather/10 font-bold text-leather"
-                    : "border-leather/15 text-leather/85 hover:bg-leather/5 hover:text-leather"
-                )}
-              >
-                <span>{w.name}</span>
-                {isMagic && (
-                  <span className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-leather/70">
-                    Magic
-                  </span>
-                )}
-              </button>
-            );
-          })
+          orderedKeys.map((key) => (
+            <div key={key} className="space-y-1.5">
+              {showHeaders && (
+                <h3 className="font-heading text-[10px] font-bold uppercase tracking-[0.14em] text-leather/70">
+                  {key}
+                </h3>
+              )}
+              {groups.get(key)!.map(renderRow)}
+            </div>
+          ))
         )}
       </div>
     </>
