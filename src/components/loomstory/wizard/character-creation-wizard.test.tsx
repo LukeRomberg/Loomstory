@@ -306,6 +306,39 @@ const wizardConfig: WizardConfig = {
         filter: { ability_type: "community_feature" },
       },
     },
+    traits: {
+      enabled: true,
+      label: "Assign Traits",
+      subtitle: "Distribute the standard array.",
+      shortLabel: "Traits",
+      component: "stat_assigner",
+      config: {
+        slots: [
+          { key: "agility", label: "Agility", group: "Agility / Strength" },
+          { key: "strength", label: "Strength", group: "Agility / Strength" },
+          { key: "finesse", label: "Finesse", group: "Finesse / Instinct" },
+          { key: "instinct", label: "Instinct", group: "Finesse / Instinct" },
+          { key: "presence", label: "Presence", group: "Presence / Knowledge" },
+          { key: "knowledge", label: "Knowledge", group: "Presence / Knowledge" },
+        ],
+        standardArray: [2, 1, 1, 0, 0, -1],
+      },
+    },
+    experiences_pick: {
+      enabled: true,
+      label: "Create Your Experiences",
+      subtitle: "Two short phrases that capture who your hero has been.",
+      shortLabel: "Experiences",
+      component: "experience_input",
+      config: {
+        count: 2,
+        modifier: 2,
+        suggestions: [
+          { label: "Backgrounds", items: ["Assassin", "Blacksmith"] },
+          { label: "Skills", items: ["Tracker", "Liar"] },
+        ],
+      },
+    },
     review: {
       enabled: true,
       label: "Behold",
@@ -321,6 +354,8 @@ const wizardConfig: WizardConfig = {
         "subclass_pick",
         "ancestry_pick",
         "community_pick",
+        "traits",
+        "experiences_pick",
         "review",
       ],
     },
@@ -417,7 +452,7 @@ describe("CharacterCreationWizard", () => {
     renderWizard();
     await user.click(screen.getByLabelText(/choose warrior/i));
     await user.click(screen.getByRole("button", { name: /continue/i }));
-    expect(screen.getByText("Step 2 of 5")).toBeInTheDocument();
+    expect(screen.getByText("Step 2 of 7")).toBeInTheDocument();
   });
 });
 
@@ -437,6 +472,41 @@ async function advanceToAncestryStep(user: ReturnType<typeof userEvent.setup>) {
 async function advanceToCommunityStep(user: ReturnType<typeof userEvent.setup>) {
   await advanceToAncestryStep(user);
   await user.click(screen.getByLabelText(/choose faerie/i));
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+}
+
+async function advanceToTraitsStep(user: ReturnType<typeof userEvent.setup>) {
+  await advanceToCommunityStep(user);
+  await user.click(screen.getByLabelText(/choose highborne/i));
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+}
+
+/**
+ * Assigns the SRD standard array (+2, +1, +1, +0, +0, -1) across the six trait
+ * dropdowns in order. The component pool de-duplicates as values are picked, so
+ * we walk the slot order and pick the first matching available option.
+ */
+async function fillAllTraits(user: ReturnType<typeof userEvent.setup>) {
+  const slotKeys = [
+    "agility",
+    "strength",
+    "finesse",
+    "instinct",
+    "presence",
+    "knowledge",
+  ];
+  const values = ["2", "1", "1", "0", "0", "-1"];
+  for (let i = 0; i < slotKeys.length; i++) {
+    const dropdown = screen.getByLabelText(
+      new RegExp(`Assign value to ${slotKeys[i]}`, "i")
+    );
+    await user.selectOptions(dropdown, values[i]);
+  }
+}
+
+async function advanceToExperiencesStep(user: ReturnType<typeof userEvent.setup>) {
+  await advanceToTraitsStep(user);
+  await fillAllTraits(user);
   await user.click(screen.getByRole("button", { name: /continue/i }));
 }
 
@@ -645,12 +715,168 @@ describe("CharacterCreationWizard — community step", () => {
     expect(screen.getAllByText(/\+1 to presence rolls/i).length).toBeGreaterThanOrEqual(1);
   });
 
-  it("Continue advances past community to the next step", async () => {
+  it("Continue advances past community to the Traits step", async () => {
     const user = userEvent.setup();
     renderWizard();
     await advanceToCommunityStep(user);
     await user.click(screen.getByLabelText(/choose highborne/i));
     await user.click(screen.getByRole("button", { name: /continue/i }));
-    expect(screen.getByText("Step 5 of 5")).toBeInTheDocument();
+    expect(screen.getByText("Step 5 of 7")).toBeInTheDocument();
+    expect(screen.getByText(/assign traits/i)).toBeInTheDocument();
+  });
+});
+
+describe("CharacterCreationWizard — traits step", () => {
+  it("shows heading + subtitle after advancing through community", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToTraitsStep(user);
+    expect(screen.getByText(/assign traits/i)).toBeInTheDocument();
+    expect(screen.getByText(/distribute the standard array/i)).toBeInTheDocument();
+  });
+
+  it("renders one dropdown per trait slot, all starting empty", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToTraitsStep(user);
+    for (const key of [
+      "agility",
+      "strength",
+      "finesse",
+      "instinct",
+      "presence",
+      "knowledge",
+    ]) {
+      const dropdown = screen.getByLabelText(
+        new RegExp(`Assign value to ${key}`, "i")
+      );
+      expect(dropdown).toBeInTheDocument();
+      expect(dropdown).toHaveValue("");
+    }
+  });
+
+  it("Continue is disabled until all six traits are assigned", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToTraitsStep(user);
+    const cont = screen.getByRole("button", { name: /continue/i });
+    expect(cont).toBeDisabled();
+    // Assign only five — should still be disabled.
+    const slotKeys = ["agility", "strength", "finesse", "instinct", "presence"];
+    const values = ["2", "1", "1", "0", "0"];
+    for (let i = 0; i < slotKeys.length; i++) {
+      const dropdown = screen.getByLabelText(
+        new RegExp(`Assign value to ${slotKeys[i]}`, "i")
+      );
+      await user.selectOptions(dropdown, values[i]);
+    }
+    expect(cont).toBeDisabled();
+    // Assign the last one — enabled.
+    await user.selectOptions(
+      screen.getByLabelText(/Assign value to knowledge/i),
+      "-1"
+    );
+    expect(cont).not.toBeDisabled();
+  });
+
+  it("does not offer a duplicate +2 once one trait already took it", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToTraitsStep(user);
+    await user.selectOptions(
+      screen.getByLabelText(/Assign value to agility/i),
+      "2"
+    );
+    // +2 should now be gone from every OTHER trait's option list.
+    const strength = screen.getByLabelText(/Assign value to strength/i) as HTMLSelectElement;
+    const strengthOptions = Array.from(strength.options).map((o) => o.value);
+    expect(strengthOptions).not.toContain("2");
+    // The +1 (which has two copies) should still be available.
+    expect(strengthOptions).toContain("1");
+  });
+
+  it("renders the SRD trait descriptions on the right page", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToTraitsStep(user);
+    // The reference panel shows the SRD action verbs for each trait.
+    expect(screen.getByText(/sprint, leap, maneuver/i)).toBeInTheDocument();
+    expect(screen.getByText(/lift, smash, grapple/i)).toBeInTheDocument();
+    expect(screen.getByText(/recall, analyze, comprehend/i)).toBeInTheDocument();
+  });
+
+  it("Continue advances from traits to the Experiences step", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToTraitsStep(user);
+    await fillAllTraits(user);
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+    expect(screen.getByText(/create your experiences/i)).toBeInTheDocument();
+  });
+});
+
+describe("CharacterCreationWizard — experiences step", () => {
+  it("shows heading + subtitle after advancing through traits", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToExperiencesStep(user);
+    expect(screen.getByText(/create your experiences/i)).toBeInTheDocument();
+    expect(screen.getByText(/two short phrases/i)).toBeInTheDocument();
+  });
+
+  it("renders two text inputs labeled Experience 1 / Experience 2", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToExperiencesStep(user);
+    expect(screen.getByLabelText(/experience 1/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/experience 2/i)).toBeInTheDocument();
+  });
+
+  it("renders the modifier badge (+2) next to each input", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToExperiencesStep(user);
+    expect(screen.getAllByText("+2").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("Continue is disabled until both experiences have non-empty names", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToExperiencesStep(user);
+    const cont = screen.getByRole("button", { name: /continue/i });
+    expect(cont).toBeDisabled();
+    await user.type(screen.getByLabelText(/experience 1/i), "World Traveler");
+    expect(cont).toBeDisabled();
+    await user.type(screen.getByLabelText(/experience 2/i), "Field Medic");
+    expect(cont).not.toBeDisabled();
+  });
+
+  it("renders suggestion chip groups on the right page", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToExperiencesStep(user);
+    expect(screen.getByText("Backgrounds")).toBeInTheDocument();
+    expect(screen.getByText("Skills")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Assassin" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tracker" })).toBeInTheDocument();
+  });
+
+  it("clicking a suggestion chip drops its text into the focused input", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToExperiencesStep(user);
+    const exp2 = screen.getByLabelText(/experience 2/i) as HTMLInputElement;
+    await user.click(exp2);
+    await user.click(screen.getByRole("button", { name: "Assassin" }));
+    expect(exp2).toHaveValue("Assassin");
+  });
+
+  it("without a focused input, clicking a chip fills the first empty input", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToExperiencesStep(user);
+    const exp1 = screen.getByLabelText(/experience 1/i) as HTMLInputElement;
+    await user.click(screen.getByRole("button", { name: "Tracker" }));
+    expect(exp1).toHaveValue("Tracker");
   });
 });

@@ -10,7 +10,10 @@ import { WizardProgress } from "./wizard-progress";
 import { Button } from "@/components/ui/button";
 import { useStepData } from "@/lib/character/use-step-data";
 import { getVisibleSteps } from "@/lib/character/wizard-registry";
-import { DAGGERHEART_DOMAINS } from "@/lib/character/configs/daggerheart-wizard";
+import {
+  DAGGERHEART_DOMAINS,
+  DAGGERHEART_TRAIT_DESCRIPTIONS,
+} from "@/lib/character/configs/daggerheart-wizard";
 import { getAncestryImage } from "@/lib/character/configs/daggerheart-ancestry-icons";
 import type {
   WizardConfig,
@@ -82,6 +85,12 @@ export function CharacterCreationWizard({
   );
   const [stepIndex, setStepIndex] = useState(0);
   const [maxStepReached, setMaxStepReached] = useState(0);
+  // Track which experience input was last focused so a chip click lands in it.
+  // Lifted from the panel so chip clicks (right page) can read it without
+  // ref/portal acrobatics.
+  const [experienceFocusedIdx, setExperienceFocusedIdx] = useState<number | null>(
+    null
+  );
 
   const visibleSteps = useMemo(
     () =>
@@ -191,6 +200,19 @@ export function CharacterCreationWizard({
     if (currentStepKey === "subclass_pick") return wizardState.subclassId !== null;
     if (currentStepKey === "ancestry_pick") return wizardState.ancestryName !== null;
     if (currentStepKey === "community_pick") return wizardState.communityName !== null;
+    if (currentStepKey === "traits") {
+      const cfg = currentStep?.config as { slots?: { key: string }[] } | undefined;
+      const required = cfg?.slots?.length ?? 6;
+      return Object.keys(wizardState.statValues).length === required;
+    }
+    if (currentStepKey === "experiences_pick") {
+      const cfg = currentStep?.config as { count?: number } | undefined;
+      const required = cfg?.count ?? 2;
+      const filled = wizardState.experiences.filter(
+        (e) => e.name.trim().length > 0
+      ).length;
+      return filled >= required;
+    }
     return true;
   }
 
@@ -312,6 +334,71 @@ export function CharacterCreationWizard({
       />
     ) : (
       <EmptyDetail message="Pick a community to see its details." />
+    );
+  } else if (currentStepKey === "traits") {
+    const cfg = currentStep?.config as
+      | {
+          slots?: { key: string; label: string; group?: string }[];
+          standardArray?: number[];
+        }
+      | undefined;
+    const slots = cfg?.slots ?? [];
+    const standardArray = cfg?.standardArray ?? [];
+    leftPage = (
+      <TraitAssignerPanel
+        slots={slots}
+        standardArray={standardArray}
+        values={wizardState.statValues}
+        onChange={(vals) =>
+          setWizardState((prev) => ({ ...prev, statValues: vals }))
+        }
+        title={currentStep?.label ?? "Traits"}
+        subtitle={currentStep?.subtitle ?? null}
+      />
+    );
+    rightPage = <TraitDescriptionsPanel slots={slots} />;
+  } else if (currentStepKey === "experiences_pick") {
+    const cfg = currentStep?.config as
+      | {
+          count?: number;
+          modifier?: number;
+          suggestions?: ReadonlyArray<{
+            label: string;
+            items: readonly string[];
+          }>;
+        }
+      | undefined;
+    leftPage = (
+      <ExperienceInputsPanel
+        count={cfg?.count ?? 2}
+        modifier={cfg?.modifier}
+        experiences={wizardState.experiences}
+        onChange={(exps) =>
+          setWizardState((prev) => ({ ...prev, experiences: exps }))
+        }
+        focusedIdx={experienceFocusedIdx}
+        onFocusedIdxChange={setExperienceFocusedIdx}
+        title={currentStep?.label ?? "Experiences"}
+        subtitle={currentStep?.subtitle ?? null}
+      />
+    );
+    rightPage = (
+      <ExperienceSuggestionsPanel
+        suggestions={cfg?.suggestions ?? []}
+        onChipClick={(text) => {
+          let target = experienceFocusedIdx;
+          if (target == null) {
+            const firstEmpty = wizardState.experiences.findIndex(
+              (e) => e.name.length === 0
+            );
+            target = firstEmpty >= 0 ? firstEmpty : 0;
+          }
+          const next = wizardState.experiences.map((e, i) =>
+            i === target ? { name: text } : e
+          );
+          setWizardState((prev) => ({ ...prev, experiences: next }));
+        }}
+      />
     );
   } else {
     leftPage = (
@@ -1058,6 +1145,287 @@ function CommunityDetailPanel({
           ))}
         </DetailGroup>
       )}
+    </div>
+  );
+}
+
+// ─── Traits step ────────────────────────────────────────────
+
+interface TraitSlot {
+  key: string;
+  label: string;
+  group?: string;
+}
+
+function TraitAssignerPanel({
+  slots,
+  standardArray,
+  values,
+  onChange,
+  title,
+  subtitle,
+}: {
+  slots: TraitSlot[];
+  standardArray: number[];
+  values: Record<string, number>;
+  onChange: (values: Record<string, number>) => void;
+  title: string;
+  subtitle: string | null;
+}) {
+  // Available-value computation: for each slot, return the distinct values from
+  // the standard array that aren't already used by another slot. Duplicates in
+  // the array (two +1s, two +0s) get separate accounting so re-picking +1 stays
+  // legal until both copies are taken.
+  function availableFor(currentKey: string): number[] {
+    const used = new Map<number, number>();
+    for (const [k, v] of Object.entries(values)) {
+      if (k === currentKey) continue;
+      used.set(v, (used.get(v) ?? 0) + 1);
+    }
+    const pool = new Map<number, number>();
+    for (const v of standardArray) pool.set(v, (pool.get(v) ?? 0) + 1);
+    const out = new Set<number>();
+    for (const v of [...standardArray].sort((a, b) => b - a)) {
+      const remaining = (pool.get(v) ?? 0) - (used.get(v) ?? 0);
+      if (remaining > 0) out.add(v);
+    }
+    return Array.from(out).sort((a, b) => b - a);
+  }
+
+  function handleChange(key: string, value: string) {
+    if (value === "") {
+      const next = { ...values };
+      delete next[key];
+      onChange(next);
+    } else {
+      onChange({ ...values, [key]: Number(value) });
+    }
+  }
+
+  // Group adjacent slots by their `group` label so paired traits stay together.
+  const groups: { label: string | null; slots: TraitSlot[] }[] = [];
+  const groupMap = new Map<string | null, TraitSlot[]>();
+  for (const slot of slots) {
+    const key = slot.group ?? null;
+    if (!groupMap.has(key)) {
+      groupMap.set(key, []);
+      groups.push({ label: key, slots: groupMap.get(key)! });
+    }
+    groupMap.get(key)!.push(slot);
+  }
+
+  return (
+    <>
+      <div className="shrink-0">
+        <h2 className="font-heading text-xl font-bold uppercase tracking-[0.12em] text-leather">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-1 font-lore text-sm font-medium text-leather/75">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <div className="scrollbar-none mt-3 flex-1 space-y-4 overflow-y-auto pr-1">
+        {groups.map((group) => (
+          <div key={group.label ?? "ungrouped"} className="space-y-1.5">
+            {group.label && (
+              <h3 className="font-heading text-[10px] font-bold uppercase tracking-[0.14em] text-leather/70">
+                {group.label}
+              </h3>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              {group.slots.map((slot) => {
+                const available = availableFor(slot.key);
+                const current = values[slot.key];
+                return (
+                  <label
+                    key={slot.key}
+                    className="flex flex-col gap-1 rounded-md border-2 border-leather/30 bg-transparent px-2 py-1.5"
+                  >
+                    <span className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-leather">
+                      {slot.label}
+                    </span>
+                    <select
+                      aria-label={`Assign value to ${slot.key}`}
+                      value={current != null ? String(current) : ""}
+                      onChange={(e) => handleChange(slot.key, e.target.value)}
+                      className="rounded border border-leather/30 bg-parchment/40 px-1.5 py-0.5 font-mono text-sm text-leather"
+                    >
+                      <option value="">—</option>
+                      {current != null && !available.includes(current) && (
+                        <option value={String(current)}>
+                          {current >= 0 ? `+${current}` : current}
+                        </option>
+                      )}
+                      {available.map((v) => (
+                        <option key={v} value={String(v)}>
+                          {v >= 0 ? `+${v}` : v}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function TraitDescriptionsPanel({ slots }: { slots: TraitSlot[] }) {
+  return (
+    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 border-leather/40 bg-transparent p-3 pr-2 text-leather">
+      <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
+        Trait Reference
+      </h3>
+      <p className="font-lore text-xs leading-snug text-leather/70">
+        When you &ldquo;roll with a trait,&rdquo; that trait&rsquo;s modifier is
+        added to your roll. Assign the standard array (+2, +1, +1, +0, +0, -1)
+        across the six traits below.
+      </p>
+      {slots.map((slot) => {
+        const info = DAGGERHEART_TRAIT_DESCRIPTIONS[slot.key];
+        if (!info) return null;
+        return (
+          <div key={slot.key} className="space-y-0.5">
+            <div className="flex items-baseline gap-2">
+              <span className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-leather">
+                {slot.label}
+              </span>
+              <span className="font-lore text-[11px] italic text-leather/70">
+                {info.actions}
+              </span>
+            </div>
+            <p className="font-lore text-xs leading-snug text-leather/85">
+              {info.description}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Experiences step ──────────────────────────────────────
+
+function ExperienceInputsPanel({
+  count,
+  modifier,
+  experiences,
+  onChange,
+  focusedIdx,
+  onFocusedIdxChange,
+  title,
+  subtitle,
+}: {
+  count: number;
+  modifier?: number;
+  experiences: { name: string }[];
+  onChange: (next: { name: string }[]) => void;
+  focusedIdx: number | null;
+  onFocusedIdxChange: (idx: number) => void;
+  title: string;
+  subtitle: string | null;
+}) {
+  function updateAt(idx: number, value: string) {
+    const next = experiences.map((e, i) => (i === idx ? { name: value } : e));
+    onChange(next);
+  }
+
+  const indices = Array.from({ length: count }, (_, i) => i);
+  const modifierLabel =
+    modifier != null ? (modifier >= 0 ? `+${modifier}` : String(modifier)) : null;
+
+  return (
+    <>
+      <div className="shrink-0">
+        <h2 className="font-heading text-xl font-bold uppercase tracking-[0.12em] text-leather">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-1 font-lore text-sm font-medium text-leather/75">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <div className="scrollbar-none mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
+        {indices.map((idx) => {
+          const id = `experience-input-${idx}`;
+          const active = focusedIdx === idx;
+          return (
+            <div key={idx} className="space-y-1">
+              <label
+                htmlFor={id}
+                className="block font-heading text-[10px] font-bold uppercase tracking-[0.14em] text-leather/70"
+              >
+                Experience {idx + 1}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id={id}
+                  type="text"
+                  value={experiences[idx]?.name ?? ""}
+                  onChange={(e) => updateAt(idx, e.target.value)}
+                  onFocus={() => onFocusedIdxChange(idx)}
+                  placeholder="e.g. World Traveler"
+                  className={cn(
+                    "flex-1 rounded border-2 bg-parchment/40 px-2 py-1.5 font-lore text-sm text-leather placeholder:text-leather/40 focus:outline-none",
+                    active ? "border-leather/60" : "border-leather/30"
+                  )}
+                />
+                {modifierLabel && (
+                  <span className="min-w-[2.25rem] text-center font-mono text-sm text-leather/85">
+                    {modifierLabel}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+function ExperienceSuggestionsPanel({
+  suggestions,
+  onChipClick,
+}: {
+  suggestions: ReadonlyArray<{ label: string; items: readonly string[] }>;
+  onChipClick: (text: string) => void;
+}) {
+  return (
+    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 border-leather/40 bg-transparent p-3 pr-2 text-leather">
+      <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
+        Need Inspiration?
+      </h3>
+      <p className="font-lore text-xs leading-snug text-leather/70">
+        Tap a chip to drop it into your most recently selected input. You can
+        always edit the text after.
+      </p>
+      {suggestions.map((group) => (
+        <div key={group.label} className="space-y-1.5">
+          <h4 className="font-heading text-[10px] font-bold uppercase tracking-[0.14em] text-leather/70">
+            {group.label}
+          </h4>
+          <div className="flex flex-wrap gap-1.5">
+            {group.items.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => onChipClick(item)}
+                className="rounded-full border border-leather/30 bg-parchment/30 px-2.5 py-0.5 font-lore text-[11px] text-leather/85 transition hover:border-leather/60 hover:text-leather"
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -150,6 +150,50 @@ export const DAGGERHEART_TRAIT_SLOTS = [
 // to your character's traits in any order you wish." No marking-for-advantage mechanic.
 export const DAGGERHEART_STANDARD_ARRAY = [2, 1, 1, 0, 0, -1];
 
+// ─── Trait Descriptions ─────────────────────────────────────
+// Daggerheart SRD 9-09-25 step 3 (page 4). `actions` is the SRD's "Use it to …"
+// shortlist; `description` is the SRD's "A high X means …" paragraph. Surfaced
+// on the Traits step's right page so players can compare what each trait does
+// while assigning values from the standard array.
+
+export interface TraitInfo {
+  actions: string;
+  description: string;
+}
+
+export const DAGGERHEART_TRAIT_DESCRIPTIONS: Record<string, TraitInfo> = {
+  agility: {
+    actions: "Sprint, Leap, Maneuver",
+    description:
+      "A high Agility means you're fast on your feet, nimble on difficult terrain, and quick to react to danger. You'll make an Agility Roll to scurry up a rope, sprint to cover, or bound from rooftop to rooftop.",
+  },
+  strength: {
+    actions: "Lift, Smash, Grapple",
+    description:
+      "A high Strength means you're better at feats that test your physical prowess and stamina. You'll make a Strength Roll to break through a door, lift heavy objects, or hold your ground against a charging foe.",
+  },
+  finesse: {
+    actions: "Control, Hide, Tinker",
+    description:
+      "A high Finesse means you're skilled at tasks that require accuracy, stealth, or the utmost control. You'll make a Finesse Roll to use fine tools, escape notice, or strike with precision.",
+  },
+  instinct: {
+    actions: "Perceive, Sense, Navigate",
+    description:
+      "A high Instinct means you have a keen sense of your surroundings and a natural intuition. You'll make an Instinct Roll to sense danger, notice details in the world around you, or track an elusive foe.",
+  },
+  presence: {
+    actions: "Charm, Perform, Deceive",
+    description:
+      "A high Presence means you have a strong force of personality and a facility for social situations. You'll make a Presence Roll to plead your case, intimidate a foe, or capture the attention of a crowd.",
+  },
+  knowledge: {
+    actions: "Recall, Analyze, Comprehend",
+    description:
+      "A high Knowledge means you know information others don't and understand how to apply that knowledge through deduction and inference. You'll make a Knowledge Roll to interpret facts, see the patterns clearly, or remember important information.",
+  },
+};
+
 // ─── Class-Specific Starting Items (SRD step 5) ────────────
 // Each class's character guide lists two choices the player picks between. The
 // items are flavor inventory entries with no mechanical effect, so they're
