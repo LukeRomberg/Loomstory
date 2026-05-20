@@ -13,6 +13,7 @@ import { getVisibleSteps } from "@/lib/character/wizard-registry";
 import {
   DAGGERHEART_DOMAINS,
   DAGGERHEART_TRAIT_DESCRIPTIONS,
+  DAGGERHEART_CLASS_ITEMS,
 } from "@/lib/character/configs/daggerheart-wizard";
 import { getAncestryImage } from "@/lib/character/configs/daggerheart-ancestry-icons";
 import type {
@@ -21,6 +22,7 @@ import type {
   WizardStepConfig,
   CompendiumClass,
   CompendiumAbility,
+  CompendiumItem,
   ClassTheme,
 } from "@/lib/character/wizard-types";
 import { createEmptyWizardState } from "@/lib/character/wizard-types";
@@ -97,6 +99,7 @@ export function CharacterCreationWizard({
       getVisibleSteps(wizardConfig, {
         className: wizardState.className,
         subclassName: wizardState.subclassName,
+        primaryWeaponIsTwoHanded: wizardState.primaryWeaponIsTwoHanded,
       }),
     [wizardConfig, wizardState]
   );
@@ -183,6 +186,71 @@ export function CharacterCreationWizard({
     (f) => (f.data as Record<string, unknown>)?.community === wizardState.communityName
   );
 
+  // ─── Equipment data ─────────────────────────────────────────
+  // The compendium_items table holds weapons, armor, and consumables; each step
+  // config narrows by `type`. Tier-1 + category filters happen in-component
+  // because useStepData can't filter on JSONB `properties`.
+  const weaponPrimaryStep = wizardConfig.steps["weapon_primary_pick"];
+  const weaponSecondaryStep = wizardConfig.steps["weapon_secondary_pick"];
+  const armorStep = wizardConfig.steps["armor_pick"];
+  const potionStep = wizardConfig.steps["potion_pick"];
+
+  const { data: weaponsPrimaryRaw, loading: weaponsLoading } = useStepData(
+    weaponPrimaryStep,
+    systemId
+  );
+  const { data: weaponsSecondaryRaw } = useStepData(weaponSecondaryStep, systemId);
+  const { data: armorRaw, loading: armorLoading } = useStepData(armorStep, systemId);
+  const { data: potionsRaw, loading: potionsLoading } = useStepData(
+    potionStep,
+    systemId
+  );
+
+  const allWeaponsPrimary = weaponsPrimaryRaw as unknown as CompendiumItem[];
+  const allWeaponsSecondary = weaponsSecondaryRaw as unknown as CompendiumItem[];
+  const allArmor = armorRaw as unknown as CompendiumItem[];
+  const allPotions = potionsRaw as unknown as CompendiumItem[];
+
+  // SRD restriction: magic weapons require a spellcast trait, so they're filtered
+  // out for classes without one (Warrior, Guardian).
+  const canUseMagic =
+    (selectedClass?.data as Record<string, unknown> | undefined)?.spellcast_trait !=
+    null;
+  const isPhysicalOrAllowedMagic = (w: CompendiumItem) => {
+    if (canUseMagic) return true;
+    const props = (w.properties ?? {}) as Record<string, unknown>;
+    return props.damage_type !== "magic";
+  };
+
+  const primaryWeapons = allWeaponsPrimary.filter((w) => {
+    const p = (w.properties ?? {}) as Record<string, unknown>;
+    return p.tier === 1 && p.category === "Primary" && isPhysicalOrAllowedMagic(w);
+  });
+  const secondaryWeapons = allWeaponsSecondary.filter((w) => {
+    const p = (w.properties ?? {}) as Record<string, unknown>;
+    return p.tier === 1 && p.category === "Secondary" && isPhysicalOrAllowedMagic(w);
+  });
+  const tier1Armor = allArmor.filter(
+    (a) => ((a.properties ?? {}) as Record<string, unknown>).tier === 1
+  );
+  // SRD step 5: only the two minor potions are valid starting consumables.
+  const startingPotions = allPotions.filter((p) =>
+    ["Minor Health Potion", "Minor Stamina Potion"].includes(p.name)
+  );
+
+  const selectedPrimaryWeapon =
+    primaryWeapons.find((w) => w.id === wizardState.primaryWeaponId) ?? null;
+  const selectedSecondaryWeapon =
+    secondaryWeapons.find((w) => w.id === wizardState.secondaryWeaponId) ?? null;
+  const selectedArmor = tier1Armor.find((a) => a.id === wizardState.armorId) ?? null;
+  const selectedPotion =
+    startingPotions.find((p) => p.id === wizardState.potionId) ?? null;
+
+  // Class items are free-text flavor options keyed on the picked class name.
+  const classItemOptions = wizardState.className
+    ? DAGGERHEART_CLASS_ITEMS[wizardState.className] ?? []
+    : [];
+
   // ─── Navigation ─────────────────────────────────────────────
   function goBack() {
     if (stepIndex > 0) setStepIndex((i) => i - 1);
@@ -200,6 +268,14 @@ export function CharacterCreationWizard({
     if (currentStepKey === "subclass_pick") return wizardState.subclassId !== null;
     if (currentStepKey === "ancestry_pick") return wizardState.ancestryName !== null;
     if (currentStepKey === "community_pick") return wizardState.communityName !== null;
+    if (currentStepKey === "weapon_primary_pick")
+      return wizardState.primaryWeaponId !== null;
+    if (currentStepKey === "weapon_secondary_pick")
+      return wizardState.secondaryWeaponId !== null;
+    if (currentStepKey === "armor_pick") return wizardState.armorId !== null;
+    if (currentStepKey === "potion_pick") return wizardState.potionId !== null;
+    if (currentStepKey === "class_item_pick")
+      return wizardState.classItemName !== null;
     if (currentStepKey === "traits") {
       const cfg = currentStep?.config as { slots?: { key: string }[] } | undefined;
       const required = cfg?.slots?.length ?? 6;
@@ -335,6 +411,107 @@ export function CharacterCreationWizard({
     ) : (
       <EmptyDetail message="Pick a community to see its details." />
     );
+  } else if (currentStepKey === "weapon_primary_pick") {
+    leftPage = (
+      <WeaponListPicker
+        weapons={primaryWeapons}
+        loading={weaponsLoading}
+        selectedId={wizardState.primaryWeaponId}
+        onSelect={(id) => {
+          const w = primaryWeapons.find((x) => x.id === id);
+          const isTwoHanded =
+            ((w?.properties ?? {}) as Record<string, unknown>).type ===
+            "Two-Handed";
+          setWizardState((prev) => ({
+            ...prev,
+            primaryWeaponId: id,
+            primaryWeaponIsTwoHanded: isTwoHanded,
+            // Switching to a 2H primary clears any prior secondary so it doesn't
+            // linger in the sheet preview or get saved on Review.
+            secondaryWeaponId: isTwoHanded ? null : prev.secondaryWeaponId,
+          }));
+        }}
+        title={currentStep?.label ?? "Primary Weapon"}
+        subtitle={currentStep?.subtitle ?? null}
+      />
+    );
+    rightPage = selectedPrimaryWeapon ? (
+      <WeaponDetailPanel weapon={selectedPrimaryWeapon} />
+    ) : (
+      <EmptyDetail message="Pick a primary weapon to see its details." />
+    );
+  } else if (currentStepKey === "weapon_secondary_pick") {
+    leftPage = (
+      <WeaponListPicker
+        weapons={secondaryWeapons}
+        loading={weaponsLoading}
+        selectedId={wizardState.secondaryWeaponId}
+        onSelect={(id) =>
+          setWizardState((prev) => ({ ...prev, secondaryWeaponId: id }))
+        }
+        title={currentStep?.label ?? "Secondary Weapon"}
+        subtitle={currentStep?.subtitle ?? null}
+      />
+    );
+    rightPage = selectedSecondaryWeapon ? (
+      <WeaponDetailPanel weapon={selectedSecondaryWeapon} />
+    ) : (
+      <EmptyDetail message="Pick a secondary weapon to see its details." />
+    );
+  } else if (currentStepKey === "armor_pick") {
+    leftPage = (
+      <ItemListPicker
+        items={tier1Armor}
+        loading={armorLoading}
+        selectedId={wizardState.armorId}
+        onSelect={(id) =>
+          setWizardState((prev) => ({ ...prev, armorId: id }))
+        }
+        title={currentStep?.label ?? "Armor"}
+        subtitle={currentStep?.subtitle ?? null}
+      />
+    );
+    rightPage = selectedArmor ? (
+      <ArmorDetailPanel armor={selectedArmor} />
+    ) : (
+      <EmptyDetail message="Pick armor to see its details." />
+    );
+  } else if (currentStepKey === "potion_pick") {
+    leftPage = (
+      <ItemListPicker
+        items={startingPotions}
+        loading={potionsLoading}
+        selectedId={wizardState.potionId}
+        onSelect={(id) =>
+          setWizardState((prev) => ({ ...prev, potionId: id }))
+        }
+        title={currentStep?.label ?? "Potion"}
+        subtitle={currentStep?.subtitle ?? null}
+      />
+    );
+    rightPage = selectedPotion ? (
+      <PotionDetailPanel potion={selectedPotion} />
+    ) : (
+      <EmptyDetail message="Pick a starting potion to see its details." />
+    );
+  } else if (currentStepKey === "class_item_pick") {
+    leftPage = (
+      <ClassItemListPicker
+        options={classItemOptions}
+        selectedName={wizardState.classItemName}
+        onSelect={(name) =>
+          setWizardState((prev) => ({ ...prev, classItemName: name }))
+        }
+        title={currentStep?.label ?? "Class Item"}
+        subtitle={currentStep?.subtitle ?? null}
+      />
+    );
+    rightPage = (
+      <ClassItemDetailPanel
+        className={wizardState.className}
+        selectedName={wizardState.classItemName}
+      />
+    );
   } else if (currentStepKey === "traits") {
     const cfg = currentStep?.config as
       | {
@@ -441,10 +618,10 @@ export function CharacterCreationWizard({
           classFeatures={selectedClassFeatures}
           subclassFeatures={selectedSubclassFoundationFeatures}
           domainCards={[]}
-          primaryWeapon={null}
-          secondaryWeapon={null}
-          armor={null}
-          potion={null}
+          primaryWeapon={selectedPrimaryWeapon}
+          secondaryWeapon={selectedSecondaryWeapon}
+          armor={selectedArmor}
+          potion={selectedPotion}
           classTheme={classTheme}
           onNameChange={(name) =>
             setWizardState((prev) => ({ ...prev, name }))
@@ -1387,6 +1564,335 @@ function ExperienceInputsPanel({
         })}
       </div>
     </>
+  );
+}
+
+// ─── Equipment steps ───────────────────────────────────────
+
+/**
+ * Generic items-list picker reused by Armor + Potion steps (and any future
+ * compendium_items pickers that just want a flat list of named rows).
+ */
+function ItemListPicker({
+  items,
+  loading,
+  selectedId,
+  onSelect,
+  title,
+  subtitle,
+}: {
+  items: CompendiumItem[];
+  loading: boolean;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  title: string;
+  subtitle: string | null;
+}) {
+  return (
+    <>
+      <div className="shrink-0">
+        <h2 className="font-heading text-xl font-bold uppercase tracking-[0.12em] text-leather">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-1 font-lore text-sm font-medium text-leather/75">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <div className="scrollbar-none mt-3 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        {loading ? (
+          <p className="text-sm italic text-leather/60">Loading…</p>
+        ) : items.length === 0 ? (
+          <p className="text-sm italic text-leather/60">Nothing available.</p>
+        ) : (
+          items.map((item) => {
+            const isSelected = selectedId === item.id;
+            return (
+              <button
+                key={item.id}
+                aria-label={`Choose ${item.name}`}
+                onClick={() => onSelect(item.id)}
+                className={cn(
+                  "w-full rounded border-2 px-3 py-2 text-left font-heading text-sm transition",
+                  isSelected
+                    ? "border-leather/50 bg-leather/10 font-bold text-leather"
+                    : "border-leather/15 text-leather/85 hover:bg-leather/5 hover:text-leather"
+                )}
+              >
+                {item.name}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </>
+  );
+}
+
+/**
+ * Weapon-specific list picker — same shape as ItemListPicker but adds a small
+ * "Magic" badge on rows whose damage_type === "magic" so the player can spot
+ * the magical option at a glance. Borders stay leather; no class-color tint.
+ */
+function WeaponListPicker({
+  weapons,
+  loading,
+  selectedId,
+  onSelect,
+  title,
+  subtitle,
+}: {
+  weapons: CompendiumItem[];
+  loading: boolean;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  title: string;
+  subtitle: string | null;
+}) {
+  return (
+    <>
+      <div className="shrink-0">
+        <h2 className="font-heading text-xl font-bold uppercase tracking-[0.12em] text-leather">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-1 font-lore text-sm font-medium text-leather/75">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <div className="scrollbar-none mt-3 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        {loading ? (
+          <p className="text-sm italic text-leather/60">Loading weapons…</p>
+        ) : weapons.length === 0 ? (
+          <p className="text-sm italic text-leather/60">No weapons available.</p>
+        ) : (
+          weapons.map((w) => {
+            const isSelected = selectedId === w.id;
+            const props = (w.properties ?? {}) as Record<string, unknown>;
+            const isMagic = props.damage_type === "magic";
+            return (
+              <button
+                key={w.id}
+                aria-label={`Choose ${w.name}`}
+                onClick={() => onSelect(w.id)}
+                className={cn(
+                  "flex w-full items-center justify-between gap-2 rounded border-2 px-3 py-2 text-left font-heading text-sm transition",
+                  isSelected
+                    ? "border-leather/50 bg-leather/10 font-bold text-leather"
+                    : "border-leather/15 text-leather/85 hover:bg-leather/5 hover:text-leather"
+                )}
+              >
+                <span>{w.name}</span>
+                {isMagic && (
+                  <span className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-leather/70">
+                    Magic
+                  </span>
+                )}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </>
+  );
+}
+
+function WeaponDetailPanel({ weapon }: { weapon: CompendiumItem }) {
+  const props = (weapon.properties ?? {}) as Record<string, unknown>;
+  const isMagic = props.damage_type === "magic";
+  const stats: { label: string; value: string }[] = [];
+  if (props.damage) stats.push({ label: "Damage", value: String(props.damage) });
+  if (props.range) stats.push({ label: "Range", value: String(props.range) });
+  if (props.primary_trait)
+    stats.push({ label: "Trait", value: String(props.primary_trait) });
+  if (props.type) stats.push({ label: "Hands", value: String(props.type) });
+  const feature = (props.feature as string | undefined) ?? null;
+
+  return (
+    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 border-leather/40 bg-transparent p-3 pr-2 text-leather">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
+          {weapon.name}
+        </h3>
+        {isMagic && (
+          <span className="rounded border border-leather/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-leather/70">
+            Magic
+          </span>
+        )}
+      </div>
+      {weapon.description && (
+        <p className="whitespace-pre-line font-lore text-sm leading-snug text-leather/85">
+          {weapon.description}
+        </p>
+      )}
+      {stats.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className="rounded border border-leather/30 bg-transparent px-2 py-1 text-center"
+            >
+              <div className="font-heading text-[9px] font-semibold uppercase tracking-wider text-leather/70">
+                {s.label}
+              </div>
+              <div className="font-mono text-sm text-leather">{s.value}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {feature && (
+        <DetailGroup label="Feature">
+          <p className="font-lore text-sm leading-snug text-leather/85">
+            {feature}
+          </p>
+        </DetailGroup>
+      )}
+    </div>
+  );
+}
+
+function ArmorDetailPanel({ armor }: { armor: CompendiumItem }) {
+  const props = (armor.properties ?? {}) as Record<string, unknown>;
+  const stats: { label: string; value: string }[] = [];
+  if (props.base_score != null)
+    stats.push({ label: "Base Score", value: String(props.base_score) });
+  if (props.thresholds)
+    stats.push({ label: "Thresholds", value: String(props.thresholds) });
+  const feature = (props.feature as string | undefined) ?? null;
+
+  return (
+    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 border-leather/40 bg-transparent p-3 pr-2 text-leather">
+      <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
+        {armor.name}
+      </h3>
+      {armor.description && (
+        <p className="whitespace-pre-line font-lore text-sm leading-snug text-leather/85">
+          {armor.description}
+        </p>
+      )}
+      {stats.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className="rounded border border-leather/30 bg-transparent px-2 py-1 text-center"
+            >
+              <div className="font-heading text-[9px] font-semibold uppercase tracking-wider text-leather/70">
+                {s.label}
+              </div>
+              <div className="font-mono text-sm text-leather">{s.value}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {feature && (
+        <DetailGroup label="Feature">
+          <p className="font-lore text-sm leading-snug text-leather/85">
+            {feature}
+          </p>
+        </DetailGroup>
+      )}
+    </div>
+  );
+}
+
+function PotionDetailPanel({ potion }: { potion: CompendiumItem }) {
+  return (
+    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 border-leather/40 bg-transparent p-3 pr-2 text-leather">
+      <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
+        {potion.name}
+      </h3>
+      {potion.description && (
+        <p className="whitespace-pre-line font-lore text-sm leading-snug text-leather/85">
+          {potion.description}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ClassItemListPicker({
+  options,
+  selectedName,
+  onSelect,
+  title,
+  subtitle,
+}: {
+  options: readonly string[];
+  selectedName: string | null;
+  onSelect: (name: string) => void;
+  title: string;
+  subtitle: string | null;
+}) {
+  return (
+    <>
+      <div className="shrink-0">
+        <h2 className="font-heading text-xl font-bold uppercase tracking-[0.12em] text-leather">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-1 font-lore text-sm font-medium text-leather/75">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <div className="scrollbar-none mt-3 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        {options.length === 0 ? (
+          <p className="text-sm italic text-leather/60">
+            Pick a class first to see its starting item options.
+          </p>
+        ) : (
+          options.map((option) => {
+            const isSelected = selectedName === option;
+            return (
+              <button
+                key={option}
+                aria-label={`Choose ${option}`}
+                onClick={() => onSelect(option)}
+                className={cn(
+                  "w-full rounded border-2 px-3 py-2 text-left font-heading text-sm transition",
+                  isSelected
+                    ? "border-leather/50 bg-leather/10 font-bold text-leather"
+                    : "border-leather/15 text-leather/85 hover:bg-leather/5 hover:text-leather"
+                )}
+              >
+                {option}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </>
+  );
+}
+
+function ClassItemDetailPanel({
+  className,
+  selectedName,
+}: {
+  className: string | null;
+  selectedName: string | null;
+}) {
+  return (
+    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 border-leather/40 bg-transparent p-3 pr-2 text-leather">
+      <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
+        {className ? `${className} Class Item` : "Class Item"}
+      </h3>
+      <p className="font-lore text-sm leading-snug text-leather/85">
+        Your class&rsquo;s character guide lists two flavor items. Pick the one
+        that resonates more with your hero&rsquo;s story — it&rsquo;s narrative
+        inventory only, with no mechanical effect.
+      </p>
+      {selectedName && (
+        <DetailGroup label="Selected">
+          <p className="font-lore text-sm leading-snug text-leather">
+            {selectedName}
+          </p>
+        </DetailGroup>
+      )}
+    </div>
   );
 }
 

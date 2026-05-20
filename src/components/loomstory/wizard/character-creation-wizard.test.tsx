@@ -14,6 +14,9 @@ const {
   mockSubclassFeatures,
   mockAncestryFeatures,
   mockCommunityFeatures,
+  mockWeapons,
+  mockArmor,
+  mockPotions,
 } = vi.hoisted(() => ({
   mockClasses: [
     {
@@ -27,6 +30,7 @@ const {
         hp_slots: 6,
         evasion: 11,
         hp_die: "d10",
+        // No spellcast_trait → magic weapons must be filtered out for Warrior.
       },
       source: "Daggerheart SRD",
     },
@@ -204,6 +208,150 @@ const {
       },
     },
   ],
+  mockWeapons: [
+    {
+      id: "w1",
+      name: "Broadsword",
+      type: "weapon",
+      description: "A classic one-handed blade.",
+      properties: {
+        tier: 1,
+        category: "Primary",
+        type: "One-Handed",
+        damage: "d8+1 phy",
+        range: "Melee",
+        primary_trait: "Agility",
+        feature: "Reliable: +1 to attack rolls.",
+        damage_type: "physical",
+      },
+      source: "Daggerheart SRD",
+    },
+    {
+      id: "w2",
+      name: "Battleaxe",
+      type: "weapon",
+      description: "A two-handed axe.",
+      properties: {
+        tier: 1,
+        category: "Primary",
+        type: "Two-Handed",
+        damage: "d10+3 phy",
+        range: "Melee",
+        primary_trait: "Strength",
+        damage_type: "physical",
+      },
+      source: "Daggerheart SRD",
+    },
+    {
+      id: "w3",
+      name: "Hallowed Axe",
+      type: "weapon",
+      description: "A magically attuned axe.",
+      properties: {
+        tier: 1,
+        category: "Primary",
+        type: "One-Handed",
+        damage: "d8+1 mag",
+        range: "Melee",
+        primary_trait: "Knowledge",
+        damage_type: "magic",
+      },
+      source: "Daggerheart SRD",
+    },
+    {
+      id: "w4",
+      name: "Round Shield",
+      type: "weapon",
+      description: "A simple wooden shield.",
+      properties: {
+        tier: 1,
+        category: "Secondary",
+        type: "One-Handed",
+        feature: "Protective: +1 to Armor Score.",
+        damage_type: "physical",
+      },
+      source: "Daggerheart SRD",
+    },
+    {
+      id: "w5",
+      name: "Greataxe",
+      type: "weapon",
+      // Tier 2 — must be filtered out of the level-1 picker.
+      description: "A masterwork two-handed axe.",
+      properties: {
+        tier: 2,
+        category: "Primary",
+        type: "Two-Handed",
+        damage: "d12+3 phy",
+        range: "Melee",
+        damage_type: "physical",
+      },
+      source: "Daggerheart SRD",
+    },
+  ],
+  mockArmor: [
+    {
+      id: "a1",
+      name: "Gambeson Armor",
+      type: "armor",
+      description: "Quilted cloth armor.",
+      properties: {
+        tier: 1,
+        base_score: 3,
+        thresholds: "5 / 11",
+        feature: "Flexible: +1 to Evasion.",
+      },
+      source: "Daggerheart SRD",
+    },
+    {
+      id: "a2",
+      name: "Leather Armor",
+      type: "armor",
+      description: "Sturdy hide armor.",
+      properties: {
+        tier: 1,
+        base_score: 3,
+        thresholds: "6 / 13",
+      },
+      source: "Daggerheart SRD",
+    },
+    {
+      id: "a3",
+      name: "Plate Armor",
+      type: "armor",
+      // Tier 2 — must be filtered out.
+      description: "Heavy plate armor.",
+      properties: { tier: 2, base_score: 4, thresholds: "8 / 17" },
+      source: "Daggerheart SRD",
+    },
+  ],
+  mockPotions: [
+    {
+      id: "p1",
+      name: "Minor Health Potion",
+      type: "consumable",
+      description: "Drink to clear 1d4 Hit Points.",
+      properties: { tier: 1 },
+      source: "Daggerheart SRD",
+    },
+    {
+      id: "p2",
+      name: "Minor Stamina Potion",
+      type: "consumable",
+      description: "Drink to clear 1d4 Stress.",
+      properties: { tier: 1 },
+      source: "Daggerheart SRD",
+    },
+    {
+      id: "p3",
+      name: "Elixir of Hope",
+      // Not a "starting" potion — must be filtered out.
+      type: "consumable",
+      description: "Restores Hope.",
+      properties: { tier: 2 },
+      source: "Daggerheart SRD",
+    },
+  ],
 }));
 
 vi.mock("@/lib/character/use-step-data", () => ({
@@ -249,6 +397,18 @@ vi.mock("@/lib/character/use-step-data", () => ({
       filter.ability_type === "community_feature"
     ) {
       return { data: mockCommunityFeatures, loading: false, error: null };
+    }
+    // Equipment (compendium_items) — narrow by `type` filter.
+    if (step?.dataSource?.table === "compendium_items") {
+      if (filter.type === "weapon") {
+        return { data: mockWeapons, loading: false, error: null };
+      }
+      if (filter.type === "armor") {
+        return { data: mockArmor, loading: false, error: null };
+      }
+      if (filter.type === "consumable") {
+        return { data: mockPotions, loading: false, error: null };
+      }
     }
     // Fallback — class features (no dataSource configured in the existing wizard).
     return { data: mockClassFeatures, loading: false, error: null };
@@ -306,6 +466,60 @@ const wizardConfig: WizardConfig = {
         filter: { ability_type: "community_feature" },
       },
     },
+    weapon_primary_pick: {
+      enabled: true,
+      label: "Choose Your Primary Weapon",
+      subtitle: "Either two-handed, or pair with a secondary.",
+      shortLabel: "Weapon",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_items",
+        filter: { type: "weapon" },
+      },
+    },
+    weapon_secondary_pick: {
+      enabled: true,
+      label: "Choose Your Secondary Weapon",
+      subtitle: "Pair it with your primary one-handed weapon.",
+      shortLabel: "Secondary",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_items",
+        filter: { type: "weapon" },
+      },
+      showWhen: {
+        requiresState: { key: "primaryWeaponIsTwoHanded", equals: false },
+      },
+    },
+    armor_pick: {
+      enabled: true,
+      label: "Choose Your Armor",
+      subtitle: "Set your damage thresholds and Armor Score.",
+      shortLabel: "Armor",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_items",
+        filter: { type: "armor" },
+      },
+    },
+    potion_pick: {
+      enabled: true,
+      label: "Choose a Starting Potion",
+      subtitle: "Bring a Minor Health or Minor Stamina Potion.",
+      shortLabel: "Potion",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_items",
+        filter: { type: "consumable" },
+      },
+    },
+    class_item_pick: {
+      enabled: true,
+      label: "Choose Your Class Item",
+      subtitle: "A meaningful object from your past.",
+      shortLabel: "Class Item",
+      component: "card_picker",
+    },
     traits: {
       enabled: true,
       label: "Assign Traits",
@@ -354,6 +568,11 @@ const wizardConfig: WizardConfig = {
         "subclass_pick",
         "ancestry_pick",
         "community_pick",
+        "weapon_primary_pick",
+        "weapon_secondary_pick",
+        "armor_pick",
+        "potion_pick",
+        "class_item_pick",
         "traits",
         "experiences_pick",
         "review",
@@ -452,7 +671,7 @@ describe("CharacterCreationWizard", () => {
     renderWizard();
     await user.click(screen.getByLabelText(/choose warrior/i));
     await user.click(screen.getByRole("button", { name: /continue/i }));
-    expect(screen.getByText("Step 2 of 7")).toBeInTheDocument();
+    expect(screen.getByText("Step 2 of 12")).toBeInTheDocument();
   });
 });
 
@@ -475,9 +694,43 @@ async function advanceToCommunityStep(user: ReturnType<typeof userEvent.setup>) 
   await user.click(screen.getByRole("button", { name: /continue/i }));
 }
 
-async function advanceToTraitsStep(user: ReturnType<typeof userEvent.setup>) {
+async function advanceToPrimaryWeaponStep(user: ReturnType<typeof userEvent.setup>) {
   await advanceToCommunityStep(user);
   await user.click(screen.getByLabelText(/choose highborne/i));
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+}
+
+async function advanceToSecondaryWeaponStep(
+  user: ReturnType<typeof userEvent.setup>
+) {
+  await advanceToPrimaryWeaponStep(user);
+  // Broadsword is one-handed, so the secondary step stays visible.
+  await user.click(screen.getByLabelText(/choose broadsword/i));
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+}
+
+async function advanceToArmorStep(user: ReturnType<typeof userEvent.setup>) {
+  await advanceToSecondaryWeaponStep(user);
+  await user.click(screen.getByLabelText(/choose round shield/i));
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+}
+
+async function advanceToPotionStep(user: ReturnType<typeof userEvent.setup>) {
+  await advanceToArmorStep(user);
+  await user.click(screen.getByLabelText(/choose gambeson armor/i));
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+}
+
+async function advanceToClassItemStep(user: ReturnType<typeof userEvent.setup>) {
+  await advanceToPotionStep(user);
+  await user.click(screen.getByLabelText(/choose minor health potion/i));
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+}
+
+async function advanceToTraitsStep(user: ReturnType<typeof userEvent.setup>) {
+  await advanceToClassItemStep(user);
+  // Warrior's first class item per DAGGERHEART_CLASS_ITEMS.
+  await user.click(screen.getByLabelText(/choose the drawing of a lover/i));
   await user.click(screen.getByRole("button", { name: /continue/i }));
 }
 
@@ -715,14 +968,14 @@ describe("CharacterCreationWizard — community step", () => {
     expect(screen.getAllByText(/\+1 to presence rolls/i).length).toBeGreaterThanOrEqual(1);
   });
 
-  it("Continue advances past community to the Traits step", async () => {
+  it("Continue advances past community to the Primary Weapon step", async () => {
     const user = userEvent.setup();
     renderWizard();
     await advanceToCommunityStep(user);
     await user.click(screen.getByLabelText(/choose highborne/i));
     await user.click(screen.getByRole("button", { name: /continue/i }));
-    expect(screen.getByText("Step 5 of 7")).toBeInTheDocument();
-    expect(screen.getByText(/assign traits/i)).toBeInTheDocument();
+    expect(screen.getByText("Step 5 of 12")).toBeInTheDocument();
+    expect(screen.getByText(/choose your primary weapon/i)).toBeInTheDocument();
   });
 });
 
@@ -878,5 +1131,171 @@ describe("CharacterCreationWizard — experiences step", () => {
     const exp1 = screen.getByLabelText(/experience 1/i) as HTMLInputElement;
     await user.click(screen.getByRole("button", { name: "Tracker" }));
     expect(exp1).toHaveValue("Tracker");
+  });
+});
+
+describe("CharacterCreationWizard — primary weapon step", () => {
+  it("shows the primary weapon heading + subtitle", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToPrimaryWeaponStep(user);
+    expect(screen.getByText(/choose your primary weapon/i)).toBeInTheDocument();
+  });
+
+  it("lists tier-1 primary weapons only (no tier-2, no secondaries)", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToPrimaryWeaponStep(user);
+    expect(screen.getByLabelText(/choose broadsword/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/choose battleaxe/i)).toBeInTheDocument();
+    // Tier 2 weapon hidden
+    expect(screen.queryByLabelText(/choose greataxe/i)).not.toBeInTheDocument();
+    // Secondary-category weapon hidden
+    expect(screen.queryByLabelText(/choose round shield/i)).not.toBeInTheDocument();
+  });
+
+  it("hides magic weapons for classes without a spellcast trait", async () => {
+    // Warrior has no spellcast_trait, so the magic Hallowed Axe should not appear.
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToPrimaryWeaponStep(user);
+    expect(screen.queryByLabelText(/choose hallowed axe/i)).not.toBeInTheDocument();
+  });
+
+  it("Continue is disabled until a primary weapon is selected", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToPrimaryWeaponStep(user);
+    const cont = screen.getByRole("button", { name: /continue/i });
+    expect(cont).toBeDisabled();
+    await user.click(screen.getByLabelText(/choose broadsword/i));
+    expect(cont).not.toBeDisabled();
+  });
+
+  it("shows damage / range / trait / hands + feature on the right detail panel", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToPrimaryWeaponStep(user);
+    await user.click(screen.getByLabelText(/choose broadsword/i));
+    expect(screen.getByText("Damage")).toBeInTheDocument();
+    expect(screen.getAllByText(/d8\+1 phy/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Range")).toBeInTheDocument();
+    expect(screen.getByText("Trait")).toBeInTheDocument();
+    expect(screen.getByText("Hands")).toBeInTheDocument();
+    expect(screen.getByText(/reliable: \+1 to attack/i)).toBeInTheDocument();
+  });
+
+  it("two-handed primary skips the secondary step (next continue lands on armor)", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToPrimaryWeaponStep(user);
+    await user.click(screen.getByLabelText(/choose battleaxe/i));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+    // Step count drops by one (11 instead of 12) and the heading is Armor.
+    expect(screen.getByText("Step 6 of 11")).toBeInTheDocument();
+    expect(screen.getByText(/choose your armor/i)).toBeInTheDocument();
+  });
+
+  it("one-handed primary keeps the secondary step in the flow", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToPrimaryWeaponStep(user);
+    await user.click(screen.getByLabelText(/choose broadsword/i));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+    expect(screen.getByText("Step 6 of 12")).toBeInTheDocument();
+    expect(screen.getByText(/choose your secondary weapon/i)).toBeInTheDocument();
+  });
+});
+
+describe("CharacterCreationWizard — secondary weapon step", () => {
+  it("lists tier-1 secondary weapons only", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToSecondaryWeaponStep(user);
+    expect(screen.getByLabelText(/choose round shield/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/choose broadsword/i)).not.toBeInTheDocument();
+  });
+
+  it("Continue is disabled until a secondary weapon is selected", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToSecondaryWeaponStep(user);
+    const cont = screen.getByRole("button", { name: /continue/i });
+    expect(cont).toBeDisabled();
+    await user.click(screen.getByLabelText(/choose round shield/i));
+    expect(cont).not.toBeDisabled();
+  });
+});
+
+describe("CharacterCreationWizard — armor step", () => {
+  it("lists tier-1 armor only", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToArmorStep(user);
+    expect(screen.getByLabelText(/choose gambeson armor/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/choose leather armor/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/choose plate armor/i)).not.toBeInTheDocument();
+  });
+
+  it("shows base score / thresholds / feature on the right detail panel", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToArmorStep(user);
+    await user.click(screen.getByLabelText(/choose gambeson armor/i));
+    expect(screen.getByText("Base Score")).toBeInTheDocument();
+    expect(screen.getByText("Thresholds")).toBeInTheDocument();
+    expect(screen.getByText(/flexible: \+1 to evasion/i)).toBeInTheDocument();
+  });
+
+  it("Continue is disabled until armor is selected", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToArmorStep(user);
+    const cont = screen.getByRole("button", { name: /continue/i });
+    expect(cont).toBeDisabled();
+    await user.click(screen.getByLabelText(/choose gambeson armor/i));
+    expect(cont).not.toBeDisabled();
+  });
+});
+
+describe("CharacterCreationWizard — potion step", () => {
+  it("lists only the two SRD starting potions", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToPotionStep(user);
+    expect(screen.getByLabelText(/choose minor health potion/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/choose minor stamina potion/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/choose elixir of hope/i)).not.toBeInTheDocument();
+  });
+
+  it("Continue is disabled until a potion is selected", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToPotionStep(user);
+    const cont = screen.getByRole("button", { name: /continue/i });
+    expect(cont).toBeDisabled();
+    await user.click(screen.getByLabelText(/choose minor health potion/i));
+    expect(cont).not.toBeDisabled();
+  });
+});
+
+describe("CharacterCreationWizard — class item step", () => {
+  it("lists the two class-specific items for the picked class", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToClassItemStep(user);
+    // Warrior options per DAGGERHEART_CLASS_ITEMS.
+    expect(screen.getByLabelText(/choose the drawing of a lover/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/choose a sharpening stone/i)).toBeInTheDocument();
+  });
+
+  it("Continue is disabled until a class item is selected", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToClassItemStep(user);
+    const cont = screen.getByRole("button", { name: /continue/i });
+    expect(cont).toBeDisabled();
+    await user.click(screen.getByLabelText(/choose the drawing of a lover/i));
+    expect(cont).not.toBeDisabled();
   });
 });
