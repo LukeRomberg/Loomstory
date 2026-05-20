@@ -586,6 +586,17 @@ describe("CharacterCreationWizard — ancestry step", () => {
     expect(screen.getAllByText(/fly short distances/i).length).toBeGreaterThanOrEqual(1);
   });
 
+  it("shows the ancestry portrait beside the description in the detail panel", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToAncestryStep(user);
+    await user.click(screen.getByLabelText(/choose faerie/i));
+    const detail = screen.getByTestId("ancestry-detail");
+    const img = detail.querySelector("img");
+    expect(img).toBeTruthy();
+    expect(img?.getAttribute("src")).toMatch(/Faerie/i);
+  });
+
   it("Continue advances from ancestry to community", async () => {
     const user = userEvent.setup();
     renderWizard();

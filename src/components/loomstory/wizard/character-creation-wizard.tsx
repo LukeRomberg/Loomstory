@@ -286,6 +286,7 @@ export function CharacterCreationWizard({
     rightPage = wizardState.ancestryName ? (
       <AncestryDetailPanel
         name={wizardState.ancestryName}
+        variant={wizardState.ancestryVariant}
         features={selectedAncestryFeatures}
       />
     ) : (
@@ -889,9 +890,11 @@ function AncestryListPicker({
 
 function AncestryDetailPanel({
   name,
+  variant,
   features,
 }: {
   name: string;
+  variant: "female" | "male";
   features: CompendiumAbility[];
 }) {
   const flavor =
@@ -899,19 +902,39 @@ function AncestryDetailPanel({
       .map((f) => (f.data as Record<string, unknown>)?.flavor as string | undefined)
       .find((v) => typeof v === "string" && v.length > 0) ?? "";
 
+  const portrait = getAncestryImage(name, variant);
+
   const namePrefix = `${name}: `;
   const stripName = (n: string) =>
     n.startsWith(namePrefix) ? n.slice(namePrefix.length) : n;
 
   return (
-    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 border-leather/40 bg-transparent p-3 pr-2 text-leather">
+    <div
+      data-testid="ancestry-detail"
+      className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 border-leather/40 bg-transparent p-3 pr-2 text-leather"
+    >
       <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
         {name}
       </h3>
-      {flavor && (
-        <p className="whitespace-pre-line font-lore text-sm leading-snug text-leather/85">
-          {flavor}
-        </p>
+      {(portrait || flavor) && (
+        <div className="flex items-start gap-3">
+          {portrait && (
+            <span className="relative block size-24 shrink-0 overflow-hidden rounded-md border border-leather/30 bg-parchment/40">
+              <Image
+                src={portrait}
+                alt=""
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
+            </span>
+          )}
+          {flavor && (
+            <p className="whitespace-pre-line font-lore text-sm leading-snug text-leather/85">
+              {flavor}
+            </p>
+          )}
+        </div>
       )}
       {features.length > 0 && (
         <DetailGroup label="Ancestry Features">
