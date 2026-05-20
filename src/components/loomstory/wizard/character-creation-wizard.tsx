@@ -917,7 +917,7 @@ function AncestryDetailPanel({
         {name}
       </h3>
       {(portrait || flavor) && (
-        <div className="overflow-hidden">
+        <div>
           {portrait && (
             <span className="relative float-left mr-3 mb-2 block aspect-square w-1/2 overflow-hidden rounded-md border border-leather/30 bg-parchment/40">
               <Image
