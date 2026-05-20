@@ -89,7 +89,7 @@ export interface WizardState {
   /**
    * Which gendered ancestry portrait variant to show on the picker + BEHOLD
    * banner. Purely cosmetic — never persisted on the character. Defaults to
-   * "female" on a fresh wizard.
+   * "male" on a fresh wizard.
    */
   ancestryVariant: "female" | "male";
   /** Daggerheart community name (e.g. "Highborne"). Names live in characters.data.community. */
@@ -129,7 +129,7 @@ export function createEmptyWizardState(): WizardState {
     subclassId: null,
     subclassName: null,
     ancestryName: null,
-    ancestryVariant: "female",
+    ancestryVariant: "male",
     communityName: null,
     statValues: {},
     experiences: [{ name: "" }, { name: "" }],
