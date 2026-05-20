@@ -47,9 +47,9 @@ export const DAGGERHEART_CLASS_THEMES: Record<string, ClassTheme> = {
     domains: ["Midnight", "Grace"],
   },
   Seraph: {
-    gradient: "from-[#CA980B]/30 via-[#CA980B]/15 to-[#CA980B]/30",
-    borderColor: "border-[#CA980B]",
-    textColor: "text-[#CA980B]",
+    gradient: "from-[#EDE0C8]/30 via-[#EDE0C8]/15 to-[#EDE0C8]/30",
+    borderColor: "border-[#EDE0C8]",
+    textColor: "text-[#EDE0C8]",
     icon: Sun,
     domains: ["Splendor", "Valor"],
   },
