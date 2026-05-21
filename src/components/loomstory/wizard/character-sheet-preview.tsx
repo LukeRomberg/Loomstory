@@ -61,6 +61,11 @@ const STARTING_HOPE = 2;
 const HOPE_MAX = 6;
 const STRESS_MAX = 6;
 
+/** Daggerheart purse: 10 Handfuls fill a Bag, 10 Bags fill the Chest. */
+const HANDFULS_MAX = 10;
+const BAGS_MAX = 10;
+const STARTING_HANDFULS = 1;
+
 // ─── Helpers ────────────────────────────────────────────────
 
 function stripPrefix(name: string, prefix: string | null): string {
@@ -126,6 +131,13 @@ export function CharacterSheetPreview({
   const armorProps = (armor?.properties ?? {}) as Record<string, unknown>;
   const armorScore = armorProps.base_score as number | undefined;
   const armorThresholds = armorProps.thresholds as string | undefined;
+  // Daggerheart prints thresholds as "Major / Severe". Parse for the band;
+  // fall back to dashes when no armor is picked yet.
+  const [majorThreshold, severeThreshold] = (() => {
+    if (!armorThresholds) return [null, null];
+    const parts = armorThresholds.split("/").map((p) => p.trim());
+    return [parts[0] ?? null, parts[1] ?? null];
+  })();
 
   const ClassIcon = classTheme?.icon;
   const ancestryName = wizardState.ancestryName;
@@ -224,6 +236,10 @@ export function CharacterSheetPreview({
                 theme={classTheme}
               />
             </div>
+            <DamageThresholdsBand
+              major={majorThreshold}
+              severe={severeThreshold}
+            />
             <PipRow label="HP" count={hpSlots} testIdPrefix="hp-pip" />
             <PipRow label="Stress" count={STRESS_MAX} testIdPrefix="stress-pip" muted />
           </SectionCard>
@@ -371,6 +387,10 @@ export function CharacterSheetPreview({
                 <li className="font-medium text-leather/85">· {wizardState.classItemName}</li>
               )}
             </ul>
+          </SectionCard>
+
+          <SectionCard title="Gold" testId="preview-gold" theme={classTheme}>
+            <GoldTracker startingHandfuls={STARTING_HANDFULS} />
           </SectionCard>
         </div>
       </div>
@@ -536,11 +556,11 @@ function TraitTile({
   return (
     <div
       className={cn(
-        "rounded border bg-transparent px-2 py-1.5 text-center",
+        "rounded border bg-transparent px-1 py-1.5 text-center",
         theme?.borderColor ?? "border-leather/30"
       )}
     >
-      <div className="text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70 mb-0.5">
+      <div className="text-[8px] font-heading font-semibold uppercase tracking-tight text-leather/70 mb-0.5 whitespace-nowrap">
         {label}
       </div>
       <div className="font-mono text-lg text-leather">
@@ -595,6 +615,83 @@ function FeatureBlock({
       <p className="text-xs leading-snug font-lore font-medium text-leather/80 whitespace-pre-line">
         {description}
       </p>
+    </div>
+  );
+}
+
+function DamageThresholdsBand({
+  major,
+  severe,
+}: {
+  major: string | null;
+  severe: string | null;
+}) {
+  return (
+    <div
+      data-testid="preview-damage-thresholds"
+      className="mb-2 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-1 text-[8px] font-heading font-semibold uppercase tracking-tight text-leather/75"
+    >
+      <span className="text-center">Mark 1 HP</span>
+      <span
+        data-testid="threshold-major"
+        className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[10px] text-leather"
+      >
+        {major ?? "—"}
+      </span>
+      <span className="text-center">Mark 2 HP</span>
+      <span
+        data-testid="threshold-severe"
+        className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[10px] text-leather"
+      >
+        {severe ?? "—"}
+      </span>
+      <span className="text-center">Mark 3 HP</span>
+    </div>
+  );
+}
+
+function GoldTracker({ startingHandfuls }: { startingHandfuls: number }) {
+  return (
+    <div className="space-y-1.5">
+      <GoldRow label="Handfuls" max={HANDFULS_MAX} filled={startingHandfuls} />
+      <GoldRow label="Bags" max={BAGS_MAX} filled={0} />
+      <GoldRow label="Chest" max={1} filled={0} square />
+    </div>
+  );
+}
+
+function GoldRow({
+  label,
+  max,
+  filled,
+  square,
+}: {
+  label: string;
+  max: number;
+  filled: number;
+  square?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-14 text-[8px] font-heading font-semibold uppercase tracking-tight text-leather/70">
+        {label}
+      </span>
+      <div className="flex gap-1">
+        {Array.from({ length: max }).map((_, i) => (
+          <span
+            key={i}
+            data-testid={`gold-${label.toLowerCase()}-pip-${i}`}
+            className={cn(
+              square ? "size-3" : "size-2.5",
+              square ? "rounded-sm" : "rounded-full",
+              "border",
+              i < filled
+                ? "bg-leather border-leather"
+                : "border-leather/40"
+            )}
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -557,6 +557,55 @@ describe("CharacterSheetPreview — Theming", () => {
   });
 });
 
+// ─── Damage thresholds ──────────────────────────────────────────
+
+describe("CharacterSheetPreview — Damage Thresholds", () => {
+  it("renders the Mark 1/2/3 HP band inside Combat", () => {
+    render(<CharacterSheetPreview {...defaultProps()} />);
+    const band = screen.getByTestId("preview-damage-thresholds");
+    expect(band).toBeInTheDocument();
+    expect(band.textContent).toMatch(/Mark 1 HP/);
+    expect(band.textContent).toMatch(/Mark 2 HP/);
+    expect(band.textContent).toMatch(/Mark 3 HP/);
+  });
+
+  it("parses the armor thresholds string into Major and Severe values", () => {
+    render(<CharacterSheetPreview {...defaultProps()} />);
+    // mockArmor.properties.thresholds is "6/13"
+    expect(screen.getByTestId("threshold-major").textContent).toBe("6");
+    expect(screen.getByTestId("threshold-severe").textContent).toBe("13");
+  });
+
+  it("falls back to dashes when no armor is equipped", () => {
+    render(<CharacterSheetPreview {...defaultProps()} armor={null} />);
+    expect(screen.getByTestId("threshold-major").textContent).toBe("—");
+    expect(screen.getByTestId("threshold-severe").textContent).toBe("—");
+  });
+});
+
+// ─── Gold tracker ──────────────────────────────────────────────
+
+describe("CharacterSheetPreview — Gold tracker", () => {
+  it("renders a Gold section with handfuls/bags/chest rows", () => {
+    render(<CharacterSheetPreview {...defaultProps()} />);
+    const gold = screen.getByTestId("preview-gold");
+    expect(gold).toBeInTheDocument();
+    expect(gold.textContent).toMatch(/Handfuls/);
+    expect(gold.textContent).toMatch(/Bags/);
+    expect(gold.textContent).toMatch(/Chest/);
+  });
+
+  it("starts with one Handful pip filled (SRD starting gold)", () => {
+    render(<CharacterSheetPreview {...defaultProps()} />);
+    expect(screen.getByTestId("gold-handfuls-pip-0").className).toContain(
+      "bg-leather"
+    );
+    expect(screen.getByTestId("gold-handfuls-pip-1").className).not.toContain(
+      "bg-leather"
+    );
+  });
+});
+
 // ─── Create button ──────────────────────────────────────────────
 
 describe("CharacterSheetPreview — Create button", () => {
