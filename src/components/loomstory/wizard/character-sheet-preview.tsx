@@ -222,7 +222,7 @@ export function CharacterSheetPreview({
       {/* ─── BODY GRID ──────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-4">
         {/* ── LEFT COLUMN ──────────────────────────────────── */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <SectionCard title="Combat" testId="preview-combat" theme={classTheme}>
             <div className="grid grid-cols-2 gap-4 mb-3">
               <StatTile
@@ -305,7 +305,7 @@ export function CharacterSheetPreview({
         </div>
 
         {/* ── RIGHT COLUMN ─────────────────────────────────── */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <div data-testid="preview-traits">
             <div className="mb-1.5 text-[10px] font-heading font-bold uppercase tracking-[0.18em] text-leather">
               Traits
@@ -516,11 +516,11 @@ function PipRow({
   muted?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 py-0.5">
-      <span className="text-[10px] font-heading font-semibold uppercase tracking-wider text-leather/70 w-12">
+    <div className="flex items-start gap-2 py-0.5">
+      <span className="w-12 shrink-0 pt-0.5 text-[10px] font-heading font-semibold uppercase tracking-wider text-leather/70">
         {label}
       </span>
-      <div className="flex gap-1">
+      <div className="flex min-w-0 flex-wrap gap-1">
         {Array.from({ length: count }).map((_, i) => (
           <span
             key={i}
@@ -613,11 +613,11 @@ function FeatureBlock({
 
 function HopePipRow({ filled, max }: { filled: number; max: number }) {
   return (
-    <div className="flex items-center gap-2 py-0.5">
-      <span className="text-[10px] font-heading font-semibold uppercase tracking-wider text-leather/70 w-12">
+    <div className="flex items-start gap-2 py-0.5">
+      <span className="w-12 shrink-0 pt-0.5 text-[10px] font-heading font-semibold uppercase tracking-wider text-leather/70">
         Hope
       </span>
-      <div className="flex gap-1">
+      <div className="flex min-w-0 flex-wrap gap-1.5">
         {Array.from({ length: filled }).map((_, i) => (
           <span
             key={`hope-filled-${i}`}
@@ -693,17 +693,17 @@ function GoldRow({
   square?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="w-14 text-[8px] font-heading font-semibold uppercase tracking-tight text-leather/70">
+    <div className="flex items-start gap-2">
+      <span className="w-12 shrink-0 pt-0.5 text-[8px] font-heading font-semibold uppercase tracking-tight text-leather/70">
         {label}
       </span>
-      <div className="flex gap-1">
+      <div className="flex min-w-0 flex-wrap gap-0.5">
         {Array.from({ length: max }).map((_, i) => (
           <span
             key={i}
             data-testid={`gold-${label.toLowerCase()}-pip-${i}`}
             className={cn(
-              square ? "size-3" : "size-2.5",
+              square ? "size-3" : "size-2",
               square ? "rounded-sm" : "rounded-full",
               "border",
               i < filled

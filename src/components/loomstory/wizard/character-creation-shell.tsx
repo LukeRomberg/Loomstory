@@ -93,7 +93,7 @@ export function CharacterCreationShell({
         {/* SHEET — live character sheet */}
         <div
           data-testid="creation-sheet-zone"
-          className="scrollbar-none absolute flex flex-col gap-3 overflow-y-auto font-medium text-leather"
+          className="scrollbar-none absolute flex flex-col gap-3 overflow-y-auto overflow-x-hidden font-medium text-leather"
           style={{ ...SHEET_PAGE_INSET, ...debug }}
         >
           {sheetPage}
