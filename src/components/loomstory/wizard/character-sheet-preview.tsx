@@ -238,22 +238,22 @@ export function CharacterSheetPreview({
 
       {/* ─── COMBAT ─────────────────────────────────────────── */}
       <SectionCard title="Combat" testId="preview-combat" theme={classTheme}>
-        <div className="grid grid-cols-[auto_auto_1fr] gap-2 items-start">
-          {/* Col 1: Evasion / Armor stacked */}
-          <div className="space-y-2">
-            <StatTile
-              label="Evasion"
-              value={evasion != null ? String(evasion) : "—"}
-              theme={classTheme}
-            />
-            <StatTile
-              label="Armor"
-              value={armorScore != null ? String(armorScore) : "—"}
-              theme={classTheme}
-            />
-          </div>
+        <div className="grid grid-cols-[auto_auto_auto_1fr] gap-2 items-start">
+          {/* Col 1: Evasion (single tile) */}
+          <StatTile
+            label="Evasion"
+            value={evasion != null ? String(evasion) : "—"}
+            theme={classTheme}
+          />
 
-          {/* Col 2: Major / Severe damage threshold tiles stacked */}
+          {/* Col 2: Armor (single tile) */}
+          <StatTile
+            label="Armor"
+            value={armorScore != null ? String(armorScore) : "—"}
+            theme={classTheme}
+          />
+
+          {/* Col 3: Major / Severe damage threshold tiles stacked */}
           <div
             data-testid="preview-damage-thresholds"
             className="space-y-2"
@@ -270,7 +270,7 @@ export function CharacterSheetPreview({
             />
           </div>
 
-          {/* Col 3: HP / Stress / Hope pip rows stacked */}
+          {/* Col 4: HP / Stress / Hope pip rows stacked */}
           <div className="space-y-1.5 min-w-0">
             <PipRow label="HP" count={hpSlots} testIdPrefix="hp-pip" />
             <PipRow
