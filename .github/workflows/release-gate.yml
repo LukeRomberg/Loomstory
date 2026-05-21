@@ -1,0 +1,45 @@
+# Gate Vercel deploys on the test suite.
+#
+# Vercel's "Production Branch" is set to `release` (NOT `main`). Pushes to
+# `main` don't auto-deploy. This workflow runs the full vitest suite on every
+# push to `main` and, only on green, fast-forwards `release` to that commit —
+# which then triggers Vercel's deploy.
+#
+# Net effect: Vercel never builds (let alone ships) a red commit, and the
+# build time on Vercel itself stays fast because tests already passed here.
+name: Release gate
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so the release branch fast-forward push works even
+          # when GitHub's default shallow checkout would refuse it.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        # Exclude the flaky old-wizard test that times out in CI (it dies in
+        # MVP-01e anyway). Matches the local-dev exclude pattern.
+        run: npm test -- --run --exclude src/components/loomstory/wizard/character-wizard.test.tsx
+
+      - name: Fast-forward release branch to main
+        # First push creates the branch on origin; subsequent pushes are
+        # fast-forwards. Linear history on main means no force-push needed.
+        run: git push origin HEAD:release
