@@ -17,6 +17,7 @@ const {
   mockWeapons,
   mockArmor,
   mockPotions,
+  mockDomainCards,
 } = vi.hoisted(() => ({
   mockClasses: [
     {
@@ -352,6 +353,48 @@ const {
       source: "Daggerheart SRD",
     },
   ],
+  mockDomainCards: [
+    {
+      id: "dc1",
+      name: "Reckless Slash",
+      ability_type: "domain_card",
+      description: "Make an attack with advantage but take +1 Stress.",
+      level: 1,
+      classes: ["Warrior", "Guardian"],
+      source: "Daggerheart SRD",
+      data: { domain: "Blade", recall_cost: 1, card_type: "Ability" },
+    },
+    {
+      id: "dc2",
+      name: "Get Back Up",
+      ability_type: "domain_card",
+      description: "Clear a Hit Point.",
+      level: 1,
+      classes: ["Warrior", "Guardian"],
+      source: "Daggerheart SRD",
+      data: { domain: "Blade", recall_cost: 0, card_type: "Ability" },
+    },
+    {
+      id: "dc3",
+      name: "Bone Sense",
+      ability_type: "domain_card",
+      description: "Predict an enemy's move; gain advantage on your next roll.",
+      level: 1,
+      classes: ["Warrior", "Ranger"],
+      source: "Daggerheart SRD",
+      data: { domain: "Bone", recall_cost: 1, card_type: "Ability" },
+    },
+    {
+      id: "dc4",
+      name: "Whirling Strike",
+      ability_type: "domain_card",
+      description: "Hit every adjacent enemy.",
+      level: 1,
+      classes: ["Warrior"],
+      source: "Daggerheart SRD",
+      data: { domain: "Bone", recall_cost: 2, card_type: "Ability" },
+    },
+  ],
 }));
 
 vi.mock("@/lib/character/use-step-data", () => ({
@@ -397,6 +440,17 @@ vi.mock("@/lib/character/use-step-data", () => ({
       filter.ability_type === "community_feature"
     ) {
       return { data: mockCommunityFeatures, loading: false, error: null };
+    }
+    // Domain cards — filtered by ability_type + level, dependsOn the picked
+    // class's name (passed in as `dependValue`).
+    if (
+      step?.dataSource?.table === "compendium_abilities" &&
+      filter.ability_type === "domain_card"
+    ) {
+      const rows = dependValue
+        ? mockDomainCards.filter((c) => c.classes.includes(dependValue))
+        : [];
+      return { data: rows, loading: false, error: null };
     }
     // Equipment (compendium_items) — narrow by `type` filter.
     if (step?.dataSource?.table === "compendium_items") {
@@ -553,6 +607,22 @@ const wizardConfig: WizardConfig = {
         ],
       },
     },
+    domain_cards_pick: {
+      enabled: true,
+      label: "Choose Your Domain Cards",
+      subtitle: "Pick two starting cards from your class's domains.",
+      shortLabel: "Cards",
+      component: "card_picker",
+      dataSource: {
+        table: "compendium_abilities",
+        filter: { ability_type: "domain_card", level: 1 },
+        dependsOn: "class_pick",
+        dependColumn: "classes",
+        dependType: "contains",
+        dependValueFrom: "name",
+      },
+      config: { selectCount: 2 },
+    },
     review: {
       enabled: true,
       label: "Behold",
@@ -575,6 +645,7 @@ const wizardConfig: WizardConfig = {
         "class_item_pick",
         "traits",
         "experiences_pick",
+        "domain_cards_pick",
         "review",
       ],
     },
@@ -671,7 +742,7 @@ describe("CharacterCreationWizard", () => {
     renderWizard();
     await user.click(screen.getByLabelText(/choose warrior/i));
     await user.click(screen.getByRole("button", { name: /continue/i }));
-    expect(screen.getByText("Step 2 of 12")).toBeInTheDocument();
+    expect(screen.getByText("Step 2 of 13")).toBeInTheDocument();
   });
 });
 
@@ -760,6 +831,15 @@ async function fillAllTraits(user: ReturnType<typeof userEvent.setup>) {
 async function advanceToExperiencesStep(user: ReturnType<typeof userEvent.setup>) {
   await advanceToTraitsStep(user);
   await fillAllTraits(user);
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+}
+
+async function advanceToDomainCardsStep(
+  user: ReturnType<typeof userEvent.setup>
+) {
+  await advanceToExperiencesStep(user);
+  await user.type(screen.getByLabelText(/experience 1/i), "World Traveler");
+  await user.type(screen.getByLabelText(/experience 2/i), "Field Medic");
   await user.click(screen.getByRole("button", { name: /continue/i }));
 }
 
@@ -974,7 +1054,7 @@ describe("CharacterCreationWizard — community step", () => {
     await advanceToCommunityStep(user);
     await user.click(screen.getByLabelText(/choose highborne/i));
     await user.click(screen.getByRole("button", { name: /continue/i }));
-    expect(screen.getByText("Step 5 of 12")).toBeInTheDocument();
+    expect(screen.getByText("Step 5 of 13")).toBeInTheDocument();
     expect(screen.getByText(/choose your primary weapon/i)).toBeInTheDocument();
   });
 });
@@ -1216,8 +1296,8 @@ describe("CharacterCreationWizard — primary weapon step", () => {
     await advanceToPrimaryWeaponStep(user);
     await user.click(screen.getByLabelText(/choose battleaxe/i));
     await user.click(screen.getByRole("button", { name: /continue/i }));
-    // Step count drops by one (11 instead of 12) and the heading is Armor.
-    expect(screen.getByText("Step 6 of 11")).toBeInTheDocument();
+    // Step count drops by one (12 instead of 13) and the heading is Armor.
+    expect(screen.getByText("Step 6 of 12")).toBeInTheDocument();
     expect(screen.getByText(/choose your armor/i)).toBeInTheDocument();
   });
 
@@ -1227,7 +1307,7 @@ describe("CharacterCreationWizard — primary weapon step", () => {
     await advanceToPrimaryWeaponStep(user);
     await user.click(screen.getByLabelText(/choose broadsword/i));
     await user.click(screen.getByRole("button", { name: /continue/i }));
-    expect(screen.getByText("Step 6 of 12")).toBeInTheDocument();
+    expect(screen.getByText("Step 6 of 13")).toBeInTheDocument();
     expect(screen.getByText(/choose your secondary weapon/i)).toBeInTheDocument();
   });
 });
@@ -1322,5 +1402,94 @@ describe("CharacterCreationWizard — class item step", () => {
     expect(cont).toBeDisabled();
     await user.click(screen.getByLabelText(/choose the drawing of a lover/i));
     expect(cont).not.toBeDisabled();
+  });
+});
+
+describe("CharacterCreationWizard — domain cards step", () => {
+  it("shows the heading + selection counter (0 of 2 chosen) on entry", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToDomainCardsStep(user);
+    expect(screen.getByText(/choose your domain cards/i)).toBeInTheDocument();
+    expect(screen.getByText(/0 of 2 chosen/i)).toBeInTheDocument();
+  });
+
+  it("lists only domain cards from the picked class's domains", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToDomainCardsStep(user);
+    // All four mock cards include Warrior in their classes[] so they all show.
+    expect(screen.getByLabelText(/view reckless slash/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/view get back up/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/view bone sense/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/view whirling strike/i)).toBeInTheDocument();
+  });
+
+  it("clicking a card focuses it in the right detail panel", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToDomainCardsStep(user);
+    await user.click(screen.getByLabelText(/view reckless slash/i));
+    expect(
+      screen.getByText(/make an attack with advantage/i)
+    ).toBeInTheDocument();
+    // Add button is available when the card isn't yet in the loadout.
+    expect(
+      screen.getByRole("button", { name: /add to loadout/i })
+    ).toBeInTheDocument();
+  });
+
+  it("Add adds the focused card to the loadout and flips the button to Remove", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToDomainCardsStep(user);
+    await user.click(screen.getByLabelText(/view reckless slash/i));
+    await user.click(screen.getByRole("button", { name: /add to loadout/i }));
+    expect(screen.getByText(/1 of 2 chosen/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /remove from loadout/i })
+    ).toBeInTheDocument();
+  });
+
+  it("Remove takes the card back out of the loadout", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToDomainCardsStep(user);
+    await user.click(screen.getByLabelText(/view reckless slash/i));
+    await user.click(screen.getByRole("button", { name: /add to loadout/i }));
+    await user.click(screen.getByRole("button", { name: /remove from loadout/i }));
+    expect(screen.getByText(/0 of 2 chosen/i)).toBeInTheDocument();
+  });
+
+  it("Continue is disabled until exactly two cards are picked", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToDomainCardsStep(user);
+    const cont = screen.getByRole("button", { name: /continue/i });
+    expect(cont).toBeDisabled();
+
+    await user.click(screen.getByLabelText(/view reckless slash/i));
+    await user.click(screen.getByRole("button", { name: /add to loadout/i }));
+    expect(cont).toBeDisabled();
+
+    await user.click(screen.getByLabelText(/view bone sense/i));
+    await user.click(screen.getByRole("button", { name: /add to loadout/i }));
+    expect(cont).not.toBeDisabled();
+  });
+
+  it("disables the Add button once two cards are already chosen", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToDomainCardsStep(user);
+    // Pick two cards
+    await user.click(screen.getByLabelText(/view reckless slash/i));
+    await user.click(screen.getByRole("button", { name: /add to loadout/i }));
+    await user.click(screen.getByLabelText(/view bone sense/i));
+    await user.click(screen.getByRole("button", { name: /add to loadout/i }));
+    // Focus a third card — its Add button should be disabled.
+    await user.click(screen.getByLabelText(/view whirling strike/i));
+    expect(
+      screen.getByRole("button", { name: /add to loadout/i })
+    ).toBeDisabled();
   });
 });

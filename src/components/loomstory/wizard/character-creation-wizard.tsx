@@ -93,6 +93,11 @@ export function CharacterCreationWizard({
   const [experienceFocusedIdx, setExperienceFocusedIdx] = useState<number | null>(
     null
   );
+  // Domain card "focused for detail view" id — separate from "chosen as one of
+  // two loadout cards" (those live in wizardState.selections.domain_cards_pick).
+  const [focusedDomainCardId, setFocusedDomainCardId] = useState<string | null>(
+    null
+  );
 
   const visibleSteps = useMemo(
     () =>
@@ -251,6 +256,25 @@ export function CharacterCreationWizard({
     ? DAGGERHEART_CLASS_ITEMS[wizardState.className] ?? []
     : [];
 
+  // ─── Domain cards step data ────────────────────────────────
+  const domainCardsStep = wizardConfig.steps["domain_cards_pick"];
+  const { data: domainCardsRaw, loading: domainCardsLoading } = useStepData(
+    domainCardsStep,
+    systemId,
+    wizardState.className
+  );
+  const domainCards = domainCardsRaw as unknown as CompendiumAbility[];
+  const domainCardPickIds =
+    wizardState.selections.domain_cards_pick ?? [];
+  const domainCardSelectCount =
+    (domainCardsStep?.config as { selectCount?: number } | undefined)
+      ?.selectCount ?? 2;
+  const focusedDomainCard =
+    domainCards.find((c) => c.id === focusedDomainCardId) ?? null;
+  const selectedDomainCards = domainCards.filter((c) =>
+    domainCardPickIds.includes(c.id)
+  );
+
   // ─── Navigation ─────────────────────────────────────────────
   function goBack() {
     if (stepIndex > 0) setStepIndex((i) => i - 1);
@@ -288,6 +312,9 @@ export function CharacterCreationWizard({
         (e) => e.name.trim().length > 0
       ).length;
       return filled >= required;
+    }
+    if (currentStepKey === "domain_cards_pick") {
+      return domainCardPickIds.length === domainCardSelectCount;
     }
     return true;
   }
@@ -577,6 +604,41 @@ export function CharacterCreationWizard({
         }}
       />
     );
+  } else if (currentStepKey === "domain_cards_pick") {
+    leftPage = (
+      <DomainCardListPicker
+        cards={domainCards}
+        loading={domainCardsLoading}
+        pickedIds={domainCardPickIds}
+        focusedId={focusedDomainCardId}
+        selectCount={domainCardSelectCount}
+        onFocus={setFocusedDomainCardId}
+        title={currentStep?.label ?? "Domain Cards"}
+        subtitle={currentStep?.subtitle ?? null}
+      />
+    );
+    rightPage = focusedDomainCard ? (
+      <DomainCardDetailPanel
+        card={focusedDomainCard}
+        isPicked={domainCardPickIds.includes(focusedDomainCard.id)}
+        atCap={domainCardPickIds.length >= domainCardSelectCount}
+        onToggle={() => {
+          const id = focusedDomainCard.id;
+          const isPicked = domainCardPickIds.includes(id);
+          const next = isPicked
+            ? domainCardPickIds.filter((p) => p !== id)
+            : domainCardPickIds.length < domainCardSelectCount
+              ? [...domainCardPickIds, id]
+              : domainCardPickIds;
+          setWizardState((prev) => ({
+            ...prev,
+            selections: { ...prev.selections, domain_cards_pick: next },
+          }));
+        }}
+      />
+    ) : (
+      <EmptyDetail message="Pick a card to see its rules text." />
+    );
   } else {
     leftPage = (
       <ComingSoon
@@ -617,7 +679,7 @@ export function CharacterCreationWizard({
           communityFeatures={selectedCommunityFeatures}
           classFeatures={selectedClassFeatures}
           subclassFeatures={selectedSubclassFoundationFeatures}
-          domainCards={[]}
+          domainCards={selectedDomainCards}
           primaryWeapon={selectedPrimaryWeapon}
           secondaryWeapon={selectedSecondaryWeapon}
           armor={selectedArmor}
@@ -1962,6 +2024,179 @@ function ExperienceSuggestionsPanel({
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ─── Domain cards step ─────────────────────────────────────
+
+function DomainCardListPicker({
+  cards,
+  loading,
+  pickedIds,
+  focusedId,
+  selectCount,
+  onFocus,
+  title,
+  subtitle,
+}: {
+  cards: CompendiumAbility[];
+  loading: boolean;
+  pickedIds: string[];
+  focusedId: string | null;
+  selectCount: number;
+  onFocus: (id: string) => void;
+  title: string;
+  subtitle: string | null;
+}) {
+  // Group cards by domain so the player sees their class's two domains side by
+  // side instead of one long list.
+  const groups = new Map<string, CompendiumAbility[]>();
+  for (const c of cards) {
+    const domain = ((c.data as Record<string, unknown>)?.domain as string) ?? "Other";
+    if (!groups.has(domain)) groups.set(domain, []);
+    groups.get(domain)!.push(c);
+  }
+  const showHeaders = groups.size > 1;
+
+  return (
+    <>
+      <div className="shrink-0">
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="font-heading text-xl font-bold uppercase tracking-[0.12em] text-leather">
+            {title}
+          </h2>
+          <span className="font-subheading text-[11px] uppercase tracking-[0.16em] text-leather/70">
+            {pickedIds.length} of {selectCount} chosen
+          </span>
+        </div>
+        {subtitle && (
+          <p className="mt-1 font-lore text-sm font-medium text-leather/75">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <div className="scrollbar-none mt-3 flex-1 space-y-3 overflow-y-auto pr-1">
+        {loading ? (
+          <p className="text-sm italic text-leather/60">Loading cards…</p>
+        ) : cards.length === 0 ? (
+          <p className="text-sm italic text-leather/60">No domain cards available.</p>
+        ) : (
+          Array.from(groups.entries()).map(([domain, rows]) => (
+            <div key={domain} className="space-y-1.5">
+              {showHeaders && (
+                <h3 className="font-heading text-[10px] font-bold uppercase tracking-[0.14em] text-leather/70">
+                  {domain}
+                </h3>
+              )}
+              {rows.map((card) => {
+                const isPicked = pickedIds.includes(card.id);
+                const isFocused = focusedId === card.id;
+                const data = (card.data ?? {}) as Record<string, unknown>;
+                const recall =
+                  data.recall_cost != null
+                    ? `Recall ${String(data.recall_cost)}`
+                    : null;
+                return (
+                  <button
+                    key={card.id}
+                    aria-label={`View ${card.name}`}
+                    onClick={() => onFocus(card.id)}
+                    className={cn(
+                      "flex w-full items-center justify-between gap-2 rounded border-2 px-3 py-2 text-left font-heading text-sm transition",
+                      isFocused
+                        ? "border-leather/60 bg-leather/10 font-bold text-leather"
+                        : isPicked
+                          ? "border-leather/45 bg-leather/5 font-bold text-leather"
+                          : "border-leather/15 text-leather/85 hover:bg-leather/5 hover:text-leather"
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      {isPicked && (
+                        <span
+                          aria-hidden
+                          className="inline-flex size-4 items-center justify-center rounded-full border border-leather/60 text-[10px] text-leather"
+                        >
+                          ✓
+                        </span>
+                      )}
+                      <span>{card.name}</span>
+                    </span>
+                    {recall && (
+                      <span className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-leather/70">
+                        {recall}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+}
+
+function DomainCardDetailPanel({
+  card,
+  isPicked,
+  atCap,
+  onToggle,
+}: {
+  card: CompendiumAbility;
+  isPicked: boolean;
+  atCap: boolean;
+  onToggle: () => void;
+}) {
+  const data = (card.data ?? {}) as Record<string, unknown>;
+  const domain = data.domain ? String(data.domain) : null;
+  const recall = data.recall_cost != null ? String(data.recall_cost) : null;
+  const cardType = data.card_type ? String(data.card_type) : null;
+
+  // Add is forbidden when the loadout is full and this card isn't already in it.
+  const addDisabled = !isPicked && atCap;
+
+  return (
+    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 border-leather/40 bg-transparent p-3 pr-2 text-leather">
+      <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
+        {card.name}
+      </h3>
+      <div className="flex flex-wrap gap-1.5">
+        {domain && (
+          <span className="rounded border border-leather/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-leather/80">
+            {domain}
+          </span>
+        )}
+        {recall && (
+          <span className="rounded border border-leather/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-leather/80">
+            Recall {recall}
+          </span>
+        )}
+        {cardType && (
+          <span className="rounded border border-leather/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-leather/80">
+            {cardType}
+          </span>
+        )}
+      </div>
+      {card.description && (
+        <p className="whitespace-pre-line font-lore text-sm leading-snug text-leather/85">
+          {card.description}
+        </p>
+      )}
+      <div className="mt-auto">
+        <Button
+          onClick={onToggle}
+          disabled={addDisabled}
+          variant={isPicked ? "outline" : "default"}
+          className={cn(
+            "w-full font-subheading",
+            !isPicked && !addDisabled && "gold-glow"
+          )}
+        >
+          {isPicked ? "Remove from Loadout" : "Add to Loadout"}
+        </Button>
+      </div>
     </div>
   );
 }
