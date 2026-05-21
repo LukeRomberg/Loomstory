@@ -238,25 +238,50 @@ export function CharacterSheetPreview({
 
       {/* ─── COMBAT ─────────────────────────────────────────── */}
       <SectionCard title="Combat" testId="preview-combat" theme={classTheme}>
-        <div className="grid grid-cols-2 gap-4 mb-3">
-          <StatTile
-            label="Evasion"
-            value={evasion != null ? String(evasion) : "—"}
-            theme={classTheme}
-          />
-          <StatTile
-            label="Armor"
-            value={armorScore != null ? String(armorScore) : "—"}
-            theme={classTheme}
-          />
+        <div className="grid grid-cols-[auto_auto_1fr] gap-2 items-start">
+          {/* Col 1: Evasion / Armor stacked */}
+          <div className="space-y-2">
+            <StatTile
+              label="Evasion"
+              value={evasion != null ? String(evasion) : "—"}
+              theme={classTheme}
+            />
+            <StatTile
+              label="Armor"
+              value={armorScore != null ? String(armorScore) : "—"}
+              theme={classTheme}
+            />
+          </div>
+
+          {/* Col 2: Major / Severe damage threshold tiles stacked */}
+          <div
+            data-testid="preview-damage-thresholds"
+            className="space-y-2"
+          >
+            <ThresholdTile
+              label="Major"
+              value={majorThreshold ?? "—"}
+              testId="threshold-major"
+            />
+            <ThresholdTile
+              label="Severe"
+              value={severeThreshold ?? "—"}
+              testId="threshold-severe"
+            />
+          </div>
+
+          {/* Col 3: HP / Stress / Hope pip rows stacked */}
+          <div className="space-y-1.5 min-w-0">
+            <PipRow label="HP" count={hpSlots} testIdPrefix="hp-pip" />
+            <PipRow
+              label="Stress"
+              count={STRESS_MAX}
+              testIdPrefix="stress-pip"
+              muted
+            />
+            <HopePipRow filled={STARTING_HOPE} max={HOPE_MAX} />
+          </div>
         </div>
-        <DamageThresholdsBand
-          major={majorThreshold}
-          severe={severeThreshold}
-        />
-        <PipRow label="HP" count={hpSlots} testIdPrefix="hp-pip" />
-        <PipRow label="Stress" count={STRESS_MAX} testIdPrefix="stress-pip" muted />
-        <HopePipRow filled={STARTING_HOPE} max={HOPE_MAX} />
       </SectionCard>
 
       {/* ─── INVENTORY + GOLD (paired) ──────────────────────── */}
@@ -493,6 +518,35 @@ function StatTile({
   );
 }
 
+/**
+ * Compact tile for damage thresholds (Major / Severe). Same visual shape as
+ * StatTile but a touch smaller — the values can be two- or three-digit numbers
+ * and they sit in a narrower middle column.
+ */
+function ThresholdTile({
+  label,
+  value,
+  testId,
+}: {
+  label: string;
+  value: string;
+  testId: string;
+}) {
+  return (
+    <div className="rounded border border-leather/30 bg-transparent px-2 py-1 text-center">
+      <div className="text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70">
+        {label}
+      </div>
+      <div
+        data-testid={testId}
+        className="font-mono text-base text-leather"
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
 function PipRow({
   label,
   count,
@@ -622,40 +676,6 @@ function HopePipRow({ filled, max }: { filled: number; max: number }) {
           />
         ))}
       </div>
-    </div>
-  );
-}
-
-function DamageThresholdsBand({
-  major,
-  severe,
-}: {
-  major: string | null;
-  severe: string | null;
-}) {
-  return (
-    <div
-      data-testid="preview-damage-thresholds"
-      className="mb-2 flex items-center justify-center gap-3 text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70"
-    >
-      <span className="flex items-center gap-1.5">
-        Major
-        <span
-          data-testid="threshold-major"
-          className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[10px] text-leather"
-        >
-          {major ?? "—"}
-        </span>
-      </span>
-      <span className="flex items-center gap-1.5">
-        Severe
-        <span
-          data-testid="threshold-severe"
-          className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[10px] text-leather"
-        >
-          {severe ?? "—"}
-        </span>
-      </span>
     </div>
   );
 }
