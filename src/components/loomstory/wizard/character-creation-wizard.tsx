@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 import { useTransitionRouter } from "@/hooks/use-transition-router";
 import { cn } from "@/lib/utils";
 import { CharacterCreationShell } from "./character-creation-shell";
@@ -10,10 +11,13 @@ import { WizardProgress } from "./wizard-progress";
 import { Button } from "@/components/ui/button";
 import { useStepData } from "@/lib/character/use-step-data";
 import { getVisibleSteps } from "@/lib/character/wizard-registry";
+import { createClient } from "@/lib/supabase/client";
+import { saveNewCharacter } from "@/lib/character/save-new-character";
 import {
   DAGGERHEART_DOMAINS,
   DAGGERHEART_TRAIT_DESCRIPTIONS,
   DAGGERHEART_CLASS_ITEMS,
+  DAGGERHEART_BASIC_SUPPLY_NAMES,
 } from "@/lib/character/configs/daggerheart-wizard";
 import { getAncestryImage } from "@/lib/character/configs/daggerheart-ancestry-icons";
 import type {
@@ -26,7 +30,7 @@ import type {
   ClassTheme,
 } from "@/lib/character/wizard-types";
 import { createEmptyWizardState } from "@/lib/character/wizard-types";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
 // Synthetic step config for fetching subclass features for the picked class.
 // Mirrors the old wizard's pattern — subclass_feature rows tag the parent class
@@ -75,10 +79,10 @@ interface CharacterCreationWizardProps {
 export function CharacterCreationWizard({
   open,
   onClose,
-  campaignId: _campaignId,
+  campaignId,
   systemId,
-  systemSlug,
-  userId: _userId,
+  systemSlug: _systemSlug,
+  userId,
   wizardConfig,
 }: CharacterCreationWizardProps) {
   const router = useTransitionRouter();
@@ -98,6 +102,9 @@ export function CharacterCreationWizard({
   const [focusedDomainCardId, setFocusedDomainCardId] = useState<string | null>(
     null
   );
+  // True while saveNewCharacter is running. Drives the Start Your Adventure
+  // button's disabled state + label.
+  const [creating, setCreating] = useState(false);
 
   const visibleSteps = useMemo(
     () =>
@@ -316,8 +323,76 @@ export function CharacterCreationWizard({
     if (currentStepKey === "domain_cards_pick") {
       return domainCardPickIds.length === domainCardSelectCount;
     }
+    if (currentStepKey === "review") {
+      return wizardState.name.trim().length > 0;
+    }
     return true;
   }
+
+  // ─── Save flow ──────────────────────────────────────────────
+  async function handleCreate() {
+    setCreating(true);
+    try {
+      const supabase = createClient();
+
+      // Resolve the four basic-supply compendium ids by name (seeded by
+      // migration 20260514000003). saveNewCharacter uses them to set
+      // compendium_item_ref_id on the supply character_items rows.
+      const basicSupplyIds: Record<string, string> = {};
+      const supplyNames = [...DAGGERHEART_BASIC_SUPPLY_NAMES];
+      const { data: supplyRows, error: supplyError } = await supabase
+        .from("compendium_items")
+        .select("id,name")
+        .eq("system_id", systemId)
+        .eq("source", "Daggerheart SRD")
+        .in("name", supplyNames);
+      if (supplyError) {
+        throw new Error(
+          `Failed to look up starting supplies: ${supplyError.message}`
+        );
+      }
+      for (const row of supplyRows ?? []) {
+        basicSupplyIds[(row as { name: string }).name] = (
+          row as { id: string }
+        ).id;
+      }
+
+      const { characterId } = await saveNewCharacter({
+        supabase,
+        campaignId,
+        systemId,
+        userId,
+        wizardState,
+        selectedClass,
+        selectedSubclass,
+        ancestryFeatures: selectedAncestryFeatures,
+        communityFeatures: selectedCommunityFeatures,
+        classFeatures: selectedClassFeatures,
+        subclassFeatures: selectedSubclassFoundationFeatures,
+        primaryWeapon: selectedPrimaryWeapon,
+        secondaryWeapon: selectedSecondaryWeapon,
+        armor: selectedArmor,
+        potion: selectedPotion,
+        classItemName: wizardState.classItemName,
+        basicSupplyIds,
+        domainCards: selectedDomainCards,
+      });
+
+      toast.success("Character created");
+      onClose();
+      router.push(
+        `/campaign/${campaignId}/characters?selected=${characterId}`
+      );
+    } catch (err) {
+      toast.error("Failed to create character", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  const isReviewStep = currentStepKey === "review";
 
   if (!open) return null;
 
@@ -639,6 +714,23 @@ export function CharacterCreationWizard({
     ) : (
       <EmptyDetail message="Pick a card to see its rules text." />
     );
+  } else if (currentStepKey === "review") {
+    leftPage = (
+      <ReviewChecklistPanel
+        title={currentStep?.label ?? "Behold Your Hero"}
+        subtitle={currentStep?.subtitle ?? null}
+        wizardState={wizardState}
+        selectedClass={selectedClass}
+        selectedSubclass={selectedSubclass}
+        selectedPrimaryWeapon={selectedPrimaryWeapon}
+        selectedSecondaryWeapon={selectedSecondaryWeapon}
+        selectedArmor={selectedArmor}
+        selectedPotion={selectedPotion}
+        domainCardCount={domainCardPickIds.length}
+        domainCardSelectCount={domainCardSelectCount}
+      />
+    );
+    rightPage = <ReviewFlavorPanel nameValid={wizardState.name.trim().length > 0} />;
   } else {
     leftPage = (
       <ComingSoon
@@ -688,9 +780,6 @@ export function CharacterCreationWizard({
           onNameChange={(name) =>
             setWizardState((prev) => ({ ...prev, name }))
           }
-          onCreate={() => {
-            /* Review-step CTA — populated once the Review step is ported. */
-          }}
         />
       }
       footer={
@@ -707,14 +796,32 @@ export function CharacterCreationWizard({
           <span className="font-subheading text-xs uppercase tracking-[0.18em] text-gold/70">
             Step {stepIndex + 1} of {visibleSteps.length}
           </span>
-          <Button
-            onClick={goForward}
-            disabled={!canContinue() || stepIndex >= visibleSteps.length - 1}
-            className="gold-glow font-subheading"
-          >
-            Continue
-            <ChevronRight className="ml-1 size-4" />
-          </Button>
+          {isReviewStep ? (
+            <Button
+              onClick={handleCreate}
+              disabled={!canContinue() || creating}
+              className="gold-glow animate-gold-pulse font-subheading"
+            >
+              {creating ? (
+                "Creating…"
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <Sparkles className="size-4" aria-hidden />
+                  Start Your Adventure!
+                  <Sparkles className="size-4" aria-hidden />
+                </span>
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={goForward}
+              disabled={!canContinue() || stepIndex >= visibleSteps.length - 1}
+              className="gold-glow font-subheading"
+            >
+              Continue
+              <ChevronRight className="ml-1 size-4" />
+            </Button>
+          )}
         </>
       }
     />
@@ -2197,6 +2304,173 @@ function DomainCardDetailPanel({
           {isPicked ? "Remove from Loadout" : "Add to Loadout"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+// ─── Review step ───────────────────────────────────────────
+
+/**
+ * Final-checks summary the player reads through before clicking Start. Each
+ * row shows one phase of the build with a ✓ if a pick exists for it. The
+ * sheet preview in the sheet zone still shows the full visual character.
+ */
+function ReviewChecklistPanel({
+  title,
+  subtitle,
+  wizardState,
+  selectedClass,
+  selectedSubclass,
+  selectedPrimaryWeapon,
+  selectedSecondaryWeapon,
+  selectedArmor,
+  selectedPotion,
+  domainCardCount,
+  domainCardSelectCount,
+}: {
+  title: string;
+  subtitle: string | null;
+  wizardState: WizardState;
+  selectedClass: CompendiumClass | null;
+  selectedSubclass: CompendiumClass | null;
+  selectedPrimaryWeapon: CompendiumItem | null;
+  selectedSecondaryWeapon: CompendiumItem | null;
+  selectedArmor: CompendiumItem | null;
+  selectedPotion: CompendiumItem | null;
+  domainCardCount: number;
+  domainCardSelectCount: number;
+}) {
+  const classLine =
+    selectedClass && selectedSubclass
+      ? `${selectedClass.name} · ${selectedSubclass.name}`
+      : selectedClass?.name ?? null;
+  const heritageLine =
+    wizardState.ancestryName && wizardState.communityName
+      ? `${wizardState.ancestryName} · ${wizardState.communityName}`
+      : wizardState.ancestryName ?? wizardState.communityName ?? null;
+  const equipmentLine = (() => {
+    const parts: string[] = [];
+    if (selectedPrimaryWeapon) parts.push(selectedPrimaryWeapon.name);
+    if (selectedSecondaryWeapon) parts.push(selectedSecondaryWeapon.name);
+    if (selectedArmor) parts.push(selectedArmor.name);
+    if (selectedPotion) parts.push(selectedPotion.name);
+    if (wizardState.classItemName) parts.push(wizardState.classItemName);
+    return parts.length > 0 ? parts.join(" · ") : null;
+  })();
+  const traitsLine = (() => {
+    const order = [
+      "agility",
+      "strength",
+      "finesse",
+      "instinct",
+      "presence",
+      "knowledge",
+    ];
+    const values = order.map((k) => wizardState.statValues[k]);
+    if (values.some((v) => v == null)) return null;
+    return values
+      .map((v) => (v! >= 0 ? `+${v}` : String(v)))
+      .join(" / ");
+  })();
+  const experiencesLine = (() => {
+    const filled = wizardState.experiences
+      .filter((e) => e.name.trim().length > 0)
+      .map((e) => e.name);
+    return filled.length === 2 ? filled.join(" · ") : null;
+  })();
+  const cardsLine =
+    domainCardCount === domainCardSelectCount
+      ? `${domainCardSelectCount} of ${domainCardSelectCount} picked`
+      : `${domainCardCount} of ${domainCardSelectCount} picked`;
+
+  const rows: { label: string; value: string | null; required: boolean }[] = [
+    { label: "Class", value: classLine, required: true },
+    { label: "Heritage", value: heritageLine, required: true },
+    { label: "Equipment", value: equipmentLine, required: true },
+    { label: "Traits", value: traitsLine, required: true },
+    { label: "Experiences", value: experiencesLine, required: true },
+    {
+      label: "Cards",
+      value: cardsLine,
+      required: domainCardCount === domainCardSelectCount,
+    },
+  ];
+
+  return (
+    <>
+      <div className="shrink-0">
+        <h2 className="font-heading text-xl font-bold uppercase tracking-[0.12em] text-leather">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-1 font-lore text-sm font-medium text-leather/75">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <div className="scrollbar-none mt-3 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        <h3 className="font-heading text-[10px] font-bold uppercase tracking-[0.14em] text-leather/70">
+          Final Checks
+        </h3>
+        {rows.map((row) => {
+          const done = row.value !== null && row.required;
+          return (
+            <div
+              key={row.label}
+              className="flex items-start gap-2 rounded border-2 border-leather/15 px-3 py-1.5"
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  "inline-flex size-4 shrink-0 items-center justify-center rounded-full border text-[10px]",
+                  done
+                    ? "border-leather/60 bg-leather/10 text-leather"
+                    : "border-leather/30 text-leather/50"
+                )}
+              >
+                {done ? "✓" : "·"}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-leather/80">
+                  {row.label}
+                </div>
+                <div className="font-lore text-sm leading-snug text-leather">
+                  {row.value ?? "—"}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+function ReviewFlavorPanel({ nameValid }: { nameValid: boolean }) {
+  return (
+    <div className="scrollbar-none flex h-full flex-col gap-3 overflow-y-auto rounded-lg border-2 border-leather/40 bg-transparent p-3 pr-2 text-leather">
+      <h3 className="font-heading text-lg font-bold uppercase tracking-[0.12em] text-leather">
+        Begin Your Adventure
+      </h3>
+      <p className="whitespace-pre-line font-lore text-sm leading-snug text-leather/85">
+        This is your hero, brought to life from every choice you&rsquo;ve made.
+        Name them on the parchment, look over their sheet one last time, and
+        use <span className="font-bold">Previous</span> if you want to revise
+        anything before you commit.
+      </p>
+      <p className="whitespace-pre-line font-lore text-sm leading-snug text-leather/85">
+        When you&rsquo;re ready, press{" "}
+        <span className="font-heading font-bold uppercase tracking-[0.08em]">
+          Start Your Adventure!
+        </span>{" "}
+        below — your hero is born and joins the campaign.
+      </p>
+      {!nameValid && (
+        <p className="font-lore text-sm italic leading-snug text-leather/70">
+          Your hero needs a name first — type one into the banner above the
+          sheet to enable the Start button.
+        </p>
+      )}
     </div>
   );
 }

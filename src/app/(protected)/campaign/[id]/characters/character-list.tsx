@@ -9,7 +9,7 @@ import {
   MasterList,
   MasterListItem,
 } from "@/components/shared/master-list";
-import { CharacterWizard } from "@/components/loomstory/wizard/character-wizard";
+import { CharacterCreationWizard } from "@/components/loomstory/wizard/character-creation-wizard";
 import { getWizardConfig } from "@/lib/character/wizard-registry";
 import { CharacterSheetLoader } from "./character-sheet-loader";
 import { Heart } from "lucide-react";
@@ -170,7 +170,7 @@ export function CharacterList({
       newAriaLabel="New character"
     >
       {wizardConfig && systemId && (
-        <CharacterWizard
+        <CharacterCreationWizard
           open={wizardOpen}
           onClose={() => {
             setWizardOpen(false);

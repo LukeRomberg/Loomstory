@@ -215,6 +215,8 @@ function defaultProps() {
     potion: mockPotion as CompendiumItem | null,
     classTheme: DAGGERHEART_CLASS_THEMES.Ranger,
     onNameChange: vi.fn(),
+    // Legacy "Start Your Adventure" button is opt-in via onCreate; the suite
+    // exercises that legacy path here, so default to a no-op handler.
     onCreate: vi.fn(),
   };
 }
@@ -606,14 +608,26 @@ describe("CharacterSheetPreview — Gold tracker", () => {
   });
 });
 
-// ─── Create button ──────────────────────────────────────────────
+// ─── Create button (legacy opt-in) ──────────────────────────────
+// Only renders when a caller explicitly wires `onCreate`. The new
+// master-detail wizard hides this button and uses the footer Continue button
+// on the Review step instead; the old wizard (kept dormant for a phone
+// variant) still uses this path.
 
-describe("CharacterSheetPreview — Create button", () => {
-  it("renders 'Start Your Adventure!' button", () => {
+describe("CharacterSheetPreview — Create button (legacy)", () => {
+  it("renders 'Start Your Adventure!' button when onCreate is provided", () => {
     render(<CharacterSheetPreview {...defaultProps()} />);
     expect(
       screen.getByRole("button", { name: /start your adventure/i })
     ).toBeInTheDocument();
+  });
+
+  it("is hidden when onCreate is omitted", () => {
+    const { onCreate: _omit, ...rest } = defaultProps();
+    render(<CharacterSheetPreview {...rest} />);
+    expect(
+      screen.queryByRole("button", { name: /start your adventure/i })
+    ).not.toBeInTheDocument();
   });
 
   it("is disabled when name is empty", () => {
@@ -621,18 +635,6 @@ describe("CharacterSheetPreview — Create button", () => {
       <CharacterSheetPreview
         {...defaultProps()}
         wizardState={{ ...mockState, name: "" }}
-      />
-    );
-    expect(
-      screen.getByRole("button", { name: /start your adventure/i })
-    ).toBeDisabled();
-  });
-
-  it("is disabled when name is whitespace only", () => {
-    render(
-      <CharacterSheetPreview
-        {...defaultProps()}
-        wizardState={{ ...mockState, name: "   " }}
       />
     );
     expect(

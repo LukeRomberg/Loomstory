@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-vi.mock("@/components/loomstory/wizard/character-wizard", () => ({
-  CharacterWizard: () => null,
+vi.mock("@/components/loomstory/wizard/character-creation-wizard", () => ({
+  CharacterCreationWizard: () => null,
 }));
 
 vi.mock("@/lib/character/wizard-registry", () => ({
-  getWizardConfig: () => ({ steps: [] }),
+  getWizardConfig: () => ({ steps: [], phases: [] }),
+  getVisibleSteps: () => [],
 }));
 
 vi.mock("./character-sheet-loader", () => ({

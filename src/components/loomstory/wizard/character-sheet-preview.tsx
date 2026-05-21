@@ -33,7 +33,13 @@ interface CharacterSheetPreviewProps {
   potion: CompendiumItem | null;
   classTheme?: ClassTheme;
   onNameChange: (name: string) => void;
-  onCreate: () => void;
+  /**
+   * When provided, renders the legacy "Start Your Adventure" button at the
+   * bottom of the sheet. The new master-detail wizard hides this button (it
+   * lives on the footer Continue button on the Review step instead); the old
+   * wizard — kept dormant for a future phone variant — wires it up.
+   */
+  onCreate?: () => void;
   creating?: boolean;
 }
 
@@ -444,23 +450,29 @@ export function CharacterSheetPreview({
         </SectionCard>
       )}
 
-      {/* ─── CTA ─────────────────────────────────────────────── */}
-      <Button
-        type="button"
-        onClick={onCreate}
-        disabled={!nameValid || creating}
-        className="w-full border-2 border-leather/60 bg-transparent py-3 font-heading text-sm font-bold uppercase tracking-[0.18em] text-leather hover:bg-leather/10"
-      >
-        {creating ? (
-          "Creating..."
-        ) : (
-          <span className="flex items-center justify-center gap-2">
-            <Sparkles className="size-4" aria-hidden />
-            Start Your Adventure
-            <Sparkles className="size-4" aria-hidden />
-          </span>
-        )}
-      </Button>
+      {/* ─── Legacy CTA ───────────────────────────────────────
+          Only rendered when a caller explicitly wires `onCreate` (the old
+          CharacterWizard kept dormant for a future phone variant). The new
+          master-detail wizard hides this button and uses the footer Continue
+          button on the Review step instead. */}
+      {onCreate && (
+        <Button
+          type="button"
+          onClick={onCreate}
+          disabled={!nameValid || creating}
+          className="w-full border-2 border-leather/60 bg-transparent py-3 font-heading text-sm font-bold uppercase tracking-[0.18em] text-leather hover:bg-leather/10"
+        >
+          {creating ? (
+            "Creating..."
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <Sparkles className="size-4" aria-hidden />
+              Start Your Adventure
+              <Sparkles className="size-4" aria-hidden />
+            </span>
+          )}
+        </Button>
+      )}
     </div>
   );
 }

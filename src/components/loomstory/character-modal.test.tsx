@@ -24,8 +24,8 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
-vi.mock("@/components/loomstory/wizard/character-wizard", () => ({
-  CharacterWizard: ({ open }: { open: boolean }) =>
+vi.mock("@/components/loomstory/wizard/character-creation-wizard", () => ({
+  CharacterCreationWizard: ({ open }: { open: boolean }) =>
     open ? <div data-testid="character-wizard">Wizard</div> : null,
 }));
 

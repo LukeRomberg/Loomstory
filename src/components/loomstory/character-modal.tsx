@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { MasterDetailModal } from "@/components/shared/master-detail-modal";
-import { CharacterWizard } from "@/components/loomstory/wizard/character-wizard";
+import { CharacterCreationWizard } from "@/components/loomstory/wizard/character-creation-wizard";
 import { getWizardConfig } from "@/lib/character/wizard-registry";
 import { Heart } from "lucide-react";
 
@@ -116,7 +116,7 @@ export function CharacterModal({
 
       {/* Character Creation Wizard */}
       {wizardConfig && systemId && (
-        <CharacterWizard
+        <CharacterCreationWizard
           open={wizardOpen}
           onClose={() => {
             setWizardOpen(false);

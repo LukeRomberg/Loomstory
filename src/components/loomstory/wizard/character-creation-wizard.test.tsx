@@ -1,11 +1,56 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-const mockPush = vi.fn();
+// vi.mock is hoisted to the top of the file before any const declarations, so
+// any variables the mock factories close over must be hoisted too — wrap the
+// shared spies with vi.hoisted() so they exist at hoist time.
+const { mockPush, mockToastSuccess, mockToastError, mockSaveNewCharacter } =
+  vi.hoisted(() => ({
+    mockPush: vi.fn(),
+    mockToastSuccess: vi.fn(),
+    mockToastError: vi.fn(),
+    mockSaveNewCharacter: vi.fn(async () => ({ characterId: "char-1" })),
+  }));
+
 vi.mock("@/hooks/use-transition-router", () => ({
   useTransitionRouter: () => ({ push: mockPush, refresh: vi.fn() }),
 }));
+
+vi.mock("sonner", () => ({
+  toast: { success: mockToastSuccess, error: mockToastError },
+}));
+
+// Supabase client mock — handleCreate only uses it to look up the four basic
+// starting-supply ids by name. Return an empty supply list so saveNewCharacter
+// skips that branch entirely.
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          eq: () => ({ in: () => ({ data: [], error: null }) }),
+        }),
+      }),
+    }),
+  }),
+}));
+
+// saveNewCharacter is unit-tested elsewhere; spy on it here so we can assert
+// the wizard wires the right wizardState + selections through on save.
+vi.mock("@/lib/character/save-new-character", () => ({
+  saveNewCharacter: (params: unknown) => mockSaveNewCharacter(params),
+}));
+
+beforeEach(() => {
+  mockPush.mockClear();
+  mockToastSuccess.mockClear();
+  mockToastError.mockClear();
+  mockSaveNewCharacter.mockClear();
+  mockSaveNewCharacter.mockImplementation(async () => ({
+    characterId: "char-1",
+  }));
+});
 
 const {
   mockClasses,
@@ -843,6 +888,15 @@ async function advanceToDomainCardsStep(
   await user.click(screen.getByRole("button", { name: /continue/i }));
 }
 
+async function advanceToReviewStep(user: ReturnType<typeof userEvent.setup>) {
+  await advanceToDomainCardsStep(user);
+  await user.click(screen.getByLabelText(/view reckless slash/i));
+  await user.click(screen.getByRole("button", { name: /add to loadout/i }));
+  await user.click(screen.getByLabelText(/view bone sense/i));
+  await user.click(screen.getByRole("button", { name: /add to loadout/i }));
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+}
+
 describe("CharacterCreationWizard — subclass step", () => {
   it("shows the subclass step heading + subtitle after advancing from class", async () => {
     const user = userEvent.setup();
@@ -1491,5 +1545,98 @@ describe("CharacterCreationWizard — domain cards step", () => {
     expect(
       screen.getByRole("button", { name: /add to loadout/i })
     ).toBeDisabled();
+  });
+});
+
+describe("CharacterCreationWizard — review step", () => {
+  it("shows the Final Checks panel with one row per build phase", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToReviewStep(user);
+    expect(screen.getByText(/final checks/i)).toBeInTheDocument();
+    // Heritage + Equipment are unique to Final Checks (no progress-bar
+    // collision); Class / Traits / Experiences / Cards also appear in the
+    // progress bar so a getAll with length>=1 is enough.
+    expect(screen.getByText("Heritage")).toBeInTheDocument();
+    expect(screen.getByText("Equipment")).toBeInTheDocument();
+    for (const label of ["Class", "Traits", "Experiences", "Cards"]) {
+      expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(1);
+    }
+    // The picks are summarized — Warrior + Brave for class, Faerie + Highborne
+    // for heritage, the traits modifier string, etc.
+    expect(screen.getByText(/Warrior · Call of the Brave/i)).toBeInTheDocument();
+    expect(screen.getByText(/Faerie · Highborne/i)).toBeInTheDocument();
+    expect(screen.getByText(/World Traveler · Field Medic/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 of 2 picked/i)).toBeInTheDocument();
+  });
+
+  it("renders the Begin Your Adventure flavor panel on the right page", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToReviewStep(user);
+    expect(screen.getByText(/begin your adventure/i)).toBeInTheDocument();
+  });
+
+  it("transforms the footer Continue button into Start Your Adventure on review", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToReviewStep(user);
+    expect(
+      screen.getByRole("button", { name: /start your adventure/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^continue$/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("Start Your Adventure is disabled until the hero has a name", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToReviewStep(user);
+    const start = screen.getByRole("button", { name: /start your adventure/i });
+    expect(start).toBeDisabled();
+    // Type a name into the sheet preview banner input.
+    await user.type(screen.getByLabelText(/character name/i), "Kael Ashgrin");
+    expect(start).not.toBeDisabled();
+  });
+
+  it("clicking Start saves the character and routes to the characters page", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToReviewStep(user);
+    await user.type(screen.getByLabelText(/character name/i), "Kael Ashgrin");
+    await user.click(
+      screen.getByRole("button", { name: /start your adventure/i })
+    );
+    expect(mockSaveNewCharacter).toHaveBeenCalledTimes(1);
+    const params = mockSaveNewCharacter.mock.calls[0][0] as {
+      campaignId: string;
+      wizardState: { name: string; className: string | null };
+    };
+    expect(params.campaignId).toBe("campaign-1");
+    expect(params.wizardState.name).toBe("Kael Ashgrin");
+    expect(params.wizardState.className).toBe("Warrior");
+    expect(mockToastSuccess).toHaveBeenCalledWith("Character created");
+    expect(mockPush).toHaveBeenCalledWith(
+      "/campaign/campaign-1/characters?selected=char-1"
+    );
+  });
+
+  it("Save failure surfaces a toast error and does not navigate", async () => {
+    mockSaveNewCharacter.mockImplementationOnce(async () => {
+      throw new Error("DB down");
+    });
+    const user = userEvent.setup();
+    renderWizard();
+    await advanceToReviewStep(user);
+    await user.type(screen.getByLabelText(/character name/i), "Kael Ashgrin");
+    await user.click(
+      screen.getByRole("button", { name: /start your adventure/i })
+    );
+    expect(mockToastError).toHaveBeenCalledWith(
+      "Failed to create character",
+      { description: "DB down" }
+    );
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });
