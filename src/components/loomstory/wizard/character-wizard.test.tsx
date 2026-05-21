@@ -836,16 +836,17 @@ describe("CharacterWizard", () => {
     await user.click(screen.getByText("Call of the Brave"));
     await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
 
-    // The radiogroup exposes two radios; Female is selected by default.
+    // The radiogroup exposes two radios; Male is selected by default
+    // (see createEmptyWizardState in wizard-types.ts).
     // /^male$/i avoids "Female" matching the loose /male/i regex.
     const female = screen.getByRole("radio", { name: /^female$/i });
     const male = screen.getByRole("radio", { name: /^male$/i });
-    expect(female).toHaveAttribute("aria-checked", "true");
-    expect(male).toHaveAttribute("aria-checked", "false");
-
-    await user.click(male);
-    expect(female).toHaveAttribute("aria-checked", "false");
     expect(male).toHaveAttribute("aria-checked", "true");
+    expect(female).toHaveAttribute("aria-checked", "false");
+
+    await user.click(female);
+    expect(male).toHaveAttribute("aria-checked", "false");
+    expect(female).toHaveAttribute("aria-checked", "true");
   });
 
   it("toggling Female ↔ Male switches the ancestry card hero images", async () => {
@@ -857,13 +858,14 @@ describe("CharacterWizard", () => {
     await user.click(screen.getByRole("button", { name: /choose call of the brave/i }));
 
     // Faerie has both -f and -m portraits — both images come from public/ancestries.
+    // Default ancestryVariant is "male"; toggle to female and back.
     const faerieCard = screen.getByText("Faerie").closest("[data-card-id]") as HTMLElement;
     const faerieImg = () => within(faerieCard).getByAltText("Faerie");
 
-    expect(faerieImg().getAttribute("src") ?? "").toMatch(/Faerie-f\.png/);
-
-    await user.click(screen.getByRole("radio", { name: /^male$/i }));
     expect(faerieImg().getAttribute("src") ?? "").toMatch(/Faerie-m\.png/);
+
+    await user.click(screen.getByRole("radio", { name: /^female$/i }));
+    expect(faerieImg().getAttribute("src") ?? "").toMatch(/Faerie-f\.png/);
   });
 
   it("ancestry card shows both ancestry features with descriptions when expanded", async () => {
