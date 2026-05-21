@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3100",
-    "prebuild": "vitest run",
+    "prebuild": "NODE_ENV=test vitest run",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
