@@ -219,173 +219,162 @@ export function CharacterSheetPreview({
         </div>
       </div>
 
-      {/* ─── BODY GRID ──────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-4">
-        {/* ── LEFT COLUMN ──────────────────────────────────── */}
-        <div className="min-w-0 space-y-4">
-          <SectionCard title="Combat" testId="preview-combat" theme={classTheme}>
-            <div className="grid grid-cols-2 gap-4 mb-3">
-              <StatTile
-                label="Evasion"
-                value={evasion != null ? String(evasion) : "—"}
-                theme={classTheme}
-              />
-              <StatTile
-                label="Armor"
-                value={armorScore != null ? String(armorScore) : "—"}
-                theme={classTheme}
-              />
-            </div>
-            <DamageThresholdsBand
-              major={majorThreshold}
-              severe={severeThreshold}
-            />
-            <PipRow label="HP" count={hpSlots} testIdPrefix="hp-pip" />
-            <PipRow label="Stress" count={STRESS_MAX} testIdPrefix="stress-pip" muted />
-            <HopePipRow filled={STARTING_HOPE} max={HOPE_MAX} />
-          </SectionCard>
-
-          {hopeFeature && (
-            <SectionCard
-              title="Hope Feature"
-              testId="preview-hope"
-              theme={classTheme}
-            >
-              <FeatureBlock
-                name={stripPrefix(hopeFeature.name, wizardState.className)}
-                description={hopeFeature.description ?? ""}
-                theme={classTheme}
-              />
-            </SectionCard>
-          )}
-
-          {classFeature && (
-            <SectionCard title="Class Feature" theme={classTheme}>
-              <FeatureBlock
-                name={stripPrefix(classFeature.name, wizardState.className)}
-                description={classFeature.description ?? ""}
-                theme={classTheme}
-              />
-            </SectionCard>
-          )}
-
-          {subclassFoundation && (
-            <SectionCard
-              title="Subclass Feature"
-              testId="preview-subclass-feature"
-              theme={classTheme}
-            >
-              <FeatureBlock
-                name={stripPrefix(subclassFoundation.name, wizardState.subclassName)}
-                description={subclassFoundation.description ?? ""}
-                theme={classTheme}
-              />
-            </SectionCard>
-          )}
-
-          {nonEmptyExperiences.length > 0 && (
-            <SectionCard
-              title="Experiences"
-              testId="preview-experiences"
-              theme={classTheme}
-            >
-              <ul className="space-y-1.5">
-                {nonEmptyExperiences.map((exp, i) => (
-                  <li
-                    key={i}
-                    className="flex items-baseline justify-between gap-2 text-sm"
-                  >
-                    <span className="font-lore font-medium text-leather">{exp.name}</span>
-                    <span className="font-mono font-semibold text-leather">+2</span>
-                  </li>
-                ))}
-              </ul>
-            </SectionCard>
-          )}
+      {/* ─── TRAITS ─────────────────────────────────────────── */}
+      <div data-testid="preview-traits">
+        <div className="mb-1.5 text-[10px] font-heading font-bold uppercase tracking-[0.18em] text-leather">
+          Traits
         </div>
-
-        {/* ── RIGHT COLUMN ─────────────────────────────────── */}
-        <div className="min-w-0 space-y-4">
-          <div data-testid="preview-traits">
-            <div className="mb-1.5 text-[10px] font-heading font-bold uppercase tracking-[0.18em] text-leather">
-              Traits
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {TRAITS.map(({ key, label }) => (
-                <TraitTile
-                  key={key}
-                  label={label}
-                  value={wizardState.statValues[key]}
-                  theme={classTheme}
-                />
-              ))}
-            </div>
-          </div>
-
-          {hasEquipment && (
-            <SectionCard
-              title="Active Weapons"
-              testId="preview-weapons"
+        <div className="grid grid-cols-3 gap-2">
+          {TRAITS.map(({ key, label }) => (
+            <TraitTile
+              key={key}
+              label={label}
+              value={wizardState.statValues[key]}
               theme={classTheme}
-            >
-              <div className="flex items-baseline justify-between mb-2 text-[10px] font-semibold uppercase tracking-wider text-leather/70">
-                <span>Proficiency</span>
-                <span
-                  data-testid="proficiency-value"
-                  className="font-mono text-sm text-leather"
-                >
-                  1
-                </span>
-              </div>
-              {primaryWeapon && <WeaponRow weapon={primaryWeapon} label="Primary" />}
-              {secondaryWeapon && (
-                <WeaponRow weapon={secondaryWeapon} label="Secondary" />
-              )}
-            </SectionCard>
-          )}
-
-          {armor && (
-            <SectionCard
-              title="Active Armor"
-              testId="preview-armor"
-              theme={classTheme}
-            >
-              <div className="space-y-1">
-                <div className="font-heading font-bold text-sm text-leather">
-                  {armor.name}
-                </div>
-                <div className="text-xs font-medium text-leather/75">
-                  Thresholds {armorThresholds ?? "—"} · Score {armorScore ?? "—"}
-                </div>
-              </div>
-            </SectionCard>
-          )}
-
-          <SectionCard
-            title="Inventory"
-            testId="preview-inventory"
-            theme={classTheme}
-          >
-            <ul className="space-y-0.5 text-xs">
-              {BASIC_SUPPLIES.map((s) => (
-                <li key={s} className="font-medium text-leather/85">
-                  · {s}
-                </li>
-              ))}
-              {potion && (
-                <li className="font-medium text-leather/85">· {potion.name}</li>
-              )}
-              {wizardState.classItemName && (
-                <li className="font-medium text-leather/85">· {wizardState.classItemName}</li>
-              )}
-            </ul>
-          </SectionCard>
-
-          <SectionCard title="Gold" testId="preview-gold" theme={classTheme}>
-            <GoldTracker startingHandfuls={STARTING_HANDFULS} />
-          </SectionCard>
+            />
+          ))}
         </div>
       </div>
+
+      {/* ─── COMBAT ─────────────────────────────────────────── */}
+      <SectionCard title="Combat" testId="preview-combat" theme={classTheme}>
+        <div className="grid grid-cols-2 gap-4 mb-3">
+          <StatTile
+            label="Evasion"
+            value={evasion != null ? String(evasion) : "—"}
+            theme={classTheme}
+          />
+          <StatTile
+            label="Armor"
+            value={armorScore != null ? String(armorScore) : "—"}
+            theme={classTheme}
+          />
+        </div>
+        <DamageThresholdsBand
+          major={majorThreshold}
+          severe={severeThreshold}
+        />
+        <PipRow label="HP" count={hpSlots} testIdPrefix="hp-pip" />
+        <PipRow label="Stress" count={STRESS_MAX} testIdPrefix="stress-pip" muted />
+        <HopePipRow filled={STARTING_HOPE} max={HOPE_MAX} />
+      </SectionCard>
+
+      {/* ─── INVENTORY + GOLD (paired) ──────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <SectionCard
+          title="Inventory"
+          testId="preview-inventory"
+          theme={classTheme}
+        >
+          <ul className="space-y-0.5 text-xs">
+            {BASIC_SUPPLIES.map((s) => (
+              <li key={s} className="font-medium text-leather/85">
+                · {s}
+              </li>
+            ))}
+            {potion && (
+              <li className="font-medium text-leather/85">· {potion.name}</li>
+            )}
+            {wizardState.classItemName && (
+              <li className="font-medium text-leather/85">· {wizardState.classItemName}</li>
+            )}
+          </ul>
+        </SectionCard>
+
+        <SectionCard title="Gold" testId="preview-gold" theme={classTheme}>
+          <GoldTracker startingHandfuls={STARTING_HANDFULS} />
+        </SectionCard>
+      </div>
+
+      {/* ─── WEAPONS / ARMOR / FEATURES (full-width stack) ──── */}
+      {hasEquipment && (
+        <SectionCard
+          title="Active Weapons"
+          testId="preview-weapons"
+          theme={classTheme}
+        >
+          <div className="flex items-baseline justify-between mb-2 text-[10px] font-semibold uppercase tracking-wider text-leather/70">
+            <span>Proficiency</span>
+            <span
+              data-testid="proficiency-value"
+              className="font-mono text-sm text-leather"
+            >
+              1
+            </span>
+          </div>
+          {primaryWeapon && <WeaponRow weapon={primaryWeapon} label="Primary" />}
+          {secondaryWeapon && (
+            <WeaponRow weapon={secondaryWeapon} label="Secondary" />
+          )}
+        </SectionCard>
+      )}
+
+      {armor && (
+        <SectionCard title="Active Armor" testId="preview-armor" theme={classTheme}>
+          <div className="space-y-1">
+            <div className="font-heading font-bold text-sm text-leather">
+              {armor.name}
+            </div>
+            <div className="text-xs font-medium text-leather/75">
+              Thresholds {armorThresholds ?? "—"} · Score {armorScore ?? "—"}
+            </div>
+          </div>
+        </SectionCard>
+      )}
+
+      {hopeFeature && (
+        <SectionCard title="Hope Feature" testId="preview-hope" theme={classTheme}>
+          <FeatureBlock
+            name={stripPrefix(hopeFeature.name, wizardState.className)}
+            description={hopeFeature.description ?? ""}
+            theme={classTheme}
+          />
+        </SectionCard>
+      )}
+
+      {classFeature && (
+        <SectionCard title="Class Feature" theme={classTheme}>
+          <FeatureBlock
+            name={stripPrefix(classFeature.name, wizardState.className)}
+            description={classFeature.description ?? ""}
+            theme={classTheme}
+          />
+        </SectionCard>
+      )}
+
+      {subclassFoundation && (
+        <SectionCard
+          title="Subclass Feature"
+          testId="preview-subclass-feature"
+          theme={classTheme}
+        >
+          <FeatureBlock
+            name={stripPrefix(subclassFoundation.name, wizardState.subclassName)}
+            description={subclassFoundation.description ?? ""}
+            theme={classTheme}
+          />
+        </SectionCard>
+      )}
+
+      {nonEmptyExperiences.length > 0 && (
+        <SectionCard
+          title="Experiences"
+          testId="preview-experiences"
+          theme={classTheme}
+        >
+          <ul className="space-y-1.5">
+            {nonEmptyExperiences.map((exp, i) => (
+              <li
+                key={i}
+                className="flex items-baseline justify-between gap-2 text-sm"
+              >
+                <span className="font-lore font-medium text-leather">{exp.name}</span>
+                <span className="font-mono font-semibold text-leather">+2</span>
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
+      )}
 
       {/* ─── HERITAGE FEATURES ──────────────────────────────── */}
       {(ancestryFeatures.length > 0 || communityFeatures.length > 0) && (
