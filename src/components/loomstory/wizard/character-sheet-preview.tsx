@@ -242,33 +242,22 @@ export function CharacterSheetPreview({
             />
             <PipRow label="HP" count={hpSlots} testIdPrefix="hp-pip" />
             <PipRow label="Stress" count={STRESS_MAX} testIdPrefix="stress-pip" muted />
+            <HopePipRow filled={STARTING_HOPE} max={HOPE_MAX} />
           </SectionCard>
 
-          <SectionCard title="Hope" testId="preview-hope" theme={classTheme}>
-            <div className="flex gap-2 mb-3">
-              {Array.from({ length: STARTING_HOPE }).map((_, i) => (
-                <span
-                  key={`filled-${i}`}
-                  data-testid="hope-token-filled"
-                  className="size-3 rotate-45 bg-leather border-2 border-leather"
-                />
-              ))}
-              {Array.from({ length: HOPE_MAX - STARTING_HOPE }).map((_, i) => (
-                <span
-                  key={`empty-${i}`}
-                  data-testid="hope-token-empty"
-                  className="size-3 rotate-45 border-2 border-leather/50"
-                />
-              ))}
-            </div>
-            {hopeFeature && (
+          {hopeFeature && (
+            <SectionCard
+              title="Hope Feature"
+              testId="preview-hope"
+              theme={classTheme}
+            >
               <FeatureBlock
                 name={stripPrefix(hopeFeature.name, wizardState.className)}
                 description={hopeFeature.description ?? ""}
                 theme={classTheme}
               />
-            )}
-          </SectionCard>
+            </SectionCard>
+          )}
 
           {classFeature && (
             <SectionCard title="Class Feature" theme={classTheme}>
@@ -317,8 +306,11 @@ export function CharacterSheetPreview({
 
         {/* ── RIGHT COLUMN ─────────────────────────────────── */}
         <div className="space-y-4">
-          <SectionCard title="Traits" testId="preview-traits" theme={classTheme}>
-            <div className="grid grid-cols-3 gap-3">
+          <div data-testid="preview-traits">
+            <div className="mb-1.5 text-[10px] font-heading font-bold uppercase tracking-[0.18em] text-leather">
+              Traits
+            </div>
+            <div className="grid grid-cols-3 gap-2">
               {TRAITS.map(({ key, label }) => (
                 <TraitTile
                   key={key}
@@ -328,7 +320,7 @@ export function CharacterSheetPreview({
                 />
               ))}
             </div>
-          </SectionCard>
+          </div>
 
           {hasEquipment && (
             <SectionCard
@@ -619,6 +611,32 @@ function FeatureBlock({
   );
 }
 
+function HopePipRow({ filled, max }: { filled: number; max: number }) {
+  return (
+    <div className="flex items-center gap-2 py-0.5">
+      <span className="text-[10px] font-heading font-semibold uppercase tracking-wider text-leather/70 w-12">
+        Hope
+      </span>
+      <div className="flex gap-1">
+        {Array.from({ length: filled }).map((_, i) => (
+          <span
+            key={`hope-filled-${i}`}
+            data-testid="hope-token-filled"
+            className="size-3 rotate-45 bg-leather border-2 border-leather"
+          />
+        ))}
+        {Array.from({ length: max - filled }).map((_, i) => (
+          <span
+            key={`hope-empty-${i}`}
+            data-testid="hope-token-empty"
+            className="size-3 rotate-45 border-2 border-leather/50"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function DamageThresholdsBand({
   major,
   severe,
@@ -629,23 +647,26 @@ function DamageThresholdsBand({
   return (
     <div
       data-testid="preview-damage-thresholds"
-      className="mb-2 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-1 text-[8px] font-heading font-semibold uppercase tracking-tight text-leather/75"
+      className="mb-2 flex items-center justify-center gap-3 text-[9px] font-heading font-semibold uppercase tracking-wider text-leather/70"
     >
-      <span className="text-center">Mark 1 HP</span>
-      <span
-        data-testid="threshold-major"
-        className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[10px] text-leather"
-      >
-        {major ?? "—"}
+      <span className="flex items-center gap-1.5">
+        Major
+        <span
+          data-testid="threshold-major"
+          className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[10px] text-leather"
+        >
+          {major ?? "—"}
+        </span>
       </span>
-      <span className="text-center">Mark 2 HP</span>
-      <span
-        data-testid="threshold-severe"
-        className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[10px] text-leather"
-      >
-        {severe ?? "—"}
+      <span className="flex items-center gap-1.5">
+        Severe
+        <span
+          data-testid="threshold-severe"
+          className="rounded border border-leather/30 px-1.5 py-0.5 font-mono text-[10px] text-leather"
+        >
+          {severe ?? "—"}
+        </span>
       </span>
-      <span className="text-center">Mark 3 HP</span>
     </div>
   );
 }

@@ -348,11 +348,12 @@ describe("CharacterSheetPreview — Sheet body, left column", () => {
     expect(stressPips).toHaveLength(6);
   });
 
-  it("renders Hope as 6 diamond tokens with 2 filled (starting Hope)", () => {
+  it("renders Hope as 6 diamond tokens with 2 filled (starting Hope) inside Combat", () => {
     render(<CharacterSheetPreview {...defaultProps()} />);
-    const hope = screen.getByTestId("preview-hope");
-    expect(within(hope).getAllByTestId("hope-token-filled")).toHaveLength(2);
-    expect(within(hope).getAllByTestId("hope-token-empty")).toHaveLength(4);
+    // Hope pips live alongside HP and Stress in the Combat section now.
+    const combat = screen.getByTestId("preview-combat");
+    expect(within(combat).getAllByTestId("hope-token-filled")).toHaveLength(2);
+    expect(within(combat).getAllByTestId("hope-token-empty")).toHaveLength(4);
   });
 
   it("renders the class's Hope feature with description", () => {
@@ -560,13 +561,12 @@ describe("CharacterSheetPreview — Theming", () => {
 // ─── Damage thresholds ──────────────────────────────────────────
 
 describe("CharacterSheetPreview — Damage Thresholds", () => {
-  it("renders the Mark 1/2/3 HP band inside Combat", () => {
+  it("renders a compact Major/Severe band inside Combat", () => {
     render(<CharacterSheetPreview {...defaultProps()} />);
     const band = screen.getByTestId("preview-damage-thresholds");
     expect(band).toBeInTheDocument();
-    expect(band.textContent).toMatch(/Mark 1 HP/);
-    expect(band.textContent).toMatch(/Mark 2 HP/);
-    expect(band.textContent).toMatch(/Mark 3 HP/);
+    expect(band.textContent).toMatch(/Major/i);
+    expect(band.textContent).toMatch(/Severe/i);
   });
 
   it("parses the armor thresholds string into Major and Severe values", () => {
